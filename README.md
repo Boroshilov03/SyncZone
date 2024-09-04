@@ -3,6 +3,7 @@ This repository contains the code for the Chat App, which includes both the fron
 
 # Repository Structure
 **/frontend:** Contains the React Native code for the mobile app.
+
 **/backend:** Contains the Django code for the backend server.
 
 # Frontend Setup (React Native)
@@ -13,8 +14,6 @@ React Native CLI
 Android Studio or Xcode (for mobile emulators)
 
 **Installation:**
-bash
-Copy code
 cd frontend
 npm install
 **or if you use Yarn**
@@ -23,16 +22,12 @@ yarn install
 **Running the App:**
 iOS: Open frontend/ios/ChatApp.xcworkspace in Xcode and run the project.
 Android: Run the following command:
-bash
-Copy code
 npm run android
 **or if you use Yarn**
 yarn android
 
 **Configuration:**
 Create a .env file in the frontend directory with the following variables:
-bash
-Copy code
 API_URL=http://localhost:8000/api
 Backend Setup (Django)
 
@@ -43,8 +38,6 @@ pip (Python package manager)
 Virtualenv
 
 **Installation:**
-bash
-Copy code
 cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows use `venv\Scripts\activate`
@@ -54,20 +47,15 @@ pip install -r requirements.txt
 
 Ensure MySQL or your preferred database is running.
 Create a .env file in the backend directory with your database configuration:
-bash
-Copy code
 DATABASE_URL=postgres://user:password...
 
 # Running the Server:
-bash
-Copy code
 python manage.py migrate
+
 python manage.py runserver
 
 # Admin Access:
 Create a superuser to access the Django admin panel:
-bash
-Copy code
 python manage.py createsuperuser
 Dependencies
 
