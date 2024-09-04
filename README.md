@@ -5,8 +5,6 @@ This repository contains the code for the Chat App, which includes both the fron
 **/frontend:** Contains the React Native code for the mobile app.
 **/backend:** Contains the Django code for the backend server.
 
-
-# Setup Instructions
 # Frontend Setup (React Native)
 **Prerequisites:**
 Node.js (v14 or later)
