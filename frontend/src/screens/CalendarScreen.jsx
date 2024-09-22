@@ -1,14 +1,25 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { SafeAreaView, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
+import MyCalendar from "../components/MyCalendar";
+import AddEvent from "../components/AddEvent";
+import ListEvent from "../components/ListEvent";
 
 const CalendarScreen = () => {
   return (
-    <View>
-      <Text>CalendarScreen</Text>
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <MyCalendar />
+      <ListEvent/>
+      {/* <AddEvent /> */}
+    </SafeAreaView>
   )
 }
 
-export default CalendarScreen
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "white",
+  },
+});
 
-const styles = StyleSheet.create({})
+
+export default CalendarScreen
