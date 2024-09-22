@@ -1,4 +1,5 @@
 # SyncZone
+SyncZone or synchronizing timezone, aims to meet the needs of users who struggle to stay connected with loved ones living far away. The main focus of our project is to bridge the communication gap by offering features that help users connect emotionally and practically. Whether through sending positive messages, better recognizing emotions, or scheduling important dates, SyncZone helps users manage the challenges posed by different time zones, ensuring that distance doesn't hinder meaningful relationships.
 This repository contains the code for the Chat App, which includes both the frontend (React Native) and the backend (Django). This app allows users to chat in real-time and includes features like user authentication, real-time messaging, schedule planner and more.
 
 # Repository Structure
