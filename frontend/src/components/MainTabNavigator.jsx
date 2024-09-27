@@ -45,15 +45,10 @@ const iconSizeMap = {
 };
 
 function MainTabNavigator({ navigation }) {
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShown: false,
-    });
-  }, [navigation]);
-
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
           height: 60,
@@ -77,7 +72,11 @@ function MainTabNavigator({ navigation }) {
             >
               <Image
                 source={icon}
-                style={[styles.icon, { width, height }, focused && { tintColor: color }]}
+                style={[
+                  styles.icon,
+                  { width, height },
+                  focused && { tintColor: color },
+                ]}
               />
               {focused && (
                 <Text style={[styles.label, { color }]}>{label}</Text>
