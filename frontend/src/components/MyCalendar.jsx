@@ -7,7 +7,7 @@ const MyCalendar = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Your Calendar</Text>
+      <Text style={styles.title}>Your Events</Text>
       <Calendar
         style={styles.calendar}
         theme={{
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     borderColor: "#E0E0E0",
     borderRadius: 10,
     height: 350,
-    marginBottom: 15,
+    marginBottom: 5,
     padding: 10,
     backgroundColor: "#fff",
     shadowColor: "#E0E0E0", 
