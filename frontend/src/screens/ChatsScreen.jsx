@@ -4,13 +4,11 @@ import { supabase } from "../lib/supabase"; // Ensure this path is correct
 import useStore from "../store/store"; // Ensure this path is correct
 
 const ChatsScreen = () => {
-  const { setAuthenticated, setUser, setAccessToken, setRefreshToken, user } =
-    useStore();
+  const { setUser, setAccessToken, setRefreshToken, user } = useStore();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut(); // Sign out from Supabase
     if (!error) {
-      setAuthenticated(false); // Update Zustand store
       setUser(null); // Clear user data
       setAccessToken(null); // Clear access token
       setRefreshToken(null); // Clear refresh token
