@@ -1,9 +1,15 @@
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 
 const AddEvent = () => {
-  const [inputValue, setInputValue] = useState('');
+  // const [ addEvent, setAddEvent] = useState({});
+
+  // const { data, error } = await supabase
+
+  // .from('calendar')
+  // .insert({id:id})
 
   return (
     <View style={styles.container}>
