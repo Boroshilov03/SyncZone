@@ -1,35 +1,67 @@
 import { View, Text, ScrollView, StyleSheet, Image } from 'react-native';
-import React from 'react';
-import { DUMMY_DATA } from '../data/CalendarDummy';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 const ListEvent = () => {
+  const [allEvents, setAllEvents] = useState([]);
+
+  useEffect(() => {
+    const fetchingData = async () => {
+      const { data, error } = await supabase
+        .from('calendar')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching data:', error);
+      } else {
+        console.log('Fetched data:', data);
+        setAllEvents(data);
+      }
+    };
+
+    // Call the async function to fetch data
+    fetchingData();
+  }, []);
+
+  const formatDateTime = (date, time) => {
+    return new Date(`${date}T${time}`);
+  };
+
   return (
     <ScrollView>
-      {DUMMY_DATA.map(event => (
-        <View key={event.id} style={[styles.container, { backgroundColor: getMoodColor(event.mood) }]}>
-        <View style={styles.row}>
-          <View style={styles.imageContainer}>
-            <Image source={require('../../assets/icons/calendaricon.webp')} style={[styles.icon, { width: 100, height: 100 }]} />
-            <Text style={styles.overlayText}>
-              {new Date(event.startDate).toLocaleString(undefined, { day: 'numeric' })}
-            </Text>
-          </View>
-          <View style={styles.textContainer}>
-            <Text style={styles.title}>{event.title}</Text>
-            <Text style={styles.timeText}>
-              ({new Date(event.startDate).toLocaleString(undefined, { hour: 'numeric', minute: 'numeric', hour12: true })} - 
-              {new Date(event.endDate).toLocaleString(undefined, { hour: 'numeric', minute: 'numeric', hour12: true })})
-            </Text>
-          </View>
-        </View>
-          <View style={styles.flipIconContainer}>
-              <Image source={require('../../assets/icons/flipicon.png')} style={styles.flipIcon} />
+      {allEvents.map(event => {
+        const startDateTime = formatDateTime(event.date, event.start_time);
+        const endDateTime = formatDateTime(event.date, event.end_time);
+
+        return (
+          <View key={event.id} style={[styles.container, { backgroundColor: getMoodColor(event.mood) }]}>
+            <View style={styles.row}>
+              <View style={styles.imageContainer}>
+                {/* Month abbreviation */}
+                <Text style={styles.monthText}>
+                  {startDateTime.toLocaleString(undefined, { month: 'short' })}
+                </Text>
+                {/* Date number */}
+                <Text style={styles.overlayText}>
+                  {startDateTime.toLocaleString(undefined, { day: 'numeric' })}
+                </Text>
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={styles.title}>{event.title}</Text>
+                <Text style={styles.timeText}>
+                  ({startDateTime.toLocaleString(undefined, { hour: 'numeric', minute: 'numeric', hour12: true })} - {endDateTime.toLocaleString(undefined, { hour: 'numeric', minute: 'numeric', hour12: true })})
+                </Text>
+              </View>
+            </View>
+            <View style={styles.pencilIconContainer}>
+              <Image source={require('../../assets/icons/pencil_icon.png')} style={styles.pencilIcon} />
             </View>
           </View>
-      ))}
+        );
+      })}
     </ScrollView>
   );
-}
+};
 
 const getMoodColor = (mood) => {
   switch (mood) {
@@ -39,72 +71,82 @@ const getMoodColor = (mood) => {
       return '#DCEDC8'; // Softer Pastel Green
     case 'pink':
       return '#FDE0E1'; // Sakura Pink
-      case 'purple':
+    case 'purple':
       return '#F3E5F5'; // Softer Pastel Purple
     case 'blue':
       return '#E3F2FD'; // Softer Pastel Blue
+    default:
+      return '#FFFFFF'; // Default color if mood is not recognized
   }
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     marginTop: 10,
     borderRadius: 20,
     marginHorizontal: 20,
-    // Shadow properties for iOS
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 5,
-    position: 'relative', // Required for positioning flip icon inside the container
+    position: 'relative',
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
   imageContainer: {
     position: 'relative',
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 45,
   },
-  icon: {
+  monthText: {
+    position: 'absolute',
+    top: '89%',
+    left: '50%',
+    transform: [{ translateX: -55 }, { translateY: -40 }],
+    color: 'black',
+    fontWeight: '300',
+    fontSize: 22,
+    textAlign: 'center',
     width: '100%',
-    height: '100%',
   },
   overlayText: {
     position: 'absolute',
-    top: '50%',
+    top: '60%',
     left: '50%',
-    transform: [{ translateX: -50 }, { translateY: -14 }],
+    transform: [{ translateX: -55 }, { translateY: -7 }],
     color: 'black',
-    fontWeight: 'bold',
-    fontSize: 37,
+    fontWeight: '300',
+    fontSize: 25,
     textAlign: 'center',
     width: '100%',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 3,
   },
-  flipIconContainer: {
+  pencilIconContainer: {
     position: 'absolute',
-    bottom: 10, // Adjust distance from bottom of the container
-    right: 10,  // Adjust distance from the right of the container
+    bottom: 10,
+    right: 10,
   },
-  flipIcon: {
-    width: 25,
-    height: 25,
+  pencilIcon: {
+    width: 17,
+    height: 17,
   },
   title: {
     fontWeight: 'bold',
-    fontSize: 18, // Increased font size for title
+    fontSize: 18,
+    marginLeft: 10,
   },
   timeText: {
-    fontSize: 14, // Smaller font size for time text
-    color: 'grey', // Lighter color for visibility
-    paddingLeft: 0, // Left padding for time text
+    fontSize: 14,
+    color: 'grey',
+    paddingLeft: 0,
+    marginLeft: 10,
+  },
+  textContainer: {
+    flex: 1,
   },
 });
 
