@@ -103,12 +103,15 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 40,
     padding: 12,
+    // backgroundColor: '#8ca599',
   },
   parent: {
     flex: 1,
     marginTop: 40,
     padding: 12,
+    // backgroundColor: '#8ca599',
   },
+
   box: {
     marginTop: 40,
     padding: 12,
@@ -124,5 +127,10 @@ const styles = StyleSheet.create({
   signInLink: {
     color: "#007BFF",
     fontWeight: "bold",
+  },
+  sync: {
+    textAlign: "center",
+    fontWeight: 'bold',
+    fontSize: 30,
   },
 });
