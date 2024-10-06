@@ -52,12 +52,13 @@ function MainTabNavigator({ navigation }) {
         tabBarStyle: {
           height: 60,
         },
+        headerShown: false, // Add this line to ensure no headers are shown
         tabBarIcon: ({ focused }) => {
           const icon = iconMap[route.name];
           const backgroundColor = backgroundColorMap[route.name];
           const color = colorMap[route.name];
           const label = labelMap[route.name];
-          const { width, height } = iconSizeMap[route.name]; // Get the size for the current route
+          const { width, height } = iconSizeMap[route.name];
 
           return (
             <View

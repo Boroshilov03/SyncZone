@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~3.2.3",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/free-brands-svg-icons": "^6.6.0",
     "@fortawesome/free-solid-svg-icons": "^6.6.0",
@@ -26,17 +27,17 @@
     "expo-image-picker": "^15.0.7",
     "expo-status-bar": "~1.12.1",
     "react": "18.2.0",
+    "react-dom": "18.2.0",
     "react-native": "0.74.5",
     "react-native-calendars": "^1.1307.0",
     "react-native-dotenv": "^3.4.11",
+    "react-native-gradient-texts": "^0.1.0",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-uuid": "^2.0.2",
+    "react-native-web": "~0.19.10",
     "typescript": "~5.3.3",
     "zod": "^3.23.8",
-    "zustand": "^4.5.5",
-    "react-native-web": "~0.19.10",
-    "react-dom": "18.2.0",
-    "@expo/metro-runtime": "~3.2.3"
+    "zustand": "^4.5.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
