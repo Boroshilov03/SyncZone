@@ -30,7 +30,9 @@
     "react-native-calendars": "^1.1307.0",
     "react-native-gradient-texts": "^0.1.0",
     "react-native-text-gradient": "^0.1.7",
+
     "react-native-dotenv": "^3.4.11",
+
     "react-native-url-polyfill": "^2.0.0",
     "react-native-uuid": "^2.0.2",
     "typescript": "~5.3.3",

@@ -2,20 +2,22 @@ import React, { useState } from "react";
 import { Alert, StyleSheet, View, Text } from "react-native";
 import { supabase } from "../lib/supabase";
 import { Button, Input } from "@rneui/themed";
-import useStore from "../store/store";
 import GradientText from "react-native-gradient-texts";
-//import { loginSchema } from "../utils/validation"; // Import the login schema
-//import { useMutation } from "@tanstack/react-query"; // Import useMutation
+import useStore from "../store/store"; // Assuming this handles user and tokens
+import { loginSchema } from "../utils/validation"; // Import the login schema
+import { useMutation } from "@tanstack/react-query"; // Import useMutation
 
-export default function SignInScreen({ navigation }) { // Ensure navigation prop is here
-  const { setAuthenticated, setUser, setAccessToken, setRefreshToken } = useStore();
+export default function SignInScreen({ navigation }) {
+  const { setUser, setAccessToken, setRefreshToken } = useStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  async function signInWithEmail() {
-    setLoading(true);
-    try {
+  // Define the mutation for signing in
+  const { mutate: signInWithEmail, isLoading } = useMutation({
+    mutationFn: async () => {
+      // Validate email and password
+      loginSchema.parse({ email, password }); // Throws an error if validation fails
+
       const { error, data } = await supabase.auth.signInWithPassword({
         email: email,
         password: password,
@@ -23,18 +25,23 @@ export default function SignInScreen({ navigation }) { // Ensure navigation prop
 
       if (error) throw new Error(error.message);
 
+      return data; // Return data for further processing
+    },
+    onSuccess: (data) => {
       const { session, user } = data;
-      setAuthenticated(true);
-      setUser(user);
-      setAccessToken(session.access_token);
-      setRefreshToken(session.refresh_token);
-      navigation.navigate("MainTabs"); // Navigate after successful sign-in
-    } catch (error) {
-      Alert.alert("Login Error", error.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+      setUser(user); // Store user data
+      setAccessToken(session.access_token); // Store access token
+      setRefreshToken(session.refresh_token); // Store refresh token
+    },
+    onError: (error) => {
+      // If validation error, show validation message
+      if (error.errors) {
+        Alert.alert("Validation Error", error.errors[0].message); // Display the first validation error
+      } else {
+        Alert.alert("Login Error", error.message); // Handle any other error
+      }
+    },
+  });
 
   return (
 
@@ -50,6 +57,7 @@ export default function SignInScreen({ navigation }) { // Ensure navigation prop
             autoCapitalize="none"
           />
         </View>
+
         <View style={styles.verticallySpaced}>
           <Input
             label="Password"
@@ -61,6 +69,7 @@ export default function SignInScreen({ navigation }) { // Ensure navigation prop
             autoCapitalize="none"
           />
         </View>
+
         <View>
           <Button
             title="Sign in"
@@ -68,6 +77,7 @@ export default function SignInScreen({ navigation }) { // Ensure navigation prop
             onPress={signInWithEmail}
           />
         </View>
+
         <Text style={styles.signInText}>
           Don't have an account?{" "}
           <Text
@@ -78,6 +88,7 @@ export default function SignInScreen({ navigation }) { // Ensure navigation prop
           </Text>
         </Text>
       </View>
+
       <View style={styles.box}>
         <GradientText
           text={"SyncZone"}
