@@ -4,8 +4,8 @@ import { supabase } from "../lib/supabase";
 import { Button, Input } from "@rneui/themed";
 import useStore from "../store/store";
 import GradientText from "react-native-gradient-texts";
-import { loginSchema } from "../utils/validation"; // Import the login schema
-import { useMutation } from "@tanstack/react-query"; // Import useMutation
+//import { loginSchema } from "../utils/validation"; // Import the login schema
+//import { useMutation } from "@tanstack/react-query"; // Import useMutation
 
 export default function SignInScreen({ navigation }) { // Ensure navigation prop is here
   const { setAuthenticated, setUser, setAccessToken, setRefreshToken } = useStore();
