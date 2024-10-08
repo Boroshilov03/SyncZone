@@ -31,15 +31,9 @@
     "react-dom": "18.2.0",
     "react-native": "0.74.5",
     "react-native-calendars": "^1.1307.0",
-<<<<<<< HEAD
     "react-native-gradient-texts": "^0.1.0",
     "react-native-text-gradient": "^0.1.7",
     "react-native-dotenv": "^3.4.11",
-=======
-    "react-native-dotenv": "^3.4.11",
-    "react-native-gradient-texts": "^0.1.0",
-    "react-native-text-gradient": "^0.1.7",
->>>>>>> origin/main
     "react-native-url-polyfill": "^2.0.0",
     "react-native-uuid": "^2.0.2",
     "react-native-web": "~0.19.10",
