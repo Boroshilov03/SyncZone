@@ -66,24 +66,28 @@ const AddEvent = ({ onClose }) => {
         onChangeText={setInputValue}
       />
 
-      <View style={styles.datePickerContainer}>
-        <Text>Date: {date.toLocaleDateString()}</Text>
-        <Button title="Select Date" onPress={() => setShowDatePicker(true)} />
-        {showDatePicker && (
-          <DateTimePicker
-            testID="dateTimePicker"
-            value={date}
-            mode="date"
-            display="default"
-            onChange={onDateChange}
-          />
-        )}
+<View style={styles.row}>
+  <Text style={styles.label}>Date: </Text>
+  <DateTimePicker
+    testID="dateTimePicker"
+    value={date}
+    mode="date"
+    display="calendar" // Opens directly in calendar view
+    onChange={onDateChange} // Handles date changes
+  />
+</View>
+
+      
+      <View style={styles.row}>
+        <Text style={styles.label}>Start Time:</Text>
+        <Text style={styles.value}>{startTime.toLocaleTimeString()}</Text>
       </View>
       
-      <View style={styles.timeContainer}>
-        <Text>Start Time: {startTime.toLocaleTimeString()}</Text>
-        <Text>End Time: {endTime.toLocaleTimeString()}</Text>
+      <View style={styles.row}>
+        <Text style={styles.label}>End Time:</Text>
+        <Text style={styles.value}>{endTime.toLocaleTimeString()}</Text>
       </View>
+
       <TextInput
         style={[styles.input, { height: 80 }]}
         placeholder="Description"
@@ -92,8 +96,8 @@ const AddEvent = ({ onClose }) => {
         multiline
       />
 
-      <View style={styles.membersContainer}>
-        <Text>Participants:</Text>
+      <View style={styles.row}>
+        <Text style={styles.label}>Participants:</Text>
         <Image 
           source={require('../../assets/icons/add_person.png')} 
           style={styles.addPersonIcon} 
@@ -108,8 +112,8 @@ const AddEvent = ({ onClose }) => {
         />
       </View>
 
-      <View style={styles.moodContainer}>
-        <Text>Mood:</Text>
+      <View style={styles.row}>
+        <Text style={styles.label}>Mood:</Text>
         {['blue', 'purple', 'pink', 'green', 'yellow'].map(moodName => (
           <TouchableOpacity 
             key={moodName} 
@@ -171,13 +175,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     width: '100%',
   },
-  datePickerContainer: {
-    marginBottom: 20,
-  },
-  timeContainer: {
+  row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
+    alignItems: 'center',
+    marginBottom: 10,
   },
   membersContainer: {
     flexDirection: 'row',
@@ -253,6 +254,14 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16, 
     marginLeft: 8, 
+  },
+  label: {
+    fontSize: 18, // Slightly bigger
+    fontWeight: 'bold', // Bold the label
+  },
+  value: {
+    fontSize: 16, // Regular text size for values
+    marginLeft: 8, // Add some space between label and value
   },
 });
 
