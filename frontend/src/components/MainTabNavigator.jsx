@@ -5,6 +5,7 @@ import GiftsScreen from "../screens/GiftsScreen";
 import CallsScreen from "../screens/CallsScreen";
 import CalendarScreen from "../screens/CalendarScreen";
 import ChatsScreen from "../screens/ChatsScreen";
+import recentCalls from "../screens/recentCalls";
 
 const Tab = createBottomTabNavigator();
 
@@ -87,7 +88,7 @@ function MainTabNavigator({ navigation }) {
     >
       <Tab.Screen name="Gifts" component={GiftsScreen} />
       <Tab.Screen name="Chats" component={ChatsScreen} />
-      <Tab.Screen name="Calls" component={CallsScreen} />
+      <Tab.Screen name="Calls" component={recentCalls} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
     </Tab.Navigator>
   );
