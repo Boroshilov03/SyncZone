@@ -10,6 +10,7 @@ import CalendarScreen from "../screens/CalendarScreen";
 import MainTabNavigator from "../components/MainTabNavigator";
 import useStore from "../store/store";
 import ContactScreen from "../screens/ContactScreen";
+import recentCalls from "../screens/recentCalls";
 
 const Stack = createStackNavigator();
 
@@ -28,6 +29,7 @@ export function AppNavigator() {
           <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
           <Stack.Screen name="Calendar" component={CalendarScreen} />
           <Stack.Screen name="Contact" component={ContactScreen} />
+          <Stack.Screen name="RecentCall" component={recentCalls} />
         </>
       ) : (
         // Non-authenticated user navigation
