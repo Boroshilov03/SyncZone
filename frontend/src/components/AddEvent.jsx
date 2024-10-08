@@ -68,6 +68,10 @@ const AddEvent = ({ onClose }) => {
 
 <View style={styles.row}>
   <Text style={styles.label}>Date: </Text>
+  <Image
+    source={require('../../assets/icons/date_icon.png')} // Adjust the path to your date icon
+    style={styles.dateIcon} // Add styling for the icon
+  />
   <DateTimePicker
     testID="dateTimePicker"
     value={date}
@@ -75,8 +79,8 @@ const AddEvent = ({ onClose }) => {
     display="calendar" // Opens directly in calendar view
     onChange={onDateChange} // Handles date changes
   />
+  
 </View>
-
       
       <View style={styles.row}>
         <Text style={styles.label}>Start Time:</Text>
@@ -262,6 +266,12 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 16, // Regular text size for values
     marginLeft: 8, // Add some space between label and value
+  },
+  dateIcon: {
+    width: 20, // Adjust the size as needed
+    height: 20,
+    marginRight: 5, // Space between icon and date
+    marginLeft: 5, // Space between icon and date
   },
 });
 
