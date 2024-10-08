@@ -48,21 +48,7 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 20,
     textAlign: "center",
-  },
-  // calendar: {
-  //   borderWidth: 1,
-  //   borderColor: "#E0E0E0",
-  //   borderRadius: 10,
-  //   height: 350,
-  //   marginBottom: 5,
-  //   padding: 10,
-  //   backgroundColor: "#fff",
-  //   shadowColor: "#E0E0E0",
-  //   shadowOffset: { width: 0, height: 2 },
-  //   shadowOpacity: 1,
-  //   shadowRadius: 5,
-  //   elevation: 3,
-  // },
+  }
 });
 
 export default MyCalendar;
