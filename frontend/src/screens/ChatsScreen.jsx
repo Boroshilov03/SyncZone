@@ -38,7 +38,7 @@ const ChatsScreen = () => {
         {
           event: "INSERT",
           schema: "public",
-          table: "Message",
+          table: "messages",
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
