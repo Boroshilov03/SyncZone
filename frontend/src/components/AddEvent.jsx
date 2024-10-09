@@ -349,6 +349,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', // Align items in a row
     alignItems: 'center', // Center items vertically
     paddingLeft: 10, // Ensure the first image is not cut off
+
   },
   pfpImage: {
     width: 30, // Adjust size as needed
@@ -358,10 +359,10 @@ const styles = StyleSheet.create({
     zIndex: 1, // Ensure images are on top
   },
   addPersonIcon: {
-    width: 30, // Adjust size as needed
+    width: 30, 
     height: 30,
-    alignSelf: 'flex-start', // Align the icon to the left
-    marginLeft: 8, // Add some margin to the left for spacing
+    alignSelf: 'flex-start',
+    marginLeft: -80, // Add some margin to the left for spacing
   },
 });
 

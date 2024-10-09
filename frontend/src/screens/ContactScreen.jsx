@@ -7,6 +7,7 @@ import {
   View,
   Modal,
   Pressable,
+  SafeAreaView,
   FlatList,
 } from "react-native";
 import useStore from "../store/store";
@@ -159,7 +160,7 @@ const ContactScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.navigate("MainTabs")}
@@ -167,7 +168,6 @@ const ContactScreen = ({ navigation }) => {
         <Text style={styles.backButtonText}>← Back</Text>
       </TouchableOpacity>
       <Text style={styles.title}>Contacts</Text>
-
       {/* Contact List */}
       <FlatList
         data={contacts}
@@ -207,7 +207,7 @@ const ContactScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f9f9f9",
+    margin: 10,
   },
   title: {
     fontSize: 28,

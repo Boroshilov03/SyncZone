@@ -1,4 +1,3 @@
-Giftpage
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native';
 import React from 'react';
 import Dog from "../../assets/icons/Dogo.gif"; // Import the image
