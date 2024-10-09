@@ -24,10 +24,13 @@ const AddEvent = ({ onClose }) => {
   const [inputValue, setInputValue] = useState(""); // Title
   const [date, setDate] = useState(new Date()); // Date
   const [showDatePicker, setShowDatePicker] = useState(false); // Toggle date picker
-  const [startTime, setStartTime] = useState(new Date()); // Start time
-  const [endTime, setEndTime] = useState(new Date()); // End time
+  const [startTime, setStartTime] = useState(new Date()); // Start time state
+  const [endTime, setEndTime] = useState(new Date()); // End time state
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false); // State to show start time picker
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false); // State to show end time picker
   const [description, setDescription] = useState(""); // Description
   const [members, setMembers] = useState([]); // Selected members
+  const [newMember, setNewMember] = useState(''); // Input for new member
   const [mood, setMood] = useState(null); // Selected mood
 
   const handleAddEvent = async () => {
@@ -54,6 +57,13 @@ const AddEvent = ({ onClose }) => {
     setShowDatePicker(false);
     setDate(currentDate);
   };
+
+  const predefinedPFPs = [
+    require('../../assets/icons/pfp1.png'),
+    require('../../assets/icons/pfp2.jpg'),
+    require('../../assets/icons/pfp3.webp'),
+  ];
+  
 
   return (
     <View style={styles.container}>
@@ -82,39 +92,90 @@ const AddEvent = ({ onClose }) => {
   
 </View>
       
-      <View style={styles.row}>
-        <Text style={styles.label}>Start Time:</Text>
-        <Text style={styles.value}>{startTime.toLocaleTimeString()}</Text>
+      {/* Start Time */}
+      <View style={styles.column}>
+        <View style={styles.row}>
+          <Text style={styles.label}>Start Time:</Text>
+          <TouchableOpacity onPress={() => setShowStartTimePicker(!showStartTimePicker)} style={styles.timeContainer}>
+            <Image
+              source={require('../../assets/icons/time_icon.webp')} // Add your time icon path
+              style={styles.timeIcon}
+            />
+            <Text style={styles.value}>{startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+          </TouchableOpacity>
+        </View>
+        {showStartTimePicker && (
+          <DateTimePicker
+            testID="startTimePicker"
+            value={startTime}
+            mode="time"
+            display="spinner"  // Displays only hours and minutes
+            onChange={(event, selectedTime) => {
+              const currentTime = selectedTime || startTime;
+              setShowStartTimePicker(false);
+              setStartTime(currentTime);
+            }}
+          />
+        )}
       </View>
-      
-      <View style={styles.row}>
-        <Text style={styles.label}>End Time:</Text>
-        <Text style={styles.value}>{endTime.toLocaleTimeString()}</Text>
+
+      {/* End Time */}
+      <View style={styles.column}>
+        <View style={styles.row}>
+          <Text style={styles.label}>End Time:  </Text>
+          <TouchableOpacity onPress={() => setShowEndTimePicker(!showEndTimePicker)} style={styles.timeContainer}>
+            <Image
+              source={require('../../assets/icons/time_icon.webp')} // Add your time icon path
+              style={styles.timeIcon}
+            />
+            <Text style={styles.value}>{endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+          </TouchableOpacity>
+        </View>
+        {showEndTimePicker && (
+          <DateTimePicker
+            testID="endTimePicker"
+            value={endTime}
+            mode="time"
+            display="spinner"  // Displays only hours and minutes
+            onChange={(event, selectedTime) => {
+              const currentTime = selectedTime || endTime;
+              setShowEndTimePicker(false);
+              setEndTime(currentTime);
+            }}
+          />
+        )}
       </View>
 
       <TextInput
-        style={[styles.input, { height: 80 }]}
+        style={styles.input}
         placeholder="Description"
         value={description}
         onChangeText={setDescription}
-        multiline
       />
+
 
       <View style={styles.row}>
         <Text style={styles.label}>Participants:</Text>
-        <Image 
-          source={require('../../assets/icons/add_person.png')} 
-          style={styles.addPersonIcon} 
-        />
-        <FlatList
-          data={members}
-          renderItem={({ item }) => (
-            <Image source={{ uri: item }} style={styles.memberImage} />
-          )}
-          keyExtractor={(item, index) => index.toString()}
-          horizontal
-        />
+
+        {/* Container for profile pictures and add icon */}
+        <View style={styles.pfpContainer}>
+          <FlatList
+            data={[...predefinedPFPs, ...members]} // Merge predefined PFPs with dynamic members
+            renderItem={({ item }) => (
+              <Image source={item} style={styles.pfpImage} />
+            )}
+            keyExtractor={(item, index) => index.toString()}
+            horizontal
+          />
+
+          {/* Add Member Icon */}
+          <Image
+            source={require('../../assets/icons/add_person.png')} 
+            style={styles.addPersonIcon}
+          />
+        </View>
       </View>
+
 
       <View style={styles.row}>
         <Text style={styles.label}>Mood:</Text>
@@ -151,7 +212,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '50%',
     left: '50%',
-    transform: [{ translateX: -155 }, { translateY: -130 }],
+    transform: [{ translateX: -155 }, { translateY: -175 }],
     width: '80%',
     maxWidth: 400,
     backgroundColor: 'white',
@@ -168,6 +229,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
+    marginBottom: 20, 
   },
   input: {
     height: 40,
@@ -222,7 +284,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
+    marginTop: 20, 
   },
+  
   cancelButton: {
     backgroundColor: '#FFABAB',
     borderRadius: 25,
@@ -260,18 +324,44 @@ const styles = StyleSheet.create({
     marginLeft: 8, 
   },
   label: {
-    fontSize: 18, // Slightly bigger
-    fontWeight: 'bold', // Bold the label
+    fontSize: 18, 
+    fontWeight: 'bold', 
   },
   value: {
-    fontSize: 16, // Regular text size for values
-    marginLeft: 8, // Add some space between label and value
+    fontSize: 16, 
+    marginLeft: 8,
   },
   dateIcon: {
-    width: 20, // Adjust the size as needed
+    width: 20,
     height: 20,
-    marginRight: 5, // Space between icon and date
-    marginLeft: 5, // Space between icon and date
+    marginLeft: 5, 
+  },
+  timeContainer: {
+    flexDirection: 'row',   
+    alignItems: 'center',     
+    marginLeft: 10,          
+  },
+  timeIcon: {
+    width: 20,       
+    height: 20,       
+  },
+  pfpContainer: {
+    flexDirection: 'row', // Align items in a row
+    alignItems: 'center', // Center items vertically
+    paddingLeft: 10, // Ensure the first image is not cut off
+  },
+  pfpImage: {
+    width: 30, // Adjust size as needed
+    height: 30,
+    borderRadius: 15, // Circular images
+    marginRight: -10, // Create overlap effect
+    zIndex: 1, // Ensure images are on top
+  },
+  addPersonIcon: {
+    width: 30, // Adjust size as needed
+    height: 30,
+    alignSelf: 'flex-start', // Align the icon to the left
+    marginLeft: 8, // Add some margin to the left for spacing
   },
 });
 
