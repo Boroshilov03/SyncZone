@@ -96,7 +96,11 @@ export default function SignupScreen({ navigation }) {
         Alert.alert("Error", error.message);
         return;
       }
-
+      if (error) {
+        console.error("Error signing up:", error);
+        Alert.alert("Error", error.message);
+      }
+      
       const user = data.user;
       let avatarUrl = null;
 

@@ -1,5 +1,5 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import React, { useLayoutEffect } from "react";
+import React from "react";
 import { Image, Text, StyleSheet, View } from "react-native";
 import GiftsScreen from "../screens/GiftsScreen";
 import CallsScreen from "../screens/CallsScreen";
@@ -40,8 +40,8 @@ const labelMap = {
 // Define icon sizes for different tabs
 const iconSizeMap = {
   Gifts: { width: 30, height: 25 },
-  Chats: { width: 25, height: 20 }, // Smaller size for Chats
-  Calls: { width: 25, height: 20 }, // Smaller size for Calls
+  Chats: { width: 25, height: 22 },
+  Calls: { width: 25, height: 24 },
   Calendar: { width: 30, height: 25 },
 };
 
@@ -51,14 +51,19 @@ function MainTabNavigator({ navigation }) {
       screenOptions={({ route }) => ({
         tabBarShowLabel: false,
         tabBarStyle: {
-          height: 60,
+          height: 70, // Height of the navbar
+          paddingBottom: 10,
+          paddingTop: 10,
+          justifyContent: 'center', // Center the icons
+          paddingHorizontal: 20, // Adjust horizontal padding to center icons
         },
+        headerShown: false,
         tabBarIcon: ({ focused }) => {
           const icon = iconMap[route.name];
           const backgroundColor = backgroundColorMap[route.name];
           const color = colorMap[route.name];
           const label = labelMap[route.name];
-          const { width, height } = iconSizeMap[route.name]; // Get the size for the current route
+          const { width, height } = iconSizeMap[route.name];
 
           return (
             <View
@@ -101,15 +106,16 @@ const styles = StyleSheet.create({
   iconContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 4,
+    padding: 2, // Reduced padding to bring icons closer
+    marginHorizontal: 5, // Add margin to space out the icons evenly
   },
   label: {
-    fontSize: 14,
-    marginLeft: 5,
+    fontSize: 13,
+    marginLeft: 3, // Reduced margin to bring label closer to icon
   },
   activeBubble: {
     borderRadius: 20,
-    paddingHorizontal: 15,
+    paddingHorizontal: 10,
     paddingVertical: 5,
   },
 });

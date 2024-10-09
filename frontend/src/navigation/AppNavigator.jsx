@@ -11,17 +11,15 @@ import MainTabNavigator from "../components/MainTabNavigator";
 import useStore from "../store/store";
 import recentCalls from "../screens/recentCalls";
 
+import ContactScreen from "../screens/ContactScreen";
+
 const Stack = createStackNavigator();
 
 export function AppNavigator() {
   const { session } = useStore(); // Get session from store
 
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false, // This will apply to all screens
-      }}
-    >
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       {session ? (
         // Authenticated user navigation
         <>
@@ -32,6 +30,8 @@ export function AppNavigator() {
           <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
           <Stack.Screen name="Calendar" component={CalendarScreen} />
           <Stack.Screen name="RecentCall" component={recentCalls} />
+          <Stack.Screen name="Contact" component={ContactScreen} />
+
         </>
       ) : (
         // Non-authenticated user navigation

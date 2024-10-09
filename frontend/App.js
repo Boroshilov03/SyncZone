@@ -4,7 +4,6 @@ import { NavigationContainer } from "@react-navigation/native";
 import { supabase } from "./src/lib/supabase"; // Import supabase client
 import { AppNavigator } from "./src/navigation/AppNavigator"; // Your main app navigation
 import SplashScreen from "./src/screens/SplashScreen"; // Adjust the import path as needed
-import useStore from "./src/store/store"; // Import useStore
 import useSession from "./src/hooks/useSession"; // Import your custom hook
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; // Import QueryClient and QueryClientProvider
 
