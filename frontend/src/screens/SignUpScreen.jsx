@@ -17,26 +17,27 @@ import * as ImagePicker from "expo-image-picker";
 import { supabase } from "../lib/supabase";
 import uuid from "react-native-uuid";
 import useStore from "../store/store";
-import { decode } from 'base64-arraybuffer'; // Import base64-arraybuffer decode method
+import { decode } from "base64-arraybuffer";
+import { signupSchema } from "../utils/validation"; // Move validation schema to a separate utils file
 
 export default function SignupScreen({ navigation }) {
-  const [username, setUsername] = useState("");
-  const [firstname, setFirstname] = useState("");
-  const [lastname, setLastname] = useState("");
-  const [email, setEmail] = useState("");
-  const [password1, setPassword1] = useState("");
-  const [password2, setPassword2] = useState("");
-  const [location, setLocation] = useState(""); // New state for location
-  const [profilePhoto, setProfilePhoto] = useState(null);
-  const [base64Photo, setBase64Photo] = useState(null); // Add state for base64 string
+  const [formData, setFormData] = useState({
+    username: "",
+    firstname: "",
+    lastname: "",
+    email: "",
+    password1: "",
+    password2: "",
+    location: "",
+  });
 
-  const [usernameError, setUsernameError] = useState("");
-  const [firstnameError, setFirstnameError] = useState("");
-  const [lastnameError, setLastnameError] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [password1Error, setPassword1Error] = useState("");
-  const [password2Error, setPassword2Error] = useState("");
-  const [locationError, setLocationError] = useState(""); // Error state for location
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [base64Photo, setBase64Photo] = useState(null);
+  const [errors, setErrors] = useState({});
+
+  const handleInputChange = (name, value) => {
+    setFormData({ ...formData, [name]: value });
+  };
 
   async function pickImage() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -53,84 +54,40 @@ export default function SignupScreen({ navigation }) {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
-      base64: true, // Enable base64 output
+      base64: true,
     });
 
     if (!result.canceled) {
-      setProfilePhoto(result.assets[0].uri); // Display image
-      setBase64Photo(result.assets[0].base64); // Store base64 string
+      setProfilePhoto(result.assets[0].uri);
+      setBase64Photo(result.assets[0].base64);
     }
   }
 
   async function onSignUp() {
-    // Reset errors
-    setUsernameError("");
-    setFirstnameError("");
-    setLastnameError("");
-    setEmailError("");
-    setPassword1Error("");
-    setPassword2Error("");
-    setLocationError("");
+    setErrors({});
 
-    // Validation logic
-    const failUsername = !username || username.length < 5;
-    if (failUsername) {
-      setUsernameError("Username must be at least 5 characters long");
-    }
+    // Validate the form using the Zod schema
+    const validationResult = signupSchema.safeParse(formData);
 
-    const failFirstName = !firstname;
-    if (failFirstName) {
-      setFirstnameError("First Name not provided");
-    }
-
-    const failLastName = !lastname;
-    if (failLastName) {
-      setLastnameError("Last Name not provided");
-    }
-
-    const failEmail = !email;
-    if (failEmail) {
-      setEmailError("Email not provided");
-    }
-
-    const failPassword1 = !password1 || password1.length < 8;
-    if (failPassword1) {
-      setPassword1Error("Password must be at least 8 characters long");
-    }
-
-    const failPassword2 = password1 !== password2;
-    if (failPassword2) {
-      setPassword2Error("Passwords do not match");
-    }
-
-    const failLocation = !location.trim();
-    if (failLocation) {
-      setLocationError("Location not provided");
-    }
-
-    if (
-      failUsername ||
-      failFirstName ||
-      failLastName ||
-      failEmail ||
-      failPassword1 ||
-      failPassword2 ||
-      failLocation
-    ) {
+    if (!validationResult.success) {
+      const formattedErrors = {};
+      validationResult.error.errors.forEach((error) => {
+        formattedErrors[error.path[0]] = error.message;
+      });
+      setErrors(formattedErrors);
       return;
     }
 
     try {
-      // Use Supabase's signUp method
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password: password1,
+        email: formData.email,
+        password: formData.password1,
         options: {
           data: {
-            username,
-            first_name: firstname,
-            last_name: lastname,
-            location,
+            username: formData.username,
+            first_name: formData.firstname,
+            last_name: formData.lastname,
+            location: formData.location,
           },
         },
       });
@@ -139,21 +96,24 @@ export default function SignupScreen({ navigation }) {
         Alert.alert("Error", error.message);
         return;
       }
-
+      if (error) {
+        console.error("Error signing up:", error);
+        Alert.alert("Error", error.message);
+      }
+      
       const user = data.user;
       let avatarUrl = null;
 
-      // Upload the profile photo if it exists
       if (base64Photo) {
         try {
-          const photoPath = `${user.id}/${uuid.v4()}.png`; // Ensure correct path with file extension
-          
-          // Decode base64 to ArrayBuffer and upload
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from("avatars")
-            .upload(photoPath, decode(base64Photo), {
-              contentType: 'image/png',
-            });
+          const photoPath = `${user.id}/${uuid.v4()}.png`;
+
+          const { data: uploadData, error: uploadError } =
+            await supabase.storage
+              .from("avatars")
+              .upload(photoPath, decode(base64Photo), {
+                contentType: "image/png",
+              });
 
           if (uploadError) {
             Alert.alert(
@@ -166,10 +126,9 @@ export default function SignupScreen({ navigation }) {
           avatarUrl = supabase.storage.from("avatars").getPublicUrl(photoPath)
             .data.publicUrl;
 
-          // Update the user profile with the avatar URL
           const { error: updateError } = await supabase.auth.updateUser({
             data: {
-              avatar_url: avatarUrl, // Add avatar URL to the user profile
+              avatar_url: avatarUrl,
             },
           });
 
@@ -178,12 +137,10 @@ export default function SignupScreen({ navigation }) {
               "Error",
               "Failed to update user profile with avatar URL"
             );
-            console.error("Update error:", updateError.message);
             return;
           }
         } catch (photoUploadError) {
           Alert.alert("Error", "An error occurred while uploading the photo.");
-          console.error("Photo upload error:", photoUploadError);
         }
       }
 
@@ -198,7 +155,6 @@ export default function SignupScreen({ navigation }) {
       navigation.navigate("MainTabs");
     } catch (error) {
       Alert.alert("Error", "An error occurred. Please try again.");
-      console.error("Signup error:", error.message);
     }
   }
 
@@ -222,54 +178,47 @@ export default function SignupScreen({ navigation }) {
             </TouchableWithoutFeedback>
             <Input
               title="Username"
-              value={username}
-              error={usernameError}
-              setValue={setUsername}
-              setError={setUsernameError}
+              value={formData.username}
+              error={errors.username}
+              setValue={(value) => handleInputChange("username", value)}
             />
             <Input
               title="First Name"
-              value={firstname}
-              error={firstnameError}
-              setValue={setFirstname}
-              setError={setFirstnameError}
+              value={formData.firstname}
+              error={errors.firstname}
+              setValue={(value) => handleInputChange("firstname", value)}
             />
             <Input
               title="Last Name"
-              value={lastname}
-              error={lastnameError}
-              setValue={setLastname}
-              setError={setLastnameError}
+              value={formData.lastname}
+              error={errors.lastname}
+              setValue={(value) => handleInputChange("lastname", value)}
             />
             <Input
               title="Email"
-              value={email}
-              error={emailError}
-              setValue={setEmail}
-              setError={setEmailError}
+              value={formData.email}
+              error={errors.email}
+              setValue={(value) => handleInputChange("email", value)}
             />
             <Input
               title="Password"
-              value={password1}
-              error={password1Error}
-              setValue={setPassword1}
-              setError={setPassword1Error}
+              value={formData.password1}
+              error={errors.password1}
+              setValue={(value) => handleInputChange("password1", value)}
               secureTextEntry
             />
             <Input
               title="Confirm Password"
-              value={password2}
-              error={password2Error}
-              setValue={setPassword2}
-              setError={setPassword2Error}
+              value={formData.password2}
+              error={errors.password2}
+              setValue={(value) => handleInputChange("password2", value)}
               secureTextEntry
             />
             <Input
               title="Location"
-              value={location}
-              error={locationError}
-              setValue={setLocation}
-              setError={setLocationError}
+              value={formData.location}
+              error={errors.location}
+              setValue={(value) => handleInputChange("location", value)}
             />
             <Button title="Sign Up" onPress={onSignUp} />
             <Text style={styles.signInText}>

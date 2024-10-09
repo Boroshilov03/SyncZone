@@ -1,14 +1,12 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { StyleSheet, Text, View, Button, SafeAreaView } from "react-native";
+import React from "react";
 
-const CallsScreen = () => {
+const CallsScreen = ({ navigation }) => {
   return (
-    <View>
-      <Text>CallsScreen</Text>
-    </View>
-  )
-}
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>CallsScreen</Text>
+    </SafeAreaView>
+  );
+};
 
-export default CallsScreen
-
-const styles = StyleSheet.create({})
+export default CallsScreen;
