@@ -1,167 +1,160 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-} from "react-native";
-import React from "react";
+Giftpage
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native';
+import React from 'react';
+import Dog from "../../assets/icons/Dogo.gif"; // Import the image
 
 const GiftsScreen = () => {
   return (
-    <SafeAreaView>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Shop</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Shop</Text>
+      
+      <View style={styles.categoryBox}>
+        <Text style={styles.categoryText}>Banners</Text>
+      </View>
 
-        <View style={styles.categoryBox}>
-          <Text style={styles.categoryText}>Banners</Text>
-        </View>
-
-        {/* Horizontal ScrollView for Banner Items */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContainer}
-        >
-          {/* Merged Frame for Banner Item and Item Name */}
-          {Array.from({ length: 3 }).map((_, index) => (
-            <View key={index} style={styles.mergedFrame}>
-              {/* Frame for Banner Items */}
-              <View style={styles.itemFrame}>
-                <Text style={styles.itemFrameText}>
-                  Banner Item {index + 1}
-                </Text>
-              </View>
-
-              {/* Line in the center near the bottom */}
-              <View style={styles.separator} />
-
-              {/* Frame for Item Name and Get Button */}
-              <View style={styles.buttonFrame}>
-                <Text style={styles.itemName}>Item Name {index + 1}</Text>
-                <TouchableOpacity style={styles.getButton}>
-                  <Text style={styles.buttonText}>Get</Text>
-                </TouchableOpacity>
-              </View>
+      {/* Horizontal ScrollView for Banner Items */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
+        {/* Merged Frame for Banner Item and Item Name */}
+        {Array.from({ length: 3 }).map((_, index) => (
+          <View key={index} style={styles.mergedFrame}>
+            {/* Frame for Banner Items */}
+            <View style={styles.itemFrame}>
+              {index === 0 ? (
+                // Replace the frame with the image for the first item
+                <Image source={Dog} style={styles.bannerImage} />
+              ) : (
+                // Show placeholder text for other items
+                <Text style={styles.itemFrameText}>Banner Item {index + 1}</Text>
+              )}
             </View>
-          ))}
-        </ScrollView>
 
-        <View style={styles.categoryBox}>
-          <Text style={styles.categoryText}>Stickers</Text>
-        </View>
+            {/* Line in the center near the bottom */}
+            <View style={styles.separator} />
 
-        {/* Horizontal ScrollView for Sticker Items */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContainer}
-        >
-          {/* Merged Frame for Sticker Item and Item Name */}
-          {Array.from({ length: 3 }).map((_, index) => (
-            <View key={index} style={styles.mergedFrame}>
-              {/* Frame for Sticker Items */}
-              <View style={styles.itemFrame}>
-                <Text style={styles.itemFrameText}>
-                  Sticker Item {index + 1}
-                </Text>
-              </View>
-
-              {/* Line in the center near the bottom */}
-              <View style={styles.separator} />
-
-              {/* Frame for Item Name and Get Button */}
-              <View style={styles.buttonFrame}>
-                <Text style={styles.itemName}>Item Name {index + 1}</Text>
-                <TouchableOpacity style={styles.getButton}>
-                  <Text style={styles.buttonText}>Get</Text>
-                </TouchableOpacity>
-              </View>
+            {/* Frame for Item Name and Get Button */}
+            <View style={styles.buttonFrame}>
+              <Text style={styles.itemName}>{index === 0 ? "Dog Brown & White" : `Banner Name ${index + 1}`}</Text>
+              <TouchableOpacity style={styles.getButton}>
+                <Text style={styles.buttonText}>Get</Text>
+              </TouchableOpacity>
             </View>
-          ))}
-        </ScrollView>
+          </View>
+        ))}
       </ScrollView>
-    </SafeAreaView>
+
+      <View style={styles.categoryBox}>
+        <Text style={styles.categoryText}>Stickers</Text>
+      </View>
+
+      {/* Horizontal ScrollView for Sticker Items */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
+        {/* Merged Frame for Sticker Item and Item Name */}
+        {Array.from({ length: 3 }).map((_, index) => (
+          <View key={index} style={styles.mergedFrame}>
+            {/* Frame for Sticker Items */}
+            <View style={styles.itemFrame}>
+              <Text style={styles.itemFrameText}>Sticker Item {index + 1}</Text>
+            </View>
+
+            {/* Line in the center near the bottom */}
+            <View style={styles.separator} />
+
+            {/* Frame for Item Name and Get Button */}
+            <View style={styles.buttonFrame}>
+              <Text style={styles.itemName}>Sticker Name {index + 1}</Text>
+              <TouchableOpacity style={styles.getButton}>
+                <Text style={styles.buttonText}>Get</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+    </ScrollView>
   );
-};
+}
 
 export default GiftsScreen;
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    paddingTop: 0, // Adjust this value as needed to space from the top
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingTop: 0,
   },
   title: {
     fontSize: 50,
-    fontWeight: "bold",
-    marginBottom: 30, // Space between title and category boxes
+    fontWeight: 'bold',
+    marginBottom: 30,
   },
   categoryBox: {
-    width: 360, // Width of the box
+    width: 360,
     height: 58,
-    borderColor: "black", // Box border color
-    borderWidth: 2, // Box border thickness
-    justifyContent: "center", // Vertically center the text
-    alignItems: "flex-start", // Align text to the left
-    paddingLeft: 15, // Space between the text and the left side of the box
-    marginBottom: 30, // Space between category boxes
-    borderRadius: 13, // Corner radius of the frame
+    borderColor: 'black',
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    paddingLeft: 15,
+    marginBottom: 30,
+    borderRadius: 13,
   },
   categoryText: {
-    fontSize: 30, // Adjust the text size inside the box
-    fontWeight: "bold",
+    fontSize: 30,
+    fontWeight: 'bold',
   },
   scrollContainer: {
-    paddingHorizontal: 10, // Padding around the scroll view
+    paddingHorizontal: 10,
   },
   mergedFrame: {
-    width: 180, // Width of the merged frame
-    borderColor: "black", // Border color for the merged frame
-    borderWidth: 2, // Border thickness for the merged frame
-    borderRadius: 13, // Corner radius for the merged frame
-    alignItems: "center", // Center items within the frame
-    marginRight: 15, // Space between items in horizontal scroll
-    marginBottom: 30, // Space below the merged frame
+    width: 180,
+    borderColor: 'black',
+    borderWidth: 2,
+    borderRadius: 13,
+    alignItems: 'center',
+    marginRight: 15,
+    marginBottom: 30,
   },
   itemFrame: {
-    width: "100%", // Full width of the merged frame
-    height: 185, // Height of the item frame
-    justifyContent: "center", // Center content
-    alignItems: "center", // Center content
+    width: '100%',
+    height: 185,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bannerImage: {
+    width: 150,  // Adjust this width according to your design
+    height: 150, // Adjust this height according to your design
+    resizeMode: 'contain',
   },
   itemFrameText: {
-    fontSize: 20, // Text size for the item frame
-    fontWeight: "bold",
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   separator: {
-    width: "100%", // Full width of the merged frame
-    height: 2, // Height of the line
-    backgroundColor: "black", // Line color
-    marginVertical: 10, // Space above and below the line
+    width: '100%',
+    height: 2,
+    backgroundColor: 'black',
+    marginVertical: 10,
   },
   buttonFrame: {
-    width: "100%", // Full width of the merged frame
-    height: 104, // Height of the bottom frame
-    justifyContent: "center", // Center content
-    alignItems: "center", // Center content
-    padding: 10, // Padding around the content
+    width: '100%',
+    height: 104,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
   },
   itemName: {
-    fontSize: 20, // Text size for the item name
-    fontWeight: "bold",
+    fontSize: 17,
+    fontWeight: 'bold',
   },
   getButton: {
-    backgroundColor: "#007BFF", // Button background color
+    backgroundColor: '#007BFF',
     padding: 7,
-    borderRadius: 5, // Rounded corners for the button
-    marginTop: 20, // Space above the button
+    borderRadius: 5,
+    marginTop: 20,
   },
   buttonText: {
-    color: "white", // Button text color
-    fontWeight: "bold",
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
+
