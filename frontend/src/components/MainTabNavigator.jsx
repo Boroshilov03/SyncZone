@@ -5,7 +5,7 @@ import GiftsScreen from "../screens/GiftsScreen";
 import CallsScreen from "../screens/CallsScreen";
 import CalendarScreen from "../screens/CalendarScreen";
 import ChatsScreen from "../screens/ChatsScreen";
-import recentCalls from "../screens/recentCalls";
+import RecentCalls from "../screens/RecentCalls";
 
 const Tab = createBottomTabNavigator();
 
@@ -54,7 +54,7 @@ function MainTabNavigator({ navigation }) {
           height: 70, // Height of the navbar
           paddingBottom: 10,
           paddingTop: 10,
-          justifyContent: 'center', // Center the icons
+          justifyContent: "center", // Center the icons
           paddingHorizontal: 20, // Adjust horizontal padding to center icons
         },
         headerShown: false,
@@ -93,7 +93,7 @@ function MainTabNavigator({ navigation }) {
     >
       <Tab.Screen name="Gifts" component={GiftsScreen} />
       <Tab.Screen name="Chats" component={ChatsScreen} />
-      <Tab.Screen name="Calls" component={recentCalls} />
+      <Tab.Screen name="Calls" component={RecentCalls} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
     </Tab.Navigator>
   );
