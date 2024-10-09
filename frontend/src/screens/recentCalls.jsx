@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
+  SafeAreaView,
 } from "react-native";
 import React from "react";
 import { useRouter } from "expo-router";
@@ -48,7 +49,7 @@ const RecentCalls = ({ navigation }) => {
   ];
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Top Bar */}
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => console.log("Go to User Profile")}>
@@ -78,7 +79,7 @@ const RecentCalls = ({ navigation }) => {
           </TouchableOpacity>
         )}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
