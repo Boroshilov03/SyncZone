@@ -10,9 +10,7 @@ import CalendarScreen from "../screens/CalendarScreen";
 import MainTabNavigator from "../components/MainTabNavigator";
 import useStore from "../store/store";
 import RecentCalls from "../screens/RecentCalls";
-
 import ContactScreen from "../screens/ContactScreen";
-
 const Stack = createStackNavigator();
 
 export function AppNavigator() {
