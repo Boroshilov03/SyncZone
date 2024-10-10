@@ -53,7 +53,7 @@ const RecentCalls = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       {/* Top Bar */}
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => console.log("Go to User Profile")}>
+        <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
           <Ionicons name="person-circle-outline" size={28} color="black" />
         </TouchableOpacity>
         <Text style={styles.title}>Recent Calls</Text>

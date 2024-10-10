@@ -10,6 +10,7 @@ import {
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase"; // Ensure this path is correct
 import useStore from "../store/store"; // Ensure this path is correct
+
 const ChatsScreen = () => {
   const { setUser, setAccessToken, setRefreshToken, user } = useStore();
   const [messages, setMessages] = useState([]);
