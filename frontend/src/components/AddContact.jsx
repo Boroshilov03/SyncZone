@@ -8,6 +8,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  SafeAreaView,
 } from "react-native";
 import { debounce } from "lodash"; // Install lodash if not already done
 import useStore from "../store/store";
@@ -102,7 +103,7 @@ const AddContact = ({ toggleModal }) => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <TextInput
         style={styles.searchInput}
         placeholder="Search by username..."
@@ -125,7 +126,7 @@ const AddContact = ({ toggleModal }) => {
       ) : (
         <Text style={styles.emptyText}>No profiles found</Text>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
