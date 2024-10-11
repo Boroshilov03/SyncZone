@@ -19,7 +19,7 @@ import uuid from "react-native-uuid";
 import useStore from "../store/store";
 import { decode } from "base64-arraybuffer";
 import { signupSchema } from "../utils/validation"; // Move validation schema to a separate utils file
-import { LinearGradient } from 'expo-linear-gradient';
+//import { LinearGradient } from 'expo-linear-gradient';
 
 export default function SignupScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -101,7 +101,7 @@ export default function SignupScreen({ navigation }) {
         console.error("Error signing up:", error);
         Alert.alert("Error", error.message);
       }
-      
+
       const user = data.user;
       let avatarUrl = null;
 
@@ -169,13 +169,13 @@ export default function SignupScreen({ navigation }) {
                 {profilePhoto ? (
                   <Image source={{ uri: profilePhoto }} style={styles.image} />
                 ) : (
-                  <LinearGradient>
+
                   <View style={styles.imagePlaceholder}>
                     <Text style={styles.imagePlaceholderText}>
                       Upload Photo
                     </Text>
                   </View>
-                  </LinearGradient>
+
                 )}
               </View>
             </TouchableWithoutFeedback>
