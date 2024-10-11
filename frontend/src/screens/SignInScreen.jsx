@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Alert, StyleSheet, View, Text, Pressable } from "react-native";
+import { StyleSheet, View, Text, Pressable, Image } from "react-native";
 import { supabase } from "../lib/supabase";
-import { Button, Input } from "@rneui/themed";
+import { Input } from "@rneui/themed";
 import GradientText from "react-native-gradient-texts";
 import { LinearGradient } from 'expo-linear-gradient';
 import useStore from "../store/store"; // Assuming this handles user and tokens
@@ -45,12 +45,19 @@ export default function SignInScreen({ navigation }) {
   });
 
   return (
+
     <LinearGradient
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.parent}
-      colors={['#ab47bf', '#96ddea']}>
-      <View style={styles.space}></View>
+      colors={['#f2c4e0', '#96ddea']}>
+      <View style={styles.space}>
+        <Image
+          source={require('../images/logo.png')}
+          style={styles.logo}
+
+        />
+      </View>
       <View style={styles.container}>
         <Text style={styles.title}>Login</Text>
         <View style={styles.fields}>
@@ -81,19 +88,17 @@ export default function SignInScreen({ navigation }) {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             // style={styles.parent}
-            colors={['#ab47bf', '#96ddea']}
-            borderRadius={30}
-            paddingLeft={30}
-            paddingRight={30}
+            colors={['#f2c4e0', '#96ddea']}
+            style={styles.gradient}
+
           >
             <Pressable
               style={styles.button}
               onPress={() => signInWithEmail()}
               disabled={isLoading} // Disable the button when loading
+              borderRadius={20}
             >
-
               <Text style={styles.buttontext}>Sign In</Text>
-
             </Pressable>
           </LinearGradient>
         </View>
@@ -121,13 +126,14 @@ export default function SignInScreen({ navigation }) {
           />
         </View>
       </View>
-    </LinearGradient >
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   parent: {
     flex: 1,
+    height: 1000,
     marginTop: 40,
     // padding: 12,
     backgroundColor: '#966dab',
@@ -135,14 +141,14 @@ const styles = StyleSheet.create({
   space: {
     flex: 1,
     padding: 42,
-    // backgroundColor: 'blue',
+    justifyContent: 'center',
+    alignItems: 'center',
+    //backgroundColor: 'blue',
   },
   container: {
     flex: 4,
     flexDirection: 'column',
-    // alignItems: 'center',
-    // justifyContent: 'space-evenly',
-    // marginTop: 40,
+
     padding: 42,
     backgroundColor: '#fffbf5',
     borderTopLeftRadius: 40,
@@ -162,6 +168,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: '#fffbf5',
   },
+  logo: {
+    // flex: 1,
+    width: 250,
+    height: 250,
+    resizeMode: 'contain',
+  },
   title: {
     fontSize: 35,
     color: '#363131',//
@@ -173,6 +185,13 @@ const styles = StyleSheet.create({
     marginTop: 40,
     padding: 12,
     alignItems: "center",
+  },
+  gradient: {
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
+    borderRadius: 30,
+    paddingLeft: 30,
+    paddingRight: 30,
   },
   buttonbox: {
     flex: 0,
