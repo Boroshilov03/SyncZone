@@ -49,7 +49,7 @@ export default function SignInScreen({ navigation }) {
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.parent}
-      colors={['#ab47bf', '#804bb8']}>
+      colors={['#f5bcde', '#accdf2']}>
       <View style={styles.space}></View>
       <View style={styles.container}>
         <Text style={styles.title}>Login</Text>
@@ -102,8 +102,8 @@ export default function SignInScreen({ navigation }) {
             fontSize={40}
             isGradientFill
             isGradientStroke
-            gradientColors={["#D49AC0", "#6FD2E2"]}
-            fontFamily={"Gill Sans"}
+            gradientColors={["#f2c4e0", "#accdf2"]}
+          // fontFamily={"Gill Sans"}
           />
         </View>
       </View>
