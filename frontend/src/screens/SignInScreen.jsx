@@ -49,7 +49,7 @@ export default function SignInScreen({ navigation }) {
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.parent}
-      colors={['#ab47bf', '#804bb8']}>
+      colors={['#ab47bf', '#96ddea']}>
       <View style={styles.space}></View>
       <View style={styles.container}>
         <Text style={styles.title}>Login</Text>
@@ -77,13 +77,25 @@ export default function SignInScreen({ navigation }) {
           </View>
         </View>
         <View style={styles.buttonbox}>
+        <LinearGradient
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+             // style={styles.parent}
+            colors={['#ab47bf', '#96ddea']}
+            borderRadius={30}
+            paddingLeft={30}
+            paddingRight={30}
+            >
           <Pressable
             style={styles.button}
             onPress={() => signInWithEmail()}
             disabled={isLoading} // Disable the button when loading
-          >
+          > 
+            
             <Text style={styles.buttontext}>Sign In</Text>
+           
           </Pressable>
+          </LinearGradient>
         </View>
         <Text style={styles.signInText}>
           Don't have an account?{" "}
@@ -103,7 +115,7 @@ export default function SignInScreen({ navigation }) {
             isGradientFill
             isGradientStroke
             gradientColors={["#D49AC0", "#6FD2E2"]}
-            fontFamily={"Gill Sans"}
+            // fontFamily={"Gill Sans"}
           />
         </View>
       </View>
@@ -166,10 +178,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
-    // backgroundColor: 'pink',
+    //backgroundColor: 'pink',
   },
   button: {
-    backgroundColor: '#9764d1',
+    //backgroundColor: '#9764d1',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 15,
