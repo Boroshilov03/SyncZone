@@ -19,6 +19,7 @@ import uuid from "react-native-uuid";
 import useStore from "../store/store";
 import { decode } from "base64-arraybuffer";
 import { signupSchema } from "../utils/validation"; // Move validation schema to a separate utils file
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function SignupScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -168,11 +169,13 @@ export default function SignupScreen({ navigation }) {
                 {profilePhoto ? (
                   <Image source={{ uri: profilePhoto }} style={styles.image} />
                 ) : (
+                  <LinearGradient>
                   <View style={styles.imagePlaceholder}>
                     <Text style={styles.imagePlaceholderText}>
                       Upload Photo
                     </Text>
                   </View>
+                  </LinearGradient>
                 )}
               </View>
             </TouchableWithoutFeedback>
@@ -250,11 +253,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
+    //borderColor: 'grey',
+    //borderWidth: 5,
   },
   image: {
     width: 100,
     height: 100,
     borderRadius: 50,
+    backgroundColor: 'green',
+    //borderColor: 'black',
+    //borderWidth: 30,
+  },
+  borderColor: {
+
   },
   imagePlaceholder: {
     width: 100,
@@ -263,6 +274,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#ddd",
     alignItems: "center",
     justifyContent: "center",
+    //borderColor: 'black',
+    //borderWidth: 3,
   },
   imagePlaceholderText: {
     color: "#999",
