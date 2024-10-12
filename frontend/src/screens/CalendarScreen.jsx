@@ -5,7 +5,7 @@ import AddEvent from "../components/AddEvent";
 import ListEvent from "../components/ListEvent";
 import Header from "../components/Header";
 
-const CalendarScreen = () => {
+const CalendarScreen = ({ navigation }) => {
   const [isAddEventVisible, setAddEventVisible] = useState(false);
 
   const toggleAddEventModal = () => {
@@ -14,10 +14,15 @@ const CalendarScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Header toggleAddEventModal={toggleAddEventModal} />
+      <Header
+        toggleAddEventModal={toggleAddEventModal}
+        event="calendar"
+        navigation={navigation}
+        title="Calendar"
+      />
       <MyCalendar />
       <ListEvent />
-      {isAddEventVisible && <AddEvent onClose={toggleAddEventModal} />} 
+      {isAddEventVisible && <AddEvent onClose={toggleAddEventModal} />}
     </SafeAreaView>
   );
 };

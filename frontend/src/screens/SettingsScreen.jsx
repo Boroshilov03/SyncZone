@@ -10,13 +10,29 @@ import {
   Image,
 } from "react-native";
 import FeatherIcon from "react-native-vector-icons/Feather";
+import { supabase } from "../lib/supabase";
+import useStore from "../store/store";
+const profilePic = require("../../assets/icons/pfp_icon.png");
 
 export default function Example({ navigation }) {
+  const { setUser, setAccessToken, setRefreshToken, user } = useStore();
+
   const [form, setForm] = useState({
     emailNotifications: true,
     pushNotifications: false,
   });
 
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut(); // Sign out from Supabase
+    if (!error) {
+      setUser(null); // Clear user data
+      setAccessToken(null); // Clear access token
+      setRefreshToken(null); // Clear refresh token
+      navigation.navigate("SignIn");
+    } else {
+      console.error("Error logging out:", error.message);
+    }
+  };
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f8f8" }}>
       <View style={styles.header}>
@@ -42,35 +58,49 @@ export default function Example({ navigation }) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={[styles.section, { paddingTop: 4 }]}>
-          <Text style={styles.sectionTitle}>Account</Text>
+        {user ? (
+          <View style={[styles.section, { paddingTop: 4 }]}>
+            <Text style={styles.sectionTitle}>Account</Text>
 
-          <View style={styles.sectionBody}>
-            <TouchableOpacity
-              onPress={() => {
-                // handle onPress
-              }}
-              style={styles.profile}
-            >
-              <Image
-                alt=""
-                source={{
-                  uri: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80",
+            <View style={styles.sectionBody}>
+              <TouchableOpacity
+                onPress={() => {
+                  // handle onPress
                 }}
-                style={styles.profileAvatar}
-              />
+                style={styles.profile}
+              >
+                <Image
+                  accessibilityLabel=""
+                  source={{
+                    uri: user.user_metadata?.avatar_url || profilePic,
+                  }}
+                  style={styles.profileAvatar}
+                />
 
-              <View style={styles.profileBody}>
-                <Text style={styles.profileName}>John Doe</Text>
+                <View style={styles.profileBody}>
+                  <Text style={styles.profileName}>
+                    {user.user_metadata?.first_name || ""}{" "}
+                    {user.user_metadata?.last_name || ""}
+                  </Text>
 
-                <Text style={styles.profileHandle}>john@example.com</Text>
-              </View>
+                  <Text style={styles.profileHandle}>
+                    {user.user_metadata?.username || "Unknown User"}
+                  </Text>
+                  <Text style={styles.profileHandle}>
+                    email: {user.email || "Unknown User"}
+                  </Text>
+                </View>
 
-              <FeatherIcon color="#bcbcbc" name="chevron-right" size={22} />
-            </TouchableOpacity>
+                <FeatherIcon color="#bcbcbc" name="chevron-right" size={22} />
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-
+        ) : (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Account</Text>
+            <Text>No user logged in</Text>
+          </View>
+        )}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>
 
@@ -219,12 +249,7 @@ export default function Example({ navigation }) {
                 { alignItems: "center" },
               ]}
             >
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}
-              >
+              <TouchableOpacity onPress={handleLogout} style={styles.row}>
                 <Text style={[styles.rowLabel, styles.rowLabelLogout]}>
                   Log Out
                 </Text>
