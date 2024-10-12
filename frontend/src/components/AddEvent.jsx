@@ -62,6 +62,7 @@ const AddEvent = ({ onClose }) => {
     require('../../assets/icons/pfp1.png'),
     require('../../assets/icons/pfp2.jpg'),
     require('../../assets/icons/pfp3.webp'),
+    require('../../assets/icons/add_person.png'),
   ];
   
 
@@ -157,25 +158,28 @@ const AddEvent = ({ onClose }) => {
       <View style={styles.row}>
         <Text style={styles.label}>Participants:</Text>
 
-        {/* Container for profile pictures and add icon */}
         <View style={styles.pfpContainer}>
           <FlatList
-            data={[...predefinedPFPs, ...members]} // Merge predefined PFPs with dynamic members
-            renderItem={({ item }) => (
-              <Image source={item} style={styles.pfpImage} />
-            )}
+            data={predefinedPFPs} 
+            renderItem={({ item }) => {
+              const isAddPersonIcon = item === require('../../assets/icons/add_person.png');
+              
+              return (
+                <Image 
+                  source={item} 
+                  style={[
+                    styles.pfpImage, 
+                    isAddPersonIcon && styles.addPersonIcon  // Apply specific styling for 'add_person.png'
+                  ]} 
+                />
+              );
+            }}
             keyExtractor={(item, index) => index.toString()}
             horizontal
           />
 
-          {/* Add Member Icon */}
-          <Image
-            source={require('../../assets/icons/add_person.png')} 
-            style={styles.addPersonIcon}
-          />
         </View>
       </View>
-
 
       <View style={styles.row}>
         <Text style={styles.label}>Mood:</Text>
@@ -318,11 +322,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
-  addPersonIcon: {
-    width: 16,
-    height: 16, 
-    marginLeft: 8, 
-  },
   label: {
     fontSize: 18, 
     fontWeight: 'bold', 
@@ -346,23 +345,24 @@ const styles = StyleSheet.create({
     height: 20,       
   },
   pfpContainer: {
-    flexDirection: 'row', // Align items in a row
-    alignItems: 'center', // Center items vertically
-    paddingLeft: 10, // Ensure the first image is not cut off
-
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingLeft: 10, 
   },
   pfpImage: {
-    width: 30, // Adjust size as needed
+    width: 30,
     height: 30,
-    borderRadius: 15, // Circular images
-    marginRight: -10, // Create overlap effect
-    zIndex: 1, // Ensure images are on top
+    borderRadius: 15, 
+    marginRight: -10, 
+    zIndex: 1,
   },
   addPersonIcon: {
-    width: 30, 
-    height: 30,
-    alignSelf: 'flex-start',
-    marginLeft: -80, // Add some margin to the left for spacing
+    width: 20,
+    height: 20,
+    marginRight: -5, 
+    marginLeft: 15,  
+    zIndex: 0, 
+    alignSelf: 'center', 
   },
 });
 
