@@ -18,7 +18,7 @@ const CalendarScreen = ({ navigation }) => {
         toggleAddEventModal={toggleAddEventModal}
         event="calendar"
         navigation={navigation}
-        title="Calendar"
+        title="My Events"
       />
       <MyCalendar />
       <ListEvent />

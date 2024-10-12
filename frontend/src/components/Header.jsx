@@ -30,11 +30,11 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
       <Text style={styles.title}>{title}</Text>
       <TouchableOpacity onPress={handleHeaderPress}>
         {event === "calendar" ? (
-          <Image source={calendarImage} style={styles.rightImage} />
+          <Image source={calendarImage} style={styles.calendarIcon} />
         ) : event === "message" ? (
-          <Image source={messageImage} style={styles.rightImage} />
+          <Image source={messageImage} style={styles.messageIcon} />
         ) : event === "call" ? (
-          <Image source={callImage} style={styles.rightImage} />
+          <Image source={callImage} style={styles.callIcon} />
         ) : null}
       </TouchableOpacity>
     </View>
@@ -59,9 +59,17 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
   },
-  rightImage: {
-    width: 40,
-    height: 40,
+  calendarIcon: {
+    width: 35,    
+    height: 35,  
+  },
+  messageIcon: {
+    width: 30, 
+    height: 30, 
+  },
+  callIcon: {
+    width: 23,   
+    height: 23,   
   },
 });
 
