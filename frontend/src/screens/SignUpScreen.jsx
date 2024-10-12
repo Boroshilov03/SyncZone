@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   ScrollView,
+  Pressable,
   StyleSheet,
 } from "react-native";
 import React, { useState } from "react";
@@ -19,7 +20,7 @@ import uuid from "react-native-uuid";
 import useStore from "../store/store";
 import { decode } from "base64-arraybuffer";
 import { signupSchema } from "../utils/validation"; // Move validation schema to a separate utils file
-//import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function SignupScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -184,6 +185,8 @@ export default function SignupScreen({ navigation }) {
               value={formData.username}
               error={errors.username}
               setValue={(value) => handleInputChange("username", value)}
+              borderRadius={20}
+              backgroundColor='blue'
             />
             <Input
               title="First Name"
@@ -223,7 +226,24 @@ export default function SignupScreen({ navigation }) {
               error={errors.location}
               setValue={(value) => handleInputChange("location", value)}
             />
-            <Button title="Sign Up" onPress={onSignUp} />
+            {/* <Button title="Sign Up" onPress={onSignUp} /> */}
+            <View style={styles.buttonbox}>
+              <LinearGradient
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                // style={styles.parent}
+                colors={['#f2c4e0', '#96ddea']}
+                style={styles.gradient}
+              //borderRadius={20}
+              >
+                <Pressable
+                  style={styles.button}
+                  onPress={onSignUp}
+                >
+                  <Text style={styles.buttontext}>Sign In</Text>
+                </Pressable>
+              </LinearGradient>
+            </View>
             <Text style={styles.signInText}>
               Already have an account?{" "}
               <Text
@@ -261,11 +281,37 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     backgroundColor: 'green',
-    //borderColor: 'black',
+    borderColor: 'black',
     //borderWidth: 30,
   },
   borderColor: {
 
+  },
+  buttonbox: {
+    flex: 1,
+    padding: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
+    //borderRadius: 40,
+
+    //backgroundColor: 'pink',
+  },
+  button: {
+    //backgroundColor: '#9764d1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 50,
+    //width: '60%',
+  },
+  gradient: {
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
+    borderRadius: 30,
+    paddingLeft: 30,
+    paddingRight: 30,
   },
   imagePlaceholder: {
     width: 100,
