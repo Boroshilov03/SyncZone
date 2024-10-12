@@ -20,7 +20,7 @@ function Input({ title, value, error, setValue, setError, secureTextEntry }) {
           backgroundColor: "#f3f4f6",
           borderWidth: 1,
           borderColor: error ? "#ff5555" : "#d1d5db",
-          borderRadius: 5,
+          borderRadius: 40,
           padding: 10,
           color: "black",
         }}
