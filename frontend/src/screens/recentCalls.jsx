@@ -53,7 +53,7 @@ const RecentCalls = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Top Bar */}
-      <Header event="call" navigation={navigation} title="Calls" />
+      <Header event="call" navigation={navigation} title="Recent Calls" />
 
       {/* Recent Calls list */}
       <FlatList

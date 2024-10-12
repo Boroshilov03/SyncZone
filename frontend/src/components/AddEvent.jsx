@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, Image, Button } from 'react-native';
 import { supabase } from '../lib/supabase';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import useStore from '../store/store';
 
 const getMoodColor = (mood) => {
   switch (mood) {
@@ -21,7 +22,8 @@ const getMoodColor = (mood) => {
 };
 
 const AddEvent = ({ onClose }) => {
-  const [inputValue, setInputValue] = useState(""); // Title
+  const{ user } = useStore();
+  const [titleValue, settitleValue] = useState(""); // Title
   const [date, setDate] = useState(new Date()); // Date
   const [showDatePicker, setShowDatePicker] = useState(false); // Toggle date picker
   const [startTime, setStartTime] = useState(new Date()); // Start time state
@@ -29,29 +31,70 @@ const AddEvent = ({ onClose }) => {
   const [showStartTimePicker, setShowStartTimePicker] = useState(false); // State to show start time picker
   const [showEndTimePicker, setShowEndTimePicker] = useState(false); // State to show end time picker
   const [description, setDescription] = useState(""); // Description
-  const [members, setMembers] = useState([]); // Selected members
+  const [participants, setparticipants] = useState('0c9d97dd-b1b8-43b7-bc30-f089d60c9c47'); // Selected participants
   const [newMember, setNewMember] = useState(''); // Input for new member
   const [mood, setMood] = useState(null); // Selected mood
-
+  
   const handleAddEvent = async () => {
+    const formatTime = (date) => {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    };
+  
+    const formattedStartTime = formatTime(startTime);  
+    const formattedEndTime = formatTime(endTime);  
+  
+    console.log({ titleValue, date, startTime: formattedStartTime, endTime: formattedEndTime, description, participants, mood });
+  
     try {
       const { data, error } = await supabase
-        .from('calendar')
-        .insert([{ title: inputValue, date, start_time: startTime, end_time: endTime, description, members, mood }]);
-
+        .from('event')
+        .insert([{
+          title: titleValue,
+          date,
+          start_time: formattedStartTime,  
+          end_time: formattedEndTime,     
+          description,
+          participants,
+          mood
+        }])
+        .select();
+  
       if (error) {
         console.error(error.message);
       } else {
-        setInputValue('');
+        settitleValue('');
         setDescription('');
         setMood(null);
-        onClose(); 
+        onClose();
+        console.log(data);
+  
+        // Get the event ID from the inserted data and add participants
+        const eventID = data[0].id;
+        await addEventParticipants(eventID);
       }
     } catch (error) {
       console.error("Error adding event:", error);
     }
   };
-
+  
+  const addEventParticipants = async (eventID) => {
+    try {
+      const { data, error } = await supabase
+        .from('event_participants')
+        .insert({ user_id: user.id, event_id: eventID })
+        .select();
+  
+      if (error) {
+        console.error(error.message);
+      } else {
+        console.log("Participants added successfully:", data);
+      }
+    } catch (error) {
+      console.error("Error adding participants:", error);
+    }
+  };
+  
+  
   const onDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || date;
     setShowDatePicker(false);
@@ -73,8 +116,8 @@ const AddEvent = ({ onClose }) => {
       <TextInput
         style={styles.input}
         placeholder="Event Title"
-        value={inputValue}
-        onChangeText={setInputValue}
+        value={titleValue}
+        onChangeText={settitleValue}
       />
 
 <View style={styles.row}>
@@ -108,9 +151,10 @@ const AddEvent = ({ onClose }) => {
         {showStartTimePicker && (
           <DateTimePicker
             testID="startTimePicker"
-            value={startTime}
-            mode="time"
-            display="spinner"  // Displays only hours and minutes
+            value={startTime} // Pass the time state
+            mode="time" // Make sure the mode is set to "time"
+            is24Hour={false} // Set to false for 12-hour format or true for 24-hour format
+            display="spinner" // Optional display style
             onChange={(event, selectedTime) => {
               const currentTime = selectedTime || startTime;
               setShowStartTimePicker(false);
@@ -135,9 +179,10 @@ const AddEvent = ({ onClose }) => {
         {showEndTimePicker && (
           <DateTimePicker
             testID="endTimePicker"
-            value={endTime}
-            mode="time"
-            display="spinner"  // Displays only hours and minutes
+            value={endTime} // Pass the time state
+            mode="time" // Make sure the mode is set to "time"
+            is24Hour={false} // Set to false for 12-hour format or true for 24-hour format
+            display="spinner" // Optional display style
             onChange={(event, selectedTime) => {
               const currentTime = selectedTime || endTime;
               setShowEndTimePicker(false);
@@ -250,7 +295,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  membersContainer: {
+  participantsContainer: {
     flexDirection: 'row',
     marginBottom: 20,
   },
