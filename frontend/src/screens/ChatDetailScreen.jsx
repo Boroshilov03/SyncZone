@@ -16,7 +16,6 @@ import useStore from "../store/store";
 
 const ChatDetailScreen = () => {
   const { user } = useStore();
-  console.log("from chatdetail", user.id);
   const route = useRoute();
   const navigation = useNavigation();
   const { chatId } = route.params;
@@ -24,16 +23,31 @@ const ChatDetailScreen = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [newMessage, setNewMessage] = useState(""); // State to hold the new message input
+  const [newMessage, setNewMessage] = useState("");
+
+  useEffect(() => {
+    const channel = supabase.channel(`chat-room-${chatId}`);
+
+    channel
+      .on("broadcast", { event: "new-message" }, (payload) => {
+        const receivedMessage = payload.payload;
+        setMessages((prevMessages) => [receivedMessage, ...prevMessages]);
+      })
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+      supabase.removeChannel(channel);
+    };
+  }, [chatId]);
 
   useEffect(() => {
     const fetchMessages = async () => {
-      // Fetch messages using chatId
       const { data: messages, error } = await supabase
         .from("messages")
         .select("*")
         .eq("chat_id", chatId)
-        .order("created_at", { ascending: true }); // Optional: order by time
+        .order("created_at", { ascending: false });
 
       if (error) {
         console.error("Error fetching messages:", error);
@@ -48,53 +62,66 @@ const ChatDetailScreen = () => {
     fetchMessages();
   }, [chatId]);
 
-  // Handle new message submission
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) {
-      return; // Don't send empty messages
-    }
+    if (!newMessage.trim()) return;
 
     const { data, error } = await supabase
       .from("messages")
       .insert([
         {
-          content: newMessage,
+          content: newMessage.trim(),
           chat_id: chatId,
           sender_id: user.id,
-          created_at: new Date(), // Set the current timestamp
+          created_at: new Date(),
         },
       ])
-      .select("*"); // Explicitly request the inserted data
+      .select("*");
 
     if (error) {
       console.error("Error inserting message:", error);
       return;
     }
 
-    // Add the new message to the message list if data exists
     if (data && data.length > 0) {
-      setMessages((prevMessages) => [data[0], ...prevMessages]);
-    } else {
-      console.error("No data returned from insert query.");
+      supabase.channel(`chat-room-${chatId}`).send({
+        type: "broadcast",
+        event: "new-message",
+        payload: data[0],
+      });
     }
 
-    // Clear the input field after sending
     setNewMessage("");
   };
 
-  // Render each message
-  const renderMessage = ({ item }) => (
-    <View style={styles.messageContainer}>
-      <Text style={styles.messageText}>{item.content}</Text>
-      <Text style={styles.messageTimestamp}>
-        {new Date(item.created_at).toLocaleTimeString()}
-      </Text>
-    </View>
-  );
+  const renderMessage = ({ item }) => {
+    const isMyMessage = item.sender_id === user.id;
+
+    return (
+      <View
+        style={[
+          styles.messageContainer,
+          isMyMessage
+            ? styles.myMessageContainer
+            : styles.otherMessageContainer,
+        ]}
+      >
+        <Text
+          style={[
+            styles.messageText,
+            isMyMessage ? styles.myMessageText : styles.otherMessageText,
+          ]}
+        >
+          {item.content}
+        </Text>
+        <Text style={styles.messageTimestamp}>
+          {new Date(item.created_at).toLocaleTimeString()}
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Back Button */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.navigate("MainTabs")}
@@ -108,23 +135,20 @@ const ChatDetailScreen = () => {
         <Text style={styles.chatIdValue}>{chatId}</Text>
       </View>
 
-      {/* Display loading indicator */}
       {loading && <ActivityIndicator size="large" color="#007BFF" />}
 
-      {/* Display error message if any */}
       {error && <Text style={styles.errorText}>{error}</Text>}
 
-      {/* Render messages */}
       {!loading && !error && (
         <FlatList
           data={messages}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderMessage}
           contentContainerStyle={styles.messageList}
+          inverted
         />
       )}
 
-      {/* New message input */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -188,7 +212,6 @@ const styles = StyleSheet.create({
   },
   messageContainer: {
     padding: 10,
-    backgroundColor: "#fff",
     borderRadius: 8,
     marginBottom: 10,
     shadowColor: "#000",
@@ -197,8 +220,23 @@ const styles = StyleSheet.create({
     shadowRadius: 1.5,
     elevation: 2,
   },
+  myMessageContainer: {
+    backgroundColor: "#007BFF",
+    alignSelf: "flex-end",
+    borderTopRightRadius: 0,
+  },
+  otherMessageContainer: {
+    backgroundColor: "#f1f1f1",
+    alignSelf: "flex-start",
+    borderTopLeftRadius: 0,
+  },
   messageText: {
     fontSize: 16,
+  },
+  myMessageText: {
+    color: "#fff",
+  },
+  otherMessageText: {
     color: "#333",
   },
   messageTimestamp: {
