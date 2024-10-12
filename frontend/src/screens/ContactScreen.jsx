@@ -96,6 +96,7 @@ const ContactScreen = ({ navigation }) => {
       const chatId = existingChats[0].id;
       console.log("Chat already exists with ID:", chatId);
       navigation.navigate("ChatDetail", { chatId }); // Navigate to the chat screen
+      return;
     }
 
     // If no chat exists, create a new one
@@ -121,9 +122,9 @@ const ContactScreen = ({ navigation }) => {
       console.error("Error adding participants:", participantsError);
       return;
     }
-
+    const chatId = newChat[0].id;
+    navigation.navigate("ChatDetail", { chatId }); // Navigate to the chat screen
     console.log("Chat created with ID:", newChat[0].id);
-    return newChat.id;
   };
 
   const createCall = (contactID) => {
