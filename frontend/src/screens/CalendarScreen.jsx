@@ -1,11 +1,11 @@
-import { SafeAreaView, StyleSheet } from "react-native";
+import { SafeAreaView, StyleSheet, Pressable, Text } from "react-native";
 import React, { useState } from "react";
 import MyCalendar from "../components/MyCalendar";
 import AddEvent from "../components/AddEvent";
 import ListEvent from "../components/ListEvent";
 import Header from "../components/Header";
 
-const CalendarScreen = () => {
+const CalendarScreen = ({ }) => {
   const [isAddEventVisible, setAddEventVisible] = useState(false);
 
   const toggleAddEventModal = () => {
@@ -14,10 +14,13 @@ const CalendarScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+
       <Header toggleAddEventModal={toggleAddEventModal} />
       <MyCalendar />
       <ListEvent />
-      {isAddEventVisible && <AddEvent onClose={toggleAddEventModal} />} 
+
+      {isAddEventVisible && <AddEvent onClose={toggleAddEventModal} />}
+
     </SafeAreaView>
   );
 };
