@@ -1,27 +1,85 @@
 import { View, Text, ScrollView, StyleSheet, Image } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import useStore from '../store/store';
 
 const ListEvent = () => {
   const [allEvents, setAllEvents] = useState([]);
+  const { user } = useStore();
 
-  useEffect(() => {
-    const fetchingData = async () => {
+  // Fetch events from the database
+  const fetchingData = async () => {
+    try {
+      const { data: eventData, error: eventError } = await supabase
+        .from('event_participants')
+        .select('event_id')
+        .eq('user_id', user.id);
+
+      if (eventError) {
+        console.error('Error fetching event IDs:', eventError);
+        return;
+      }
+
+      const eventIds = eventData.map(event => event.event_id);
+
+      // Fetch the event details using the event IDs
       const { data, error } = await supabase
         .from('event')
-        .select('*');
-      
+        .select('*')
+        .in('id', eventIds);
+
       if (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching event data:', error);
       } else {
-        console.log('Fetched data:', data);
+        console.log('Fetched event data:', data);
         setAllEvents(data);
       }
-    };
+    } catch (error) {
+      console.error('Error during data fetching:', error);
+    }
+  };
 
-    // Call the async function to fetch data
-    fetchingData();
-  }, []);
+  // Set up real-time subscription
+  useEffect(() => {
+    fetchingData(); // Initial fetch
+
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'event_participants',
+        },
+        (payload) => {
+          console.log('Real-time event change detected in participants:', payload);
+          fetchingData(); // Re-fetch data on change
+        }
+      )
+      .subscribe();
+
+    const eventChannel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'event',
+        },
+        (payload) => {
+          console.log('Real-time event change detected in events:', payload);
+          fetchingData(); // Re-fetch data on change
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(eventChannel);
+    };
+  }, [user.id]); // Listen for changes in user.id
 
   const formatDateTime = (date, time) => {
     return new Date(`${date}T${time}`);
@@ -37,11 +95,9 @@ const ListEvent = () => {
           <View key={event.id} style={[styles.container, { backgroundColor: getMoodColor(event.mood) }]}>
             <View style={styles.row}>
               <View style={styles.imageContainer}>
-                {/* Month abbreviation */}
                 <Text style={styles.monthText}>
                   {startDateTime.toLocaleString(undefined, { month: 'short' })}
                 </Text>
-                {/* Date number */}
                 <Text style={styles.overlayText}>
                   {startDateTime.toLocaleString(undefined, { day: 'numeric' })}
                 </Text>
@@ -142,7 +198,6 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 14,
     color: 'grey',
-    paddingLeft: 0,
     marginLeft: 10,
   },
   textContainer: {
