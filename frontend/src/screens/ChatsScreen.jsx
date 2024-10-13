@@ -20,27 +20,45 @@ const ChatsScreen = ({ navigation }) => {
   const { user } = useStore();
 
   const getRecentChats = async () => {
-    const { data, error } = await supabase
-      .from("chats")
-      .select(
-        `id, created_at, chat_participants!inner (
-          user_id,
-          profiles (
-            id,
-            username,
-            avatar_url
-          )
-        )`
-      )
-      .eq("chat_participants.user_id", user.id) // Correct filtering
-      .order("created_at", { ascending: false })
-      .limit(10);
+    try {
+      // First, get the chat IDs for the current user
+      const { data: chatParticipants, error: chatError } = await supabase
+        .from("chat_participants")
+        .select("chat_id")
+        .eq("user_id", user.id);
 
-    console.log(data); // Log the data to check its structure
-    if (error) {
-      console.error(error);
-    } else {
-      setChats(data);
+      if (chatError) {
+        console.error("Error fetching chat participants:", chatError);
+        return; // Handle error appropriately (e.g., show a message to the user)
+      }
+
+      const chatIds = chatParticipants.map((chat) => chat.chat_id);
+
+      // Now, query the chats based on the retrieved chat IDs
+      const { data, error } = await supabase
+        .from("chats")
+        .select(
+          `id, created_at, chat_participants!inner (
+            user_id,
+            profiles (
+              id,
+              username,
+              avatar_url
+            )
+          )`
+        )
+        .in("id", chatIds)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error("Error fetching chats:", error);
+      } else {
+        console.log("Fetched chats data:", data); // Log the fetched data for debugging
+        setChats(data); // Update state with the fetched chats
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err); // Catch any unexpected errors
     }
   };
 
@@ -50,19 +68,21 @@ const ChatsScreen = ({ navigation }) => {
 
   const filteredChats = useMemo(() => {
     return chats.filter((chat) => {
-      // Ensure we are checking the participants properly
-      const participants = chat.chat_participants; // Correct access to participants
+      const participants = chat.chat_participants;
+
+      // Check if there's any participant that isn't the current user
       return participants.some((participant) => {
         return (
           participant.profiles &&
           participant.profiles.username &&
+          participant.user_id !== user.id && // Exclude your own user ID
           participant.profiles.username
             .toLowerCase()
             .includes(input.toLowerCase())
         );
       });
     });
-  }, [input, chats]);
+  }, [input, chats, user.id]); // Add user.id to dependencies
 
   const renderChatItem = ({ item }) => {
     const participants = item.chat_participants; // Access the array of participants
@@ -76,9 +96,7 @@ const ChatsScreen = ({ navigation }) => {
 
       return (
         <TouchableOpacity
-          onPress={() =>
-            navigation.navigate("ChatDetail", { chatId: item.id })
-          }
+          onPress={() => navigation.navigate("ChatDetail", { chatId: item.id })}
         >
           <View style={styles.card}>
             {participant.profiles.avatar_url ? (
