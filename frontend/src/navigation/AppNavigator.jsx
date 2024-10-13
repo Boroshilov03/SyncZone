@@ -9,7 +9,7 @@ import CallsScreen from "../screens/CallsScreen";
 import CalendarScreen from "../screens/CalendarScreen";
 import MainTabNavigator from "../components/MainTabNavigator";
 import useStore from "../store/store";
-import RecentCalls from "../screens/RecentCalls";
+import RecentCalls from "../screens/recentCalls";
 import ContactScreen from "../screens/ContactScreen";
 const Stack = createStackNavigator();
 
