@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import useStore from '../store/store';
 
+
 const ListEvent = ({ toggleEditEventModal }) => {
   const [allEvents, setAllEvents] = useState([]);
   const { user } = useStore();
@@ -11,31 +12,31 @@ const ListEvent = ({ toggleEditEventModal }) => {
   const fetchingData = async () => {
     try {
       const { data: eventData, error: eventError } = await supabase
-        .from('event_participants')
-        .select('event_id')
-        .eq('user_id', user.id);
+        .from("event_participants")
+        .select("event_id")
+        .eq("user_id", user.id);
 
       if (eventError) {
-        console.error('Error fetching event IDs:', eventError);
+        console.error("Error fetching event IDs:", eventError);
         return;
       }
 
-      const eventIds = eventData.map(event => event.event_id);
+      const eventIds = eventData.map((event) => event.event_id);
 
       // Fetch the event details using the event IDs
       const { data, error } = await supabase
-        .from('event')
-        .select('*')
-        .in('id', eventIds);
+        .from("event")
+        .select("*")
+        .in("id", eventIds);
 
       if (error) {
-        console.error('Error fetching event data:', error);
+        console.error("Error fetching event data:", error);
       } else {
-        console.log('Fetched event data:', data);
+        console.log("Fetched event data:", data);
         setAllEvents(data);
       }
     } catch (error) {
-      console.error('Error during data fetching:', error);
+      console.error("Error during data fetching:", error);
     }
   };
 
@@ -43,13 +44,13 @@ const ListEvent = ({ toggleEditEventModal }) => {
     fetchingData();
 
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel("schema-db-changes")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'event_participants',
+          event: "*",
+          schema: "public",
+          table: "event_participants",
         },
         (payload) => {
           console.log('Real-time event change detected in participants:', payload);
@@ -59,13 +60,13 @@ const ListEvent = ({ toggleEditEventModal }) => {
       .subscribe();
 
     const eventChannel = supabase
-      .channel('schema-db-changes')
+      .channel("schema-db-changes")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'event',
+          event: "*",
+          schema: "public",
+          table: "event",
         },
         (payload) => {
           console.log('Real-time event change detected in events:', payload);
@@ -86,25 +87,43 @@ const ListEvent = ({ toggleEditEventModal }) => {
 
   return (
     <ScrollView>
-      {allEvents.map(event => {
+      {allEvents.map((event) => {
         const startDateTime = formatDateTime(event.date, event.start_time);
         const endDateTime = formatDateTime(event.date, event.end_time);
 
         return (
-          <View key={event.id} style={[styles.container, { backgroundColor: getMoodColor(event.mood) }]}>
+          <View
+            key={event.id}
+            style={[
+              styles.container,
+              { backgroundColor: getMoodColor(event.mood) },
+            ]}
+          >
             <View style={styles.row}>
               <View style={styles.imageContainer}>
                 <Text style={styles.monthText}>
-                  {startDateTime.toLocaleString(undefined, { month: 'short' })}
+                  {startDateTime.toLocaleString(undefined, { month: "short" })}
                 </Text>
                 <Text style={styles.overlayText}>
-                  {startDateTime.toLocaleString(undefined, { day: 'numeric' })}
+                  {startDateTime.toLocaleString(undefined, { day: "numeric" })}
                 </Text>
               </View>
               <View style={styles.textContainer}>
                 <Text style={styles.title}>{event.title}</Text>
                 <Text style={styles.timeText}>
-                  ({startDateTime.toLocaleString(undefined, { hour: 'numeric', minute: 'numeric', hour12: true })} - {endDateTime.toLocaleString(undefined, { hour: 'numeric', minute: 'numeric', hour12: true })})
+                  (
+                  {startDateTime.toLocaleString(undefined, {
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true,
+                  })}{" "}
+                  -{" "}
+                  {endDateTime.toLocaleString(undefined, {
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true,
+                  })}
+                  )
                 </Text>
               </View>
             </View>
@@ -142,46 +161,46 @@ const styles = StyleSheet.create({
     marginTop: 10,
     borderRadius: 20,
     marginHorizontal: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 5,
-    position: 'relative',
+    position: "relative",
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   imageContainer: {
-    position: 'relative',
+    position: "relative",
     width: 80,
     height: 45,
   },
   monthText: {
-    position: 'absolute',
-    top: '89%',
-    left: '50%',
+    position: "absolute",
+    top: "89%",
+    left: "50%",
     transform: [{ translateX: -55 }, { translateY: -40 }],
-    color: 'black',
-    fontWeight: '300',
+    color: "black",
+    fontWeight: "300",
     fontSize: 22,
-    textAlign: 'center',
-    width: '100%',
+    textAlign: "center",
+    width: "100%",
   },
   overlayText: {
-    position: 'absolute',
-    top: '60%',
-    left: '50%',
+    position: "absolute",
+    top: "60%",
+    left: "50%",
     transform: [{ translateX: -55 }, { translateY: -7 }],
-    color: 'black',
-    fontWeight: '300',
+    color: "black",
+    fontWeight: "300",
     fontSize: 25,
-    textAlign: 'center',
-    width: '100%',
+    textAlign: "center",
+    width: "100%",
   },
   pencilIconContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 10,
     right: 10,
   },
@@ -190,13 +209,13 @@ const styles = StyleSheet.create({
     height: 17,
   },
   title: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 18,
     marginLeft: 10,
   },
   timeText: {
     fontSize: 14,
-    color: 'grey',
+    color: "grey",
     marginLeft: 10,
   },
   textContainer: {

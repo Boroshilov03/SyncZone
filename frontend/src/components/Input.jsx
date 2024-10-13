@@ -1,6 +1,6 @@
 import { View, Text, TextInput } from "react-native";
 
-function Input({ title, value, error, setValue, setError, secureTextEntry }) {
+function Input({ title, value, error, setValue, secureTextEntry }) {
   return (
     <View style={{ marginVertical: 6 }}>
       <Text
@@ -27,7 +27,7 @@ function Input({ title, value, error, setValue, setError, secureTextEntry }) {
         value={value}
         onChangeText={(text) => {
           setValue(text);
-          setError(""); // Reset error when user starts typing
+          // Removed setError since it's not needed here
         }}
       />
     </View>
