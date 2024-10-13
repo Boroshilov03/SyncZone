@@ -2,13 +2,11 @@ import {
   StyleSheet,
   Text,
   View,
-  Button,
-  Image,
-  FlatList,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   SafeAreaView,
+  FlatList,
+  Image,
 } from "react-native";
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase";
@@ -16,71 +14,108 @@ import useStore from "../store/store";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import Header from "../components/Header";
 
-const users = [
-  {
-    img: "",
-    name: "Bell Burgess",
-    phone: "+1 (887) 478-2693",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80",
-    name: "Bernard Baker",
-    phone: "+1 (862) 581-3022",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80",
-    name: "Elma Chapman",
-    phone: "+1 (913) 497-2020",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2340&q=80",
-    name: "Knapp Berry",
-    phone: "+1 (951) 472-2967",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80",
-    name: "Larson Ashbee",
-    phone: "+1 (972) 566-2684",
-  },
-  {
-    img: "",
-    name: "Lorraine Abbott",
-    phone: "+1 (959) 422-3635",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=987&q=80",
-    name: "Rosie Arterton",
-    phone: "+1 (845) 456-2237",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1573497019236-17f8177b81e8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2340&q=80",
-    name: "Shelby Ballard",
-    phone: "+1 (824) 467-3579",
-  },
-];
-
 const ChatsScreen = ({ navigation }) => {
-  const { setUser, setAccessToken, setRefreshToken, user } = useStore();
-
   const [input, setInput] = useState("");
-  const filteredRows = useMemo(() => {
-    const rows = [];
-    const query = input.toLowerCase();
-    for (const item of users) {
-      const nameIndex = item.name.toLowerCase().search(query);
-      if (nameIndex !== -1) {
-        rows.push({
-          ...item,
-          index: nameIndex,
-        });
-      }
+  const [chats, setChats] = useState([]);
+  const { user } = useStore();
+
+  const getRecentChats = async () => {
+    const { data, error } = await supabase
+      .from("chats")
+      .select(
+        `id, created_at, chat_participants!inner (
+          user_id,
+          profiles (
+            id,
+            username,
+            avatar_url
+          )
+        )`
+      )
+      .eq("chat_participants.user_id", user.id) // Correct filtering
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    console.log(data); // Log the data to check its structure
+    if (error) {
+      console.error(error);
+    } else {
+      setChats(data);
     }
-    return rows.sort((a, b) => a.index - b.index);
-  }, [input]);
+  };
+
+  useEffect(() => {
+    getRecentChats(); // Fetch chats on component mount
+  }, []);
+
+  const filteredChats = useMemo(() => {
+    return chats.filter((chat) => {
+      // Ensure we are checking the participants properly
+      const participants = chat.chat_participants; // Correct access to participants
+      return participants.some((participant) => {
+        return (
+          participant.profiles &&
+          participant.profiles.username &&
+          participant.profiles.username
+            .toLowerCase()
+            .includes(input.toLowerCase())
+        );
+      });
+    });
+  }, [input, chats]);
+
+  const renderChatItem = ({ item }) => {
+    const participants = item.chat_participants; // Access the array of participants
+    if (participants && participants.length > 0) {
+      // Iterate through participants to find a valid profile
+      const participant = participants[0]; // Access the first participant
+      console.log("Participant Info:", participant);
+      if (!participant || !participant.profiles) {
+        return null; // Skip rendering if participant or profiles is undefined
+      }
+
+      return (
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("ChatDetail", { chatId: item.id })
+          }
+        >
+          <View style={styles.card}>
+            {participant.profiles.avatar_url ? (
+              <Image
+                alt="Avatar"
+                resizeMode="cover"
+                source={{ uri: participant.profiles.avatar_url }}
+                style={styles.cardImg}
+              />
+            ) : (
+              <View style={[styles.cardImg, styles.cardAvatar]}>
+                <Text style={styles.cardAvatarText}>
+                  {participant.profiles.username[0]}
+                </Text>
+              </View>
+            )}
+            <View style={styles.cardBody}>
+              <Text style={styles.cardTitle}>
+                {participant.profiles.username}
+              </Text>
+              <Text style={styles.cardTimestamp}>
+                {new Date(item.created_at).toLocaleString()}
+              </Text>
+            </View>
+            <View style={styles.cardAction}>
+              <FeatherIcon color="#9ca3af" name="chevron-right" size={22} />
+            </View>
+          </View>
+        </TouchableOpacity>
+      );
+    }
+    return null; // Fallback if participant is not found
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <Header event="message" navigation={navigation} title="Recent Chats"/>
+      <Header event="message" navigation={navigation} title="Recent Chats" />
       <View style={styles.container}>
         <View style={styles.searchWrapper}>
           <View style={styles.search}>
@@ -100,49 +135,16 @@ const ChatsScreen = ({ navigation }) => {
             />
           </View>
         </View>
-        <ScrollView contentContainerStyle={styles.searchContent}>
-          {filteredRows.length ? (
-            filteredRows.map(({ img, name, phone }, index) => {
-              return (
-                <View key={index} style={styles.cardWrapper}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      // handle onPress
-                    }}
-                  >
-                    <View style={styles.card}>
-                      {img ? (
-                        <Image
-                          alt=""
-                          resizeMode="cover"
-                          source={{ uri: img }}
-                          style={styles.cardImg}
-                        />
-                      ) : (
-                        <View style={[styles.cardImg, styles.cardAvatar]}>
-                          <Text style={styles.cardAvatarText}>{name[0]}</Text>
-                        </View>
-                      )}
-                      <View style={styles.cardBody}>
-                        <Text style={styles.cardTitle}>{name}</Text>
-                        <Text style={styles.cardPhone}>{phone}</Text>
-                      </View>
-                      <View style={styles.cardAction}>
-                        <FeatherIcon
-                          color="#9ca3af"
-                          name="chevron-right"
-                          size={22}
-                        />
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-              );
-            })
-          ) : (
-            <Text style={styles.searchEmpty}>No results</Text>
-          )}
-        </ScrollView>
+        {filteredChats.length ? (
+          <FlatList
+            data={filteredChats}
+            keyExtractor={(item) => item.id}
+            renderItem={renderChatItem}
+            contentContainerStyle={styles.searchContent}
+          />
+        ) : (
+          <Text style={styles.searchEmpty}>No results</Text>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -207,10 +209,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-start",
   },
-  cardWrapper: {
-    borderBottomWidth: 1,
-    borderColor: "#d6d6d6",
-  },
   cardImg: {
     width: 42,
     height: 42,
@@ -236,57 +234,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#000",
   },
-  cardPhone: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "500",
+  cardTimestamp: {
+    fontSize: 14,
     color: "#616d79",
     marginTop: 3,
   },
   cardAction: {
     paddingRight: 16,
-  },
-  profilePhoto: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 20,
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  userEmail: {
-    fontSize: 16,
-    color: "gray",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  messageContainer: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  messageContent: {
-    fontSize: 16,
-  },
-  messageTimestamp: {
-    fontSize: 12,
-    color: "#aaa",
-    textAlign: "right",
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-  },
-  input: {
-    flex: 1,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    padding: 10,
-    marginRight: 10,
   },
 });
