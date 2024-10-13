@@ -11,6 +11,7 @@ import React from "react";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../lib/supabase";
+import Header from "../components/Header";
 
 const RecentCalls = ({ navigation }) => {
   const router = useRouter();
@@ -52,15 +53,7 @@ const RecentCalls = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Top Bar */}
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => console.log("Go to User Profile")}>
-          <Ionicons name="person-circle-outline" size={28} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Recent Calls</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Contact")}>
-          <Ionicons name="call-outline" size={28} color="black" />
-        </TouchableOpacity>
-      </View>
+      <Header event="call" navigation={navigation} title="Recent Calls" />
 
       {/* Recent Calls list */}
       <FlatList

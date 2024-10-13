@@ -8,7 +8,7 @@ const ListEvent = () => {
   useEffect(() => {
     const fetchingData = async () => {
       const { data, error } = await supabase
-        .from('calendar')
+        .from('event')
         .select('*');
       
       if (error) {

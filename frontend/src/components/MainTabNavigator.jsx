@@ -5,7 +5,7 @@ import GiftsScreen from "../screens/GiftsScreen";
 import CallsScreen from "../screens/CallsScreen";
 import CalendarScreen from "../screens/CalendarScreen";
 import ChatsScreen from "../screens/ChatsScreen";
-import RecentCalls from "../screens/RecentCalls";
+import RecentCalls from "../screens/recentCalls";
 
 const Tab = createBottomTabNavigator();
 
@@ -100,18 +100,13 @@ function MainTabNavigator({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  icon: {
-    // Default size will be overridden by iconSizeMap
-  },
   iconContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 2, // Reduced padding to bring icons closer
-    marginHorizontal: 5, // Add margin to space out the icons evenly
   },
   label: {
     fontSize: 13,
-    marginLeft: 3, // Reduced margin to bring label closer to icon
+    marginLeft: 3, 
   },
   activeBubble: {
     borderRadius: 20,

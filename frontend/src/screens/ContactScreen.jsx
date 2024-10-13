@@ -59,8 +59,8 @@ const ContactScreen = ({ navigation }) => {
   }
 
   const createChat = async (contactID) => {
-    console.log("my id", user.id);
-    console.log("creating chat... with ", contactID);
+    // console.log("my id", user.id);
+    // console.log("creating chat... with ", contactID);
 
     // Check if a 1-on-1 chat already exists between the two users
     const { data: existingChats, error: chatError } = await supabase
@@ -93,8 +93,10 @@ const ContactScreen = ({ navigation }) => {
 
     // If chat already exists, return its ID
     if (existingChats && existingChats.length > 0) {
-      console.log("Chat already exists with ID:", existingChats[0].id);
-      return existingChats[0].id;
+      const chatId = existingChats[0].id;
+      console.log("Chat already exists with ID:", chatId);
+      navigation.navigate("ChatDetail", { chatId }); // Navigate to the chat screen
+      return;
     }
 
     // If no chat exists, create a new one
@@ -108,7 +110,6 @@ const ContactScreen = ({ navigation }) => {
       return;
     }
 
-    console.log(newChat);
     // Add both users to the participants table
     const { data: participants, error: participantsError } = await supabase
       .from("chat_participants")
@@ -121,9 +122,9 @@ const ContactScreen = ({ navigation }) => {
       console.error("Error adding participants:", participantsError);
       return;
     }
-
+    const chatId = newChat[0].id;
+    navigation.navigate("ChatDetail", { chatId }); // Navigate to the chat screen
     console.log("Chat created with ID:", newChat[0].id);
-    return newChat.id;
   };
 
   const createCall = (contactID) => {
