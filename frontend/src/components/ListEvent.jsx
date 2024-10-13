@@ -1,9 +1,9 @@
-import { View, Text, ScrollView, StyleSheet, Image } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import useStore from '../store/store';
 
-const ListEvent = () => {
+const ListEvent = ({ toggleEditEventModal }) => {
   const [allEvents, setAllEvents] = useState([]);
   const { user } = useStore();
 
@@ -39,9 +39,8 @@ const ListEvent = () => {
     }
   };
 
-  // Set up real-time subscription
   useEffect(() => {
-    fetchingData(); // Initial fetch
+    fetchingData();
 
     const channel = supabase
       .channel('schema-db-changes')
@@ -54,7 +53,7 @@ const ListEvent = () => {
         },
         (payload) => {
           console.log('Real-time event change detected in participants:', payload);
-          fetchingData(); // Re-fetch data on change
+          fetchingData();
         }
       )
       .subscribe();
@@ -70,7 +69,7 @@ const ListEvent = () => {
         },
         (payload) => {
           console.log('Real-time event change detected in events:', payload);
-          fetchingData(); // Re-fetch data on change
+          fetchingData();
         }
       )
       .subscribe();
@@ -79,7 +78,7 @@ const ListEvent = () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(eventChannel);
     };
-  }, [user.id]); // Listen for changes in user.id
+  }, [user.id]);
 
   const formatDateTime = (date, time) => {
     return new Date(`${date}T${time}`);
@@ -109,9 +108,9 @@ const ListEvent = () => {
                 </Text>
               </View>
             </View>
-            <View style={styles.pencilIconContainer}>
+            <TouchableOpacity style={styles.pencilIconContainer} onPress={() => toggleEditEventModal(event)}>
               <Image source={require('../../assets/icons/pencil_icon.png')} style={styles.pencilIcon} />
-            </View>
+            </TouchableOpacity>
           </View>
         );
       })}
@@ -122,17 +121,17 @@ const ListEvent = () => {
 const getMoodColor = (mood) => {
   switch (mood) {
     case 'yellow':
-      return '#FFFDE7'; // Softer Pastel Yellow
+      return '#FFFDE7';
     case 'green':
-      return '#DCEDC8'; // Softer Pastel Green
+      return '#DCEDC8';
     case 'pink':
-      return '#FDE0E1'; // Sakura Pink
+      return '#FDE0E1';
     case 'purple':
-      return '#F3E5F5'; // Softer Pastel Purple
+      return '#F3E5F5';
     case 'blue':
-      return '#E3F2FD'; // Softer Pastel Blue
+      return '#E3F2FD';
     default:
-      return '#FFFFFF'; // Default color if mood is not recognized
+      return '#FFFFFF';
   }
 };
 
