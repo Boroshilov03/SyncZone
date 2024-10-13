@@ -9,7 +9,7 @@ import {
   TextInput,
   Button,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
@@ -24,6 +24,8 @@ const ChatDetailScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
+  const [typingUser, setTypingUser] = useState(null); // Track the user who is typing
+  const typingTimeoutRef = useRef(null); // Use ref to store the typing timeout
 
   useEffect(() => {
     const channel = supabase.channel(`chat-room-${chatId}`);
@@ -33,6 +35,14 @@ const ChatDetailScreen = () => {
         const receivedMessage = payload.payload;
         setMessages((prevMessages) => [receivedMessage, ...prevMessages]);
       })
+      .on("broadcast", { event: "typing" }, (payload) => {
+        const { userId, isTyping } = payload.payload; // Destructure userId and isTyping from payload
+        if (isTyping) {
+          setTypingUser(userId); // Set the typing user
+        } else {
+          setTypingUser(null); // Clear typing user if not typing
+        }
+      })
       .subscribe();
 
     return () => {
@@ -41,9 +51,10 @@ const ChatDetailScreen = () => {
     };
   }, [chatId]);
 
+  // Fetch messages from the Supabase database
   useEffect(() => {
     const fetchMessages = async () => {
-      const { data: messages, error } = await supabase
+      const { data, error } = await supabase
         .from("messages")
         .select("*")
         .eq("chat_id", chatId)
@@ -52,18 +63,39 @@ const ChatDetailScreen = () => {
       if (error) {
         console.error("Error fetching messages:", error);
         setError("Failed to load messages");
-        setLoading(false);
-        return;
+      } else {
+        setMessages(data);
       }
-      setMessages(messages);
       setLoading(false);
     };
 
     fetchMessages();
   }, [chatId]);
 
+  const handleTyping = () => {
+    if (!newMessage.trim()) return; // Prevent sending typing event if the input is empty
+
+    // Send typing event to other clients
+    supabase.channel(`chat-room-${chatId}`).send({
+      type: "broadcast",
+      event: "typing",
+      payload: { userId: user.id, isTyping: true },
+    });
+
+    // Clear existing timeout and set a new one
+    clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      // Send typing event to other clients
+      supabase.channel(`chat-room-${chatId}`).send({
+        type: "broadcast",
+        event: "typing",
+        payload: { userId: user.id, isTyping: false },
+      });
+    }, 1000); // 1 second timeout
+  };
+
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim()) return; // Prevent sending empty messages
 
     const { data, error } = await supabase
       .from("messages")
@@ -90,7 +122,7 @@ const ChatDetailScreen = () => {
       });
     }
 
-    setNewMessage("");
+    setNewMessage(""); // Clear the input after sending
   };
 
   const renderMessage = ({ item }) => {
@@ -134,6 +166,9 @@ const ChatDetailScreen = () => {
         <Text style={styles.chatIdText}>Conversation ID:</Text>
         <Text style={styles.chatIdValue}>{chatId}</Text>
       </View>
+      {typingUser && (
+        <Text style={styles.typingIndicator}>{typingUser} is typing...</Text>
+      )}
 
       {loading && <ActivityIndicator size="large" color="#007BFF" />}
 
@@ -154,7 +189,10 @@ const ChatDetailScreen = () => {
           style={styles.input}
           placeholder="Type a message"
           value={newMessage}
-          onChangeText={setNewMessage}
+          onChangeText={(text) => {
+            setNewMessage(text);
+            handleTyping(); // Call handleTyping on text change
+          }}
         />
         <Button title="Send" onPress={handleSendMessage} />
       </View>
@@ -169,6 +207,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: "#f9f9f9",
+  },
+  typingIndicator: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
+    marginVertical: 10,
   },
   title: {
     fontSize: 24,
@@ -259,8 +303,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: "red",
-    fontSize: 16,
     textAlign: "center",
-    marginTop: 20,
+    marginTop: 10,
   },
 });

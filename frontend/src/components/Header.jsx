@@ -12,7 +12,7 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
     if (event === "message") {
       navigation.navigate("Contact");
     } else if (event === "calendar") {
-      toggleAddEventModal(); // Open the modal for adding events
+      toggleAddEventModal();
     } else if (event === "call") {
       navigation.navigate("Contact");
     }
