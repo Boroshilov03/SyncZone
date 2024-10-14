@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet } from "react-native";
+import { SafeAreaView, StyleSheet, Pressable, Text } from "react-native";
 import React, { useState } from "react";
 import MyCalendar from "../components/MyCalendar";
 import AddEvent from "../components/AddEvent";

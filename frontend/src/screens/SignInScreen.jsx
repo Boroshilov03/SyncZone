@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Text, Pressable, Image, Alert } from "react-native";
+import { StyleSheet, View, Text, Pressable, Image, SafeAreaView } from "react-native";
 import { supabase } from "../lib/supabase";
 import { Input } from "@rneui/themed";
 import GradientText from "react-native-gradient-texts";
@@ -47,96 +47,106 @@ export default function SignInScreen({ navigation }) {
   });
 
   return (
-    <LinearGradient
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.parent}
-      colors={['#f2c4e0', '#96ddea']}
+    <SafeAreaView
+      style={styles.safeview}
     >
-      <View style={styles.space}>
-        <Image
-          source={require('../images/logo.png')}
-          style={styles.logo}
-        />
-      </View>
-      <View style={styles.container}>
-        <Text style={styles.title}>Login</Text>
+      <LinearGradient
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.parent}
+        colors={['#f2c4e0', '#96ddea']}>
+        <View style={styles.space}>
+          <Image
+            source={require('../images/logo.png')}
+            style={styles.logo}
 
-        {errorMessage ? ( // Conditional rendering for error message
-          <Text style={styles.errorText}>{errorMessage}</Text>
-        ) : null}
-
-        <View style={styles.fields}>
-          <View style={[styles.verticallySpaced, styles.mt20]}>
-            <Input
-              label="Email"
-              leftIcon={{ type: "font-awesome", name: "envelope" }}
-              onChangeText={setEmail}
-              value={email}
-              placeholder="email@address.com"
-              autoCapitalize="none"
-            />
-          </View>
-          <View style={styles.verticallySpaced}>
-            <Input
-              label="Password"
-              leftIcon={{ type: "font-awesome", name: "lock" }}
-              onChangeText={setPassword}
-              value={password}
-              secureTextEntry
-              placeholder="Password"
-              autoCapitalize="none"
-            />
-          </View>
-        </View>
-        <View style={styles.buttonbox}>
-          <LinearGradient
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            colors={['#f2c4e0', '#96ddea']}
-            style={styles.gradient}
-          >
-            <Pressable
-              style={styles.button}
-              onPress={() => signInWithEmail()}
-              disabled={isLoading} // Disable the button when loading
-              borderRadius={20}
-            >
-              <Text style={styles.buttontext}>Sign In</Text>
-            </Pressable>
-          </LinearGradient>
-        </View>
-        <Text style={styles.signInText}>
-          Don't have an account?{" "}
-          <Text
-            style={styles.signInLink}
-            onPress={() => navigation.navigate("SignUp")}
-          >
-            Sign Up
-          </Text>
-        </Text>
-      </View>
-      <View style={styles.syncbox}>
-        <View style={styles.box}>
-          <GradientText
-            text={"SyncZone"}
-            fontSize={40}
-            isGradientFill
-            isGradientStroke
-            gradientColors={["#f2c4e0", "#accdf2"]}
           />
         </View>
-      </View>
-    </LinearGradient>
+        <View style={styles.container}>
+          <Text style={styles.title}>Login</Text>
+          <View style={styles.fields}>
+            <View style={[styles.verticallySpaced, styles.mt20]}>
+              <Input
+                label="Email"
+                leftIcon={{ type: "font-awesome", name: "envelope" }}
+                onChangeText={setEmail}
+                value={email}
+                placeholder="email@address.com"
+                autoCapitalize="none"
+              />
+            </View>
+            <View style={styles.verticallySpaced}>
+              <Input
+                label="Password"
+                leftIcon={{ type: "font-awesome", name: "lock" }}
+                onChangeText={setPassword}
+                value={password}
+                secureTextEntry
+                placeholder="Password"
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
+          <View style={styles.buttonbox}>
+            <LinearGradient
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              // style={styles.parent}
+              colors={['#f2c4e0', '#96ddea']}
+              style={styles.gradient}
+
+
+            >
+              <Pressable
+                style={styles.button}
+                onPress={() => signInWithEmail()}
+                disabled={isLoading} // Disable the button when loading
+                borderRadius={20}
+              >
+                <Text style={styles.buttontext}>Sign In</Text>
+              </Pressable>
+            </LinearGradient>
+          </View>
+          <Text style={styles.signInText}>
+            Don't have an account?{" "}
+            <Text
+              style={styles.signInLink}
+              onPress={() => navigation.navigate("SignUp")}
+            >
+              Sign Up
+            </Text>
+          </Text>
+        </View>
+        <View style={styles.syncbox}>
+          <View style={styles.box}>
+            <GradientText
+              text={"SyncZone"}
+              fontSize={40}
+              isGradientFill
+              isGradientStroke
+              gradientColors={["#f2c4e0", "#accdf2"]}
+            // fontFamily={"Gill Sans"}
+            //gradientColors={["#D49AC0", "#6FD2E2"]}
+            // fontFamily={"Gill Sans"}
+            />
+          </View>
+        </View>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeview: {
+    flex: 1
+  },
   parent: {
     flex: 1,
     height: 1000,
     marginTop: 40,
-    backgroundColor: '#966dab',
+    backgroundColor: 'rgba(52, 52, 52, alpha)',
+    // padding: 12,
+    //backgroundColor: '#966dab',
   },
   space: {
     flex: 1,
@@ -183,8 +193,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: 'transparent',
     borderRadius: 30,
-    paddingLeft: 30,
-    paddingRight: 30,
+
   },
   buttonbox: {
     flex: 0,
@@ -198,7 +207,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 15,
     borderRadius: 50,
-    width: '50%',
+    width: 190,
   },
   buttontext: {
     fontWeight: 'bold',
