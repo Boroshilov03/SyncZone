@@ -31,7 +31,8 @@ const AddContact = ({ toggleModal }) => {
       const { data, error } = await supabase
         .from("profiles")
         .select("id, username, first_name, last_name")
-        .ilike("username", `%${query}%`);
+        .ilike("username", `%${query}%`)
+        .neq("id", user.id);
 
       if (error) {
         console.error("Error searching profiles:", error);

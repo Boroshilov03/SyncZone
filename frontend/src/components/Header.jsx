@@ -1,5 +1,6 @@
 import { View, Image, StyleSheet, TouchableOpacity, Text } from "react-native";
 import React from "react";
+import useStore from "../store/store";
 
 const profilePic = require("../../assets/icons/pfp_icon.png");
 const calendarImage = require("../../assets/icons/add_calendar.png");
@@ -7,6 +8,8 @@ const messageImage = require("../../assets/icons/add_message.png");
 const callImage = require("../../assets/icons/add_call.png");
 
 const Header = ({ toggleAddEventModal, event, navigation, title }) => {
+  const { user } = useStore();
+
   // Handle the action based on the event type
   const handleHeaderPress = () => {
     if (event === "message") {
@@ -22,9 +25,11 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
     <View style={styles.headerContainer}>
       <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
         <Image
-          source={profilePic}
+          accessibilityLabel=""
+          source={{
+            uri: user.user_metadata?.avatar_url || profilePic,
+          }}
           style={styles.profilePic}
-          onPress={() => navigation.navigate("Settings")}
         />
       </TouchableOpacity>
       <Text style={styles.title}>{title}</Text>
@@ -60,16 +65,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   calendarIcon: {
-    width: 35,    
-    height: 35,  
+    width: 35,
+    height: 35,
   },
   messageIcon: {
-    width: 30, 
-    height: 30, 
+    width: 30,
+    height: 30,
   },
   callIcon: {
-    width: 23,   
-    height: 23,   
+    width: 23,
+    height: 23,
   },
 });
 

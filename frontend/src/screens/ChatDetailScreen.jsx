@@ -8,24 +8,26 @@ import {
   ActivityIndicator,
   TextInput,
   Button,
+  Image,
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
+const noProfilePic = require("../../assets/icons/pfp_icon.png");
 
 const ChatDetailScreen = () => {
   const { user } = useStore();
   const route = useRoute();
   const navigation = useNavigation();
-  const { chatId } = route.params;
+  const { chatId, otherPFP, otherUsername } = route.params;
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
-  const [typingUser, setTypingUser] = useState(null); // Track the user who is typing
-  const typingTimeoutRef = useRef(null); // Use ref to store the typing timeout
+  const [typingUser, setTypingUser] = useState(null);
+  const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
     const channel = supabase.channel(`chat-room-${chatId}`);
@@ -40,11 +42,10 @@ const ChatDetailScreen = () => {
 
         if (isTyping) {
           try {
-            // Query the Supabase database to get the username based on userId
             const { data: profile, error } = await supabase
-              .from("profiles") // Replace 'profiles' with your actual table name
+              .from("profiles")
               .select("username")
-              .eq("id", userId) // Assuming 'id' is the userId in your profiles table
+              .eq("id", userId)
               .single();
 
             if (error) {
@@ -59,7 +60,7 @@ const ChatDetailScreen = () => {
             console.error("Error fetching profile:", error);
           }
         } else {
-          setTypingUser(null); // Clear typing user if not typing
+          setTypingUser(null);
         }
       })
       .subscribe();
@@ -70,7 +71,6 @@ const ChatDetailScreen = () => {
     };
   }, [chatId]);
 
-  // Fetch messages from the Supabase database
   useEffect(() => {
     const fetchMessages = async () => {
       const { data, error } = await supabase
@@ -92,30 +92,27 @@ const ChatDetailScreen = () => {
   }, [chatId]);
 
   const handleTyping = () => {
-    if (!newMessage.trim()) return; // Prevent sending typing event if the input is empty
+    if (!newMessage.trim()) return;
 
-    // Send typing event to other clients
     supabase.channel(`chat-room-${chatId}`).send({
       type: "broadcast",
       event: "typing",
       payload: { userId: user.id, isTyping: true },
     });
 
-    // Clear existing timeout and set a new one
     clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
-      // Send typing event to signal user has stopped typing
       supabase.channel(`chat-room-${chatId}`).send({
         type: "broadcast",
         event: "typing",
         payload: { userId: user.id, isTyping: false },
       });
-      setTypingUser(null); // Clear typing user state when typing stops
-    }, 2000); // Increased timeout to 2 seconds for better UX
+      setTypingUser(null);
+    }, 2000);
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return; // Prevent sending empty messages
+    if (!newMessage.trim()) return;
 
     const { data, error } = await supabase
       .from("messages")
@@ -142,7 +139,7 @@ const ChatDetailScreen = () => {
       });
     }
 
-    setNewMessage(""); // Clear the input after sending
+    setNewMessage("");
   };
 
   const renderMessage = ({ item }) => {
@@ -181,11 +178,19 @@ const ChatDetailScreen = () => {
         <Text style={styles.backButtonText}>← Back</Text>
       </TouchableOpacity>
 
-      <Text style={styles.title}>Chat Detail Screen</Text>
+      <View style={styles.profileContainer}>
+        <Image
+          source={otherPFP ? { uri: otherPFP } : noProfilePic}
+          style={styles.profileImage}
+        />
+        <Text style={styles.title}>{otherUsername}</Text>
+      </View>
+
       <View style={styles.chatIdContainer}>
         <Text style={styles.chatIdText}>Conversation ID:</Text>
         <Text style={styles.chatIdValue}>{chatId}</Text>
       </View>
+
       {typingUser && (
         <Text style={styles.typingIndicator}>{typingUser} is typing...</Text>
       )}
@@ -211,19 +216,12 @@ const ChatDetailScreen = () => {
           value={newMessage}
           onChangeText={(text) => {
             setNewMessage(text);
-            handleTyping(); // Call handleTyping on text change
-          }}
-          onBlur={() => {
-            // Send typing event to signal user has stopped typing when input is blurred
-            supabase.channel(`chat-room-${chatId}`).send({
-              type: "broadcast",
-              event: "typing",
-              payload: { userId: user.id, isTyping: false },
-            });
-            setTypingUser(null); // Clear typing user state on input blur
+            handleTyping();
           }}
         />
-        <Button title="Send" onPress={handleSendMessage} />
+        <TouchableOpacity onPress={handleSendMessage}>
+          <Text style={styles.sendButton}>Send</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -235,19 +233,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#f0f4f8",
   },
-  typingIndicator: {
-    fontSize: 14,
-    color: "#999",
-    textAlign: "center",
-    marginVertical: 10,
+  profileContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  profileImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 15,
+    borderWidth: 2,
+    borderColor: "#007BFF",
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#333",
   },
   chatIdContainer: {
     padding: 15,
@@ -261,6 +275,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 2,
     elevation: 3,
+    marginBottom: 15,
   },
   chatIdText: {
     fontSize: 16,
@@ -280,55 +295,78 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#007BFF",
   },
+  typingIndicator: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
+    marginVertical: 10,
+  },
   messageList: {
     marginTop: 20,
   },
   messageContainer: {
     padding: 10,
-    borderRadius: 8,
-    marginBottom: 10,
+    borderRadius: 10,
+    marginBottom: 15,
+    maxWidth: "80%",
+    alignSelf: "flex-start",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.5,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     elevation: 2,
   },
   myMessageContainer: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#e5f5ff",
     alignSelf: "flex-end",
-    borderTopRightRadius: 0,
   },
   otherMessageContainer: {
-    backgroundColor: "#f1f1f1",
-    alignSelf: "flex-start",
-    borderTopLeftRadius: 0,
+    backgroundColor: "#f0f0f0",
   },
   messageText: {
     fontSize: 16,
+    lineHeight: 22,
   },
   myMessageText: {
-    color: "#fff",
+    color: "#333",
   },
   otherMessageText: {
-    color: "#333",
+    color: "#666",
   },
   messageTimestamp: {
     fontSize: 12,
     color: "#999",
     marginTop: 5,
-    textAlign: "right",
+    alignSelf: "flex-end",
   },
   inputContainer: {
     flexDirection: "row",
-    marginTop: 10,
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   input: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-    marginRight: 10,
+    height: 40,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    backgroundColor: "#f1f3f6",
+    fontSize: 16,
+  },
+  sendButton: {
+    fontSize: 16,
+    color: "#007BFF",
+    marginLeft: 10,
   },
   errorText: {
     color: "red",

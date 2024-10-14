@@ -96,7 +96,13 @@ const ChatsScreen = ({ navigation }) => {
 
       return (
         <TouchableOpacity
-          onPress={() => navigation.navigate("ChatDetail", { chatId: item.id })}
+          onPress={() =>
+            navigation.navigate("ChatDetail", {
+              chatId: item.id,
+              otherPFP: participant.profiles.avatar_url,
+              otherUsername: participant.profiles.username,
+            })
+          }
         >
           <View style={styles.card}>
             {participant.profiles.avatar_url ? (
