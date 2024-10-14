@@ -35,10 +35,29 @@ const ChatDetailScreen = () => {
         const receivedMessage = payload.payload;
         setMessages((prevMessages) => [receivedMessage, ...prevMessages]);
       })
-      .on("broadcast", { event: "typing" }, (payload) => {
-        const { userId, isTyping } = payload.payload; // Destructure userId and isTyping from payload
+      .on("broadcast", { event: "typing" }, async (payload) => {
+        const { userId, isTyping } = payload.payload;
+
         if (isTyping) {
-          setTypingUser(userId); // Set the typing user
+          try {
+            // Query the Supabase database to get the username based on userId
+            const { data: profile, error } = await supabase
+              .from("profiles") // Replace 'profiles' with your actual table name
+              .select("username")
+              .eq("id", userId) // Assuming 'id' is the userId in your profiles table
+              .single();
+
+            if (error) {
+              console.error("Error fetching username:", error);
+              return;
+            }
+
+            if (profile) {
+              setTypingUser(profile.username);
+            }
+          } catch (error) {
+            console.error("Error fetching profile:", error);
+          }
         } else {
           setTypingUser(null); // Clear typing user if not typing
         }
@@ -85,13 +104,14 @@ const ChatDetailScreen = () => {
     // Clear existing timeout and set a new one
     clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
-      // Send typing event to other clients
+      // Send typing event to signal user has stopped typing
       supabase.channel(`chat-room-${chatId}`).send({
         type: "broadcast",
         event: "typing",
         payload: { userId: user.id, isTyping: false },
       });
-    }, 1000); // 1 second timeout
+      setTypingUser(null); // Clear typing user state when typing stops
+    }, 2000); // Increased timeout to 2 seconds for better UX
   };
 
   const handleSendMessage = async () => {
@@ -192,6 +212,15 @@ const ChatDetailScreen = () => {
           onChangeText={(text) => {
             setNewMessage(text);
             handleTyping(); // Call handleTyping on text change
+          }}
+          onBlur={() => {
+            // Send typing event to signal user has stopped typing when input is blurred
+            supabase.channel(`chat-room-${chatId}`).send({
+              type: "broadcast",
+              event: "typing",
+              payload: { userId: user.id, isTyping: false },
+            });
+            setTypingUser(null); // Clear typing user state on input blur
           }}
         />
         <Button title="Send" onPress={handleSendMessage} />
