@@ -9,6 +9,8 @@ import {
   TextInput,
   Button,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import { useRoute, useNavigation } from "@react-navigation/native";
@@ -20,7 +22,7 @@ const ChatDetailScreen = () => {
   const { user } = useStore();
   const route = useRoute();
   const navigation = useNavigation();
-  const { chatId, otherPFP, otherUsername } = route.params;
+  const { chatId, username, otherPFP } = route.params;
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -170,60 +172,65 @@ const ChatDetailScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.navigate("MainTabs")}
-      >
-        <Text style={styles.backButtonText}>← Back</Text>
-      </TouchableOpacity>
-
-      <View style={styles.profileContainer}>
-        <Image
-          source={otherPFP ? { uri: otherPFP } : noProfilePic}
-          style={styles.profileImage}
-        />
-        <Text style={styles.title}>{otherUsername}</Text>
-      </View>
-
-      <View style={styles.chatIdContainer}>
-        <Text style={styles.chatIdText}>Conversation ID:</Text>
-        <Text style={styles.chatIdValue}>{chatId}</Text>
-      </View>
-
-      {typingUser && (
-        <Text style={styles.typingIndicator}>{typingUser} is typing...</Text>
-      )}
-
-      {loading && <ActivityIndicator size="large" color="#007BFF" />}
-
-      {error && <Text style={styles.errorText}>{error}</Text>}
-
-      {!loading && !error && (
-        <FlatList
-          data={messages}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderMessage}
-          contentContainerStyle={styles.messageList}
-          inverted
-        />
-      )}
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Type a message"
-          value={newMessage}
-          onChangeText={(text) => {
-            setNewMessage(text);
-            handleTyping();
-          }}
-        />
-        <TouchableOpacity onPress={handleSendMessage}>
-          <Text style={styles.sendButton}>Send</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <SafeAreaView style={styles.innerContainer}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.navigate("MainTabs")}
+        >
+          <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+
+        <View style={styles.profileContainer}>
+          <Image
+            source={otherPFP ? { uri: otherPFP } : noProfilePic}
+            style={styles.profileImage}
+          />
+          <Text style={styles.title}>{username}</Text>
+        </View>
+
+        <View style={styles.chatIdContainer}>
+          <Text style={styles.chatIdText}>Conversation ID:</Text>
+          <Text style={styles.chatIdValue}>{chatId}</Text>
+        </View>
+
+        {typingUser && (
+          <Text style={styles.typingIndicator}>{typingUser} is typing...</Text>
+        )}
+
+        {loading && <ActivityIndicator size="large" color="#007BFF" />}
+
+        {error && <Text style={styles.errorText}>{error}</Text>}
+
+        {!loading && !error && (
+          <FlatList
+            data={messages}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderMessage}
+            contentContainerStyle={styles.messageList}
+            inverted
+          />
+        )}
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Type a message"
+            value={newMessage}
+            onChangeText={(text) => {
+              setNewMessage(text);
+              handleTyping();
+            }}
+          />
+          <TouchableOpacity onPress={handleSendMessage}>
+            <Text style={styles.sendButton}>Send</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -231,6 +238,9 @@ export default ChatDetailScreen;
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  innerContainer: {
     flex: 1,
     padding: 20,
     backgroundColor: "#f0f4f8",
@@ -306,71 +316,57 @@ const styles = StyleSheet.create({
   },
   messageContainer: {
     padding: 10,
-    borderRadius: 10,
-    marginBottom: 15,
+    borderRadius: 8,
+    marginVertical: 5,
     maxWidth: "80%",
-    alignSelf: "flex-start",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
   myMessageContainer: {
-    backgroundColor: "#e5f5ff",
     alignSelf: "flex-end",
+    backgroundColor: "#007BFF",
   },
   otherMessageContainer: {
-    backgroundColor: "#f0f0f0",
+    alignSelf: "flex-start",
+    backgroundColor: "#E5E5E5",
   },
   messageText: {
     fontSize: 16,
-    lineHeight: 22,
+    color: "#fff",
   },
   myMessageText: {
-    color: "#333",
+    color: "#fff",
   },
   otherMessageText: {
-    color: "#666",
+    color: "#333",
   },
   messageTimestamp: {
-    fontSize: 12,
-    color: "#999",
+    fontSize: 10,
+    color: "#fff",
     marginTop: 5,
-    alignSelf: "flex-end",
+    textAlign: "right",
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginTop: 15,
   },
   input: {
     flex: 1,
-    height: 40,
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    backgroundColor: "#f1f3f6",
-    fontSize: 16,
+    borderColor: "#007BFF",
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    backgroundColor: "#fff",
+    marginRight: 10,
   },
   sendButton: {
-    fontSize: 16,
-    color: "#007BFF",
-    marginLeft: 10,
+    backgroundColor: "#007BFF",
+    color: "#fff",
+    padding: 10,
+    borderRadius: 5,
   },
   errorText: {
     color: "red",
     textAlign: "center",
-    marginTop: 10,
+    marginVertical: 10,
   },
 });

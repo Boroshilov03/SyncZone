@@ -70,71 +70,82 @@ const ChatsScreen = ({ navigation }) => {
     return chats.filter((chat) => {
       const participants = chat.chat_participants;
 
-      // Check if there's any participant that isn't the current user
-      return participants.some((participant) => {
-        return (
-          participant.profiles &&
-          participant.profiles.username &&
-          participant.user_id !== user.id && // Exclude your own user ID
-          participant.profiles.username
-            .toLowerCase()
-            .includes(input.toLowerCase())
-        );
-      });
+      // Ensure that there is at least one participant that isn't the current user
+      return (
+        participants.length > 1 && // More than one participant
+        participants.some((participant) => {
+          return (
+            participant.profiles &&
+            participant.profiles.username &&
+            participant.user_id !== user.id && // Exclude your own user ID
+            participant.profiles.username
+              .toLowerCase()
+              .includes(input.toLowerCase())
+          );
+        })
+      );
     });
   }, [input, chats, user.id]); // Add user.id to dependencies
 
   const renderChatItem = ({ item }) => {
     const participants = item.chat_participants; // Access the array of participants
     if (participants && participants.length > 0) {
-      // Iterate through participants to find a valid profile
-      const participant = participants[0]; // Access the first participant
-      console.log("Participant Info:", participant);
-      if (!participant || !participant.profiles) {
-        return null; // Skip rendering if participant or profiles is undefined
-      }
+      // Filter out the current user from participants
+      const otherParticipants = participants.filter(
+        (participant) => participant.user_id !== user.id
+      );
 
-      return (
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate("ChatDetail", {
-              chatId: item.id,
-              otherPFP: participant.profiles.avatar_url,
-              otherUsername: participant.profiles.username,
-            })
-          }
-        >
-          <View style={styles.card}>
-            {participant.profiles.avatar_url ? (
-              <Image
-                alt="Avatar"
-                resizeMode="cover"
-                source={{ uri: participant.profiles.avatar_url }}
-                style={styles.cardImg}
-              />
-            ) : (
-              <View style={[styles.cardImg, styles.cardAvatar]}>
-                <Text style={styles.cardAvatarText}>
-                  {participant.profiles.username[0]}
+      // Ensure that there is at least one valid participant to display
+      if (otherParticipants.length > 0) {
+        const participant = otherParticipants[0]; // Access the first valid participant
+        console.log("Participant Info:", participant);
+
+        if (!participant.profiles) {
+          return null; // Skip rendering if profiles is undefined
+        }
+
+        return (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate("ChatDetail", {
+                chatId: item.id,
+                username: participant.profiles.username,
+                otherPFP: participant.profiles.avatar_url,
+              })
+            }
+          >
+            <View style={styles.card}>
+              {participant.profiles.avatar_url ? (
+                <Image
+                  alt="Avatar"
+                  resizeMode="cover"
+                  source={{ uri: participant.profiles.avatar_url }}
+                  style={styles.cardImg}
+                />
+              ) : (
+                <View style={[styles.cardImg, styles.cardAvatar]}>
+                  <Text style={styles.cardAvatarText}>
+                    {participant.profiles.username[0]}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.cardBody}>
+                <Text style={styles.cardTitle}>
+                  {participant.profiles.username}
+                </Text>
+                <Text style={styles.cardTimestamp}>
+                  {new Date(item.created_at).toLocaleString()}
                 </Text>
               </View>
-            )}
-            <View style={styles.cardBody}>
-              <Text style={styles.cardTitle}>
-                {participant.profiles.username}
-              </Text>
-              <Text style={styles.cardTimestamp}>
-                {new Date(item.created_at).toLocaleString()}
-              </Text>
+              <View style={styles.cardAction}>
+                <FeatherIcon color="#9ca3af" name="chevron-right" size={22} />
+              </View>
             </View>
-            <View style={styles.cardAction}>
-              <FeatherIcon color="#9ca3af" name="chevron-right" size={22} />
-            </View>
-          </View>
-        </TouchableOpacity>
-      );
+          </TouchableOpacity>
+        );
+      }
     }
-    return null; // Fallback if participant is not found
+    return null; // Fallback if no valid participants are found
   };
 
   return (
