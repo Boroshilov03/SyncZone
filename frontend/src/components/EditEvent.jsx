@@ -113,14 +113,33 @@ const EditEvent = ({ onClose }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Edit Event</Text>
-      
+        <View style={styles.headerContainer}>
+        {/* Title Container */}
+        <View style={styles.titleContainer}>
+            <Text style={styles.title}>Edit Event</Text>
+        </View>
+
+        {/* Trash Icon */}
+        <TouchableOpacity 
+            style={styles.trashIconContainer} 
+            onPress={() => { /* Handle trash icon press */ }}
+        >
+            <Image 
+            source={require('../../assets/icons/trash_icon.png')} 
+            style={[styles.trashIcon, { width: 16, height: 16 }]} 
+            />
+        </TouchableOpacity>
+        </View>
+
+
+    <View style={styles.inputContainer}>
       <TextInput
         style={styles.input}
         placeholder="Event Title"
         value={titleValue}
         onChangeText={settitleValue}
       />
+    </View>
 
 <View style={styles.row}>
   <Text style={styles.label}>Date: </Text>
@@ -251,7 +270,7 @@ const EditEvent = ({ onClose }) => {
           <Text style={styles.buttonText}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleEditEvent} style={styles.addButton}>
-          <Text style={styles.buttonText}>Add</Text>
+          <Text style={styles.buttonText}>Save</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -275,12 +294,38 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
   },
+  headerContainer: {
+    width: '100%',         
+    height: 40,            
+    alignItems: 'center',  
+    justifyContent: 'center',
+    position: 'relative', 
+  },
+  
+  titleContainer: {
+    flex: 1,         
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    left: 0,             
+    right: 0,              
+  },
+  trashIconContainer: {
+    position: 'absolute',  
+    right: 10, 
+    top: '50%',  
+    transform: [{ translateY: -13 }], 
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
-    marginBottom: 20, 
+    flex: 1,
+  },
+  trashIcon: {
+    width: 16,  
+    height: 16,
   },
   input: {
     height: 40,
