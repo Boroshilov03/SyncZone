@@ -5,7 +5,7 @@ import GiftsScreen from "../screens/GiftsScreen";
 import CallsScreen from "../screens/CallsScreen";
 import CalendarScreen from "../screens/CalendarScreen";
 import ChatsScreen from "../screens/ChatsScreen";
-import RecentCalls from "../screens/RecentCalls";
+import RecentCalls from "../screens/recentCalls";
 
 const Tab = createBottomTabNavigator();
 
