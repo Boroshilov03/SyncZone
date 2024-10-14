@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   SafeAreaView,
   FlatList,
+  Image,
 } from "react-native";
 import useStore from "../store/store";
 import { supabase } from "../lib/supabase";
@@ -21,7 +22,9 @@ const fetchMutualContacts = async ({ queryKey }) => {
   const [_, userId] = queryKey; // The second element in queryKey is userId
   const { data, error } = await supabase
     .from("contacts")
-    .select(`profiles:contact_id (id, username, first_name, last_name)`)
+    .select(
+      `profiles:contact_id (id, username, first_name, last_name, avatar_url)`
+    )
     .or(`user_id.eq.${userId},contact_id.eq.${userId}`);
 
   if (error) throw new Error(error.message);
@@ -185,6 +188,22 @@ const ContactScreen = ({ navigation }) => {
   const renderContact = ({ item }) => (
     <View style={styles.contactItem}>
       <View style={styles.wrapperRow}>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("Profile", {
+              contactID: item.profiles.id,
+              contactPFP: item.profiles.avatar_url,
+              contactFirst: item.profiles.first_name,
+              contactLast: item.profiles.last_name,
+              contactUsername: item.profiles.username,
+            })
+          }
+        >
+          <Image
+            source={{ uri: item.profiles.avatar_url }} // Use avatar_url to load the image
+            style={styles.profileImage}
+          />
+        </TouchableOpacity>
         <View style={styles.wrapperCol}>
           <Text style={styles.contactText}>
             {item.profiles.first_name} {item.profiles.last_name}
@@ -269,6 +288,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#333",
     textAlign: "center",
+  },
+  profileImage: {
+    width: 50, // Adjust width
+    height: 50, // Adjust height
+    borderRadius: 25, // Make it circular
+    marginRight: 10, // Space between image and text
   },
   backButton: {
     padding: 10,

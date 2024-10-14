@@ -115,20 +115,32 @@ const ChatsScreen = ({ navigation }) => {
             }
           >
             <View style={styles.card}>
-              {participant.profiles.avatar_url ? (
-                <Image
-                  alt="Avatar"
-                  resizeMode="cover"
-                  source={{ uri: participant.profiles.avatar_url }}
-                  style={styles.cardImg}
-                />
-              ) : (
-                <View style={[styles.cardImg, styles.cardAvatar]}>
-                  <Text style={styles.cardAvatarText}>
-                    {participant.profiles.username[0]}
-                  </Text>
-                </View>
-              )}
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate("Profile", {
+                    contactID: participant.profiles.id,
+                    contactPFP: participant.profiles.avatar_url,
+                    contactFirst: participant.profiles.first_name,
+                    contactLast: participant.profiles.last_name,
+                    contactUsername: participant.profiles.username,
+                  })
+                }
+              >
+                {participant.profiles.avatar_url ? (
+                  <Image
+                    alt="Avatar"
+                    resizeMode="cover"
+                    source={{ uri: participant.profiles.avatar_url }}
+                    style={styles.cardImg}
+                  />
+                ) : (
+                  <View style={[styles.cardImg, styles.cardAvatar]}>
+                    <Text style={styles.cardAvatarText}>
+                      {participant.profiles.username[0]}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
               <View style={styles.cardBody}>
                 <Text style={styles.cardTitle}>
                   {participant.profiles.username}
