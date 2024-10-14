@@ -21,14 +21,17 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
     }
   };
 
+  // Validate avatar_url
+  const avatarUrl = typeof user.user_metadata?.avatar_url === 'string' 
+    ? user.user_metadata.avatar_url 
+    : null;
+
   return (
     <View style={styles.headerContainer}>
-      <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
+      <TouchableOpacity onPress={() => navigation.navigate("Settings", { profilephoto: avatarUrl })}>
         <Image
           accessibilityLabel=""
-          source={{
-            uri: user.user_metadata?.avatar_url || profilePic,
-          }}
+          source={avatarUrl ? { uri: avatarUrl } : profilePic} // Use the profilePic if avatarUrl is not a valid string
           style={styles.profilePic}
         />
       </TouchableOpacity>

@@ -192,11 +192,6 @@ const ChatDetailScreen = () => {
           <Text style={styles.title}>{username}</Text>
         </View>
 
-        <View style={styles.chatIdContainer}>
-          <Text style={styles.chatIdText}>Conversation ID:</Text>
-          <Text style={styles.chatIdValue}>{chatId}</Text>
-        </View>
-
         {typingUser && (
           <Text style={styles.typingIndicator}>{typingUser} is typing...</Text>
         )}

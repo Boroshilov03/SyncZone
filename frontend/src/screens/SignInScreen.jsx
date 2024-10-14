@@ -1,9 +1,16 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Text, Pressable, Image, SafeAreaView } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Pressable,
+  Image,
+  SafeAreaView,
+} from "react-native";
 import { supabase } from "../lib/supabase";
 import { Input } from "@rneui/themed";
 import GradientText from "react-native-gradient-texts";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
 import useStore from "../store/store"; // Assuming this handles user and tokens
 import { loginSchema } from "../utils/validation"; // Import the login schema
 import { useMutation } from "@tanstack/react-query"; // Import useMutation
@@ -47,20 +54,15 @@ export default function SignInScreen({ navigation }) {
   });
 
   return (
-    <SafeAreaView
-      style={styles.safeview}
-    >
+    <SafeAreaView style={styles.safeview}>
       <LinearGradient
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.parent}
-        colors={['#f2c4e0', '#96ddea']}>
+        colors={["#f2c4e0", "#96ddea"]}
+      >
         <View style={styles.space}>
-          <Image
-            source={require('../images/logo.png')}
-            style={styles.logo}
-
-          />
+          <Image source={require("../images/logo.png")} style={styles.logo} />
         </View>
         <View style={styles.container}>
           <Text style={styles.title}>Login</Text>
@@ -92,10 +94,8 @@ export default function SignInScreen({ navigation }) {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               // style={styles.parent}
-              colors={['#f2c4e0', '#96ddea']}
+              colors={["#f2c4e0", "#96ddea"]}
               style={styles.gradient}
-
-
             >
               <Pressable
                 style={styles.button}
@@ -125,9 +125,9 @@ export default function SignInScreen({ navigation }) {
               isGradientFill
               isGradientStroke
               gradientColors={["#f2c4e0", "#accdf2"]}
-            // fontFamily={"Gill Sans"}
-            //gradientColors={["#D49AC0", "#6FD2E2"]}
-            // fontFamily={"Gill Sans"}
+              // fontFamily={"Gill Sans"}
+              //gradientColors={["#D49AC0", "#6FD2E2"]}
+              // fontFamily={"Gill Sans"}
             />
           </View>
         </View>
@@ -138,50 +138,50 @@ export default function SignInScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   safeview: {
-    flex: 1
+    flex: 1,
   },
   parent: {
     flex: 1,
     height: 1000,
     marginTop: 40,
-    backgroundColor: 'rgba(52, 52, 52, alpha)',
+    backgroundColor: "rgba(52, 52, 52, alpha)",
     // padding: 12,
     //backgroundColor: '#966dab',
   },
   space: {
     flex: 1,
     padding: 42,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   container: {
     flex: 4,
-    flexDirection: 'column',
+    flexDirection: "column",
     padding: 42,
-    backgroundColor: '#fffbf5',
+    backgroundColor: "#fffbf5",
     borderTopLeftRadius: 40,
     borderTopRightRadius: 90,
   },
   fields: {
     flex: 1,
     height: 50,
-    justifyContent: 'center',
-    backgroundColor: '#fffbf5',
+    justifyContent: "center",
+    backgroundColor: "#fffbf5",
   },
   syncbox: {
     flex: 2,
     justifyContent: "center",
-    backgroundColor: '#fffbf5',
+    backgroundColor: "#fffbf5",
   },
   logo: {
     width: 250,
     height: 250,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   title: {
     fontSize: 35,
-    color: '#363131',
-    fontWeight: 'bold',
+    color: "#363131",
+    fontWeight: "bold",
   },
   box: {
     minWidth: 10,
@@ -190,29 +190,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   gradient: {
-    overflow: 'hidden',
-    backgroundColor: 'transparent',
+    overflow: "hidden",
+    backgroundColor: "transparent",
     borderRadius: 30,
-
   },
   buttonbox: {
     flex: 0,
     padding: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 10,
   },
   button: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 15,
     borderRadius: 50,
     width: 190,
   },
   buttontext: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 21,
-    color: '#fffbf5',
+    color: "#fffbf5",
   },
   mt20: {
     marginTop: 20,
@@ -224,9 +223,10 @@ const styles = StyleSheet.create({
     color: "#007BFF",
     fontWeight: "bold",
   },
-  errorText: { // New style for error messages
-    color: 'red', // Change color as needed
+  errorText: {
+    // New style for error messages
+    color: "red", // Change color as needed
     marginTop: 10,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
