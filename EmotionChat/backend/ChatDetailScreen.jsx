@@ -8,26 +8,51 @@ import {
   ActivityIndicator,
   TextInput,
   Button,
+  Image,
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
-import { saveMessageToSupabase, fetchEmotionAnalysis } from "../backend/api";
-import { saveEmotionAnalysis } from "../backend/emotionAnalysis";
+import { saveMessageToSupabase, initializeWebSocket } from "../../emotion/api";
+import { saveEmotionAnalysis } from "../../emotion/emotionAnalysis";
+const noProfilePic = require("../../assets/icons/pfp_icon.png");
+
+// Emotion color mapping  
+const emotionColorMap = {
+  Excitement: 'yellow',
+  Disappointment: 'black',
+  Joy: 'orange',
+  Sadness: 'blue',
+  Anger: 'red',
+  Confusion: 'purple',
+  Love: 'pink',
+};
 
 const ChatDetailScreen = () => {
   const { user } = useStore();
   const route = useRoute();
   const navigation = useNavigation();
-  const { chatId } = route.params;
+  const { chatId, otherPFP, otherUsername } = route.params;
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
-  const [typingUser, setTypingUser] = useState(null); // Track the user who is typing
-  const typingTimeoutRef = useRef(null); // Use ref to store the typing timeout
+  const [typingUser, setTypingUser] = useState(null);
+  const typingTimeoutRef = useRef(null);
+  const ws = useRef(null);
+
+  useEffect(() => {
+    // WebSocket connection initialization
+    ws.current = initializeWebSocket(setMessages);
+
+    return () => {
+      if (ws.current) {
+        ws.current.close();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const channel = supabase.channel(`chat-room-${chatId}`);
@@ -37,12 +62,30 @@ const ChatDetailScreen = () => {
         const receivedMessage = payload.payload;
         setMessages((prevMessages) => [receivedMessage, ...prevMessages]);
       })
-      .on("broadcast", { event: "typing" }, (payload) => {
-        const { userId, isTyping } = payload.payload; // Destructure userId and isTyping from payload
+      .on("broadcast", { event: "typing" }, async (payload) => {
+        const { userId, isTyping } = payload.payload;
+
         if (isTyping) {
-          setTypingUser(userId); // Set the typing user
+          try {
+            const { data: profile, error } = await supabase
+              .from("profiles")
+              .select("username")
+              .eq("id", userId)
+              .single();
+
+            if (error) {
+              console.error("Error fetching username:", error);
+              return;
+            }
+
+            if (profile) {
+              setTypingUser(profile.username);
+            }
+          } catch (error) {
+            console.error("Error fetching profile:", error);
+          }
         } else {
-          setTypingUser(null); // Clear typing user if not typing
+          setTypingUser(null);
         }
       })
       .subscribe();
@@ -53,7 +96,6 @@ const ChatDetailScreen = () => {
     };
   }, [chatId]);
 
-  // Fetch messages from the Supabase database
   useEffect(() => {
     const fetchMessages = async () => {
       const { data, error } = await supabase
@@ -66,6 +108,7 @@ const ChatDetailScreen = () => {
         console.error("Error fetching messages:", error);
         setError("Failed to load messages");
       } else {
+        console.log("Fetched messages:", data); // Debugging
         setMessages(data);
       }
       setLoading(false);
@@ -75,29 +118,27 @@ const ChatDetailScreen = () => {
   }, [chatId]);
 
   const handleTyping = () => {
-    if (!newMessage.trim()) return; // Prevent sending typing event if the input is empty
+    if (!newMessage.trim()) return;
 
-    // Send typing event to other clients
     supabase.channel(`chat-room-${chatId}`).send({
       type: "broadcast",
       event: "typing",
       payload: { userId: user.id, isTyping: true },
     });
 
-    // Clear existing timeout and set a new one
     clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
-      // Send typing event to other clients
       supabase.channel(`chat-room-${chatId}`).send({
         type: "broadcast",
         event: "typing",
         payload: { userId: user.id, isTyping: false },
       });
-    }, 1000); // 1 second timeout
+      setTypingUser(null);
+    }, 2000);
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return; // Prevent sending empty messages
+    if (!newMessage.trim()) return;
 
     const { data, error } = await supabase
       .from("messages")
@@ -124,32 +165,23 @@ const ChatDetailScreen = () => {
       });
     }
 
-    // Save the message to Supabase and analyze emotions
     const savedMessage = await saveMessageToSupabase(newMessage.trim(), user.id, chatId);
     if (!savedMessage) {
       console.error("Failed to save message");
       return;
     }
 
-    // Emotion analysis API call
-    const emotionResponse = await fetchEmotionAnalysis(newMessage.trim());
-    if (!emotionResponse || !emotionResponse.language) {
-      console.error("Failed to analyze emotions");
-      return;
-    }
+    // Hume AI emotion analysis request
+    const payload = {
+      models: { language: {} },
+      raw_text: true,
+      data: newMessage.trim(),
+    };
+    ws.current.send(JSON.stringify(payload));
 
-    // Save emotion analysis result
-    const topEmotions = emotionResponse.language.predictions[0].emotions;
-    await saveEmotionAnalysis(savedMessage.id, topEmotions);
-
-    // Broadcast the new message to all clients
-    supabase.channel(`chat-room-${chatId}`).send({
-      type: "broadcast",
-      event: "new-message",
-      payload: savedMessage,
-    });
-
-    setNewMessage(""); // Clear the input after sending
+    // New message added to the chat
+    setMessages((prevMessages) => [savedMessage, ...prevMessages]);
+    setNewMessage("");
   };
 
   const renderMessage = ({ item }) => {
@@ -172,12 +204,20 @@ const ChatDetailScreen = () => {
         >
           {item.content}
         </Text>
-        <Text style={styles.messageTimestamp}>
-          {new Date(item.created_at).toLocaleTimeString()}
+
+        {/* Emotion analysis result */}
+        {item.emotion && (
+        <Text style={[styles.emotionText, isMyMessage ? styles.myEmotionText : styles.otherEmotionText]}>
+          emotion: {item.emotion.name}
         </Text>
-      </View>
-    );
-  };
+      )}
+
+      <Text style={styles.messageTimestamp}>
+        {new Date(item.created_at).toLocaleTimeString()}
+      </Text>
+    </View>
+  );
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -188,11 +228,19 @@ const ChatDetailScreen = () => {
         <Text style={styles.backButtonText}>← Back</Text>
       </TouchableOpacity>
 
-      <Text style={styles.title}>Chat Detail Screen</Text>
+      <View style={styles.profileContainer}>
+        <Image
+          source={otherPFP ? { uri: otherPFP } : noProfilePic}
+          style={styles.profileImage}
+        />
+        <Text style={styles.title}>{otherUsername}</Text>
+      </View>
+
       <View style={styles.chatIdContainer}>
         <Text style={styles.chatIdText}>Conversation ID:</Text>
         <Text style={styles.chatIdValue}>{chatId}</Text>
       </View>
+
       {typingUser && (
         <Text style={styles.typingIndicator}>{typingUser} is typing...</Text>
       )}
@@ -204,7 +252,7 @@ const ChatDetailScreen = () => {
       {!loading && !error && (
         <FlatList
           data={messages}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item, index) => (item?.id ? item.id.toString() : index.toString())}
           renderItem={renderMessage}
           contentContainerStyle={styles.messageList}
           inverted
@@ -218,10 +266,12 @@ const ChatDetailScreen = () => {
           value={newMessage}
           onChangeText={(text) => {
             setNewMessage(text);
-            handleTyping(); // Call handleTyping on text change
+            handleTyping();
           }}
         />
-        <Button title="Send" onPress={handleSendMessage} />
+        <TouchableOpacity onPress={handleSendMessage}>
+          <Text style={styles.sendButton}>Send</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -233,19 +283,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#f0f4f8",
   },
-  typingIndicator: {
-    fontSize: 14,
-    color: "#999",
-    textAlign: "center",
-    marginVertical: 10,
+  profileContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  profileImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 15,
+    borderWidth: 2,
+    borderColor: "#007BFF",
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#333",
   },
   chatIdContainer: {
     padding: 15,
@@ -259,6 +325,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 2,
     elevation: 3,
+    marginBottom: 15,
   },
   chatIdText: {
     fontSize: 16,
@@ -278,59 +345,102 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#007BFF",
   },
+  typingIndicator: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
+    marginVertical: 10,
+  },
   messageList: {
     marginTop: 20,
   },
   messageContainer: {
     padding: 10,
-    borderRadius: 8,
-    marginBottom: 10,
+    borderRadius: 10,
+    marginBottom: 15,
+    maxWidth: "80%",
+    alignSelf: "flex-start",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.5,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     elevation: 2,
   },
   myMessageContainer: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#e5f5ff",
     alignSelf: "flex-end",
-    borderTopRightRadius: 0,
   },
   otherMessageContainer: {
-    backgroundColor: "#f1f1f1",
-    alignSelf: "flex-start",
-    borderTopLeftRadius: 0,
+    backgroundColor: "#f0f0f0",
   },
   messageText: {
     fontSize: 16,
+    lineHeight: 22,
   },
   myMessageText: {
-    color: "#fff",
+    color: "#333",
   },
   otherMessageText: {
-    color: "#333",
+    color: "#666",
   },
   messageTimestamp: {
     fontSize: 12,
     color: "#999",
     marginTop: 5,
-    textAlign: "right",
+    alignSelf: "flex-end",
   },
   inputContainer: {
     flexDirection: "row",
-    marginTop: 10,
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   input: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-    marginRight: 10,
+    height: 40,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    backgroundColor: "#f1f3f6",
+    fontSize: 16,
+  },
+  sendButton: {
+    fontSize: 16,
+    color: "#007BFF",
+    marginLeft: 10,
   },
   errorText: {
     color: "red",
     textAlign: "center",
     marginTop: 10,
+  },
+  emotionContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 4,
+  },
+  emotionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  emotionCircle: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 4,
+  },
+  emotionText: {
+    fontSize: 14,
+    color: 'gray',
   },
 });

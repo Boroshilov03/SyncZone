@@ -1,47 +1,67 @@
-import { supabase } from './supabase';
+import { supabase } from "../src/lib/supabase";
 
-// Message save to supabase
+const HUME_WS_URL = 'WebSocket endpoint';  // WebSocket endpoint
+const HUME_API_KEY = ' API';  // API
+
+// Message saving
 export const saveMessageToSupabase = async (content, senderId, chatId) => {
   try {
     const { data, error } = await supabase
       .from('messages')
-      .insert([{ content, sender_id: senderId, chat_id: chatId, created_at: new Date() }]);
+      .insert([{ content, sender_id: senderId, chat_id: chatId, created_at: new Date() }])
+      .select("*");
 
     if (error) {
-      console.error('Save message error:', error.message);
+      console.error('Message save error:', error.message);
       throw error;
     }
-    return data[0]; // saved message
+
+    if (!data || data.length === 0) {
+      console.error('Message save failed: no return data.');
+      return null;
+    }
+
+    return data[0];
   } catch (error) {
     console.error('Saving message error:', error);
     return null;
   }
 };
 
-// Emotion analysis Api call
-export const fetchEmotionAnalysis = async (message) => {
-  try {
-    const response = await fetch('https://api.hume.ai/v0/analyze', { // Hume endpoint Url
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `api`,  // Hume Api
-      },
-      body: JSON.stringify({
-        texts: [message],  // Message to analyze
-        models: { emotion: true }  // Model to use for analysis
-      }),
-    });
+// WebSocket initialization
+export const initializeWebSocket = (setChat) => {
+  const ws = new WebSocket(`${HUME_WS_URL}?apiKey=${HUME_API_KEY}`);
 
-    const result = await response.json();
-    if (response.ok) {
-      return result;
-    } else {
-      console.error('Emotion analysis failed:', result);
-      return null;
+  ws.onmessage = (event) => {
+    const response = JSON.parse(event.data);
+    console.log('감정 분석 응답:', JSON.stringify(response, null, 2));
+
+    if (response.language && response.language.predictions.length > 0) {
+      const emotionScores = [];
+      response.language.predictions.forEach((prediction) => {
+        prediction.emotions.forEach((emotion) => {
+          emotionScores.push(emotion);
+        });
+      });
+
+      const topEmotions = emotionScores.sort((a, b) => b.score - a.score).slice(0, 1); // 가장 높은 감정 하나만 선택
+      const highestEmotion = topEmotions[0];
+
+      setChat((prevChat) =>
+        prevChat.map((msg) =>
+          msg.content === response.language.predictions[0].text ? { ...msg, emotion: highestEmotion } : msg
+        )
+      );
     }
-  } catch (error) {
-    console.error('Emotion analysis error:', error);
-    return null;
-  }
+  };
+
+  ws.onerror = (error) => {
+    console.error('WebSocket error:', error);
+  };
+
+  ws.onclose = () => {
+    console.log('WebSocket connection closed');
+  };
+
+  return ws;
 };

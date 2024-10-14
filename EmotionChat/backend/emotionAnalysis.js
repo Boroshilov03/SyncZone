@@ -1,6 +1,5 @@
-import { supabase } from './supabase';
+import { supabase } from '../src/lib/supabase';
 
-// Emotion analysis save to supabase
 export const saveEmotionAnalysis = async (messageId, emotions) => {
   const emotionData = emotions.map((emotion) => ({
     message_id: messageId,
@@ -14,10 +13,10 @@ export const saveEmotionAnalysis = async (messageId, emotions) => {
       .insert(emotionData);
 
     if (error) {
-      console.error('Emotion analysis data save error:', error.message);
+      console.error('Emotion data save error:', error.message);
       throw error;
     }
   } catch (error) {
-    console.error('Saving emotion analysis failed:', error);
+    console.error('Saving emotion data error:', error);
   }
 };
