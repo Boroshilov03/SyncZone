@@ -8,7 +8,6 @@ const ListEvent = ({ toggleEditEventModal }) => {
   const [allEvents, setAllEvents] = useState([]);
   const { user } = useStore();
 
-  // Fetch events from the database
   const fetchingData = async () => {
     try {
       const { data: eventData, error: eventError } = await supabase
