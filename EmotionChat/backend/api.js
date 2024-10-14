@@ -44,7 +44,7 @@ export const initializeWebSocket = (setChat) => {
         });
       });
 
-      const topEmotions = emotionScores.sort((a, b) => b.score - a.score).slice(0, 1); // 가장 높은 감정 하나만 선택
+      const topEmotions = emotionScores.sort((a, b) => b.score - a.score).slice(0, 1);
       const highestEmotion = topEmotions[0];
 
       setChat((prevChat) =>
