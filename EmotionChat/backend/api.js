@@ -34,7 +34,7 @@ export const initializeWebSocket = (setChat) => {
 
   ws.onmessage = (event) => {
     const response = JSON.parse(event.data);
-    console.log('감정 분석 응답:', JSON.stringify(response, null, 2));
+    console.log('Emotion analysis response:', JSON.stringify(response, null, 2));
 
     if (response.language && response.language.predictions.length > 0) {
       const emotionScores = [];
