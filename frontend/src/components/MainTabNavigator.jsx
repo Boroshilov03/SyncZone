@@ -5,6 +5,7 @@ import GiftsScreen from "../screens/GiftsScreen";
 import CallsScreen from "../screens/CallsScreen";
 import CalendarScreen from "../screens/CalendarScreen";
 import ChatsScreen from "../screens/ChatsScreen";
+import RecentCalls from "../screens/RecentCalls";
 
 const Tab = createBottomTabNavigator();
 
@@ -53,7 +54,7 @@ function MainTabNavigator({ navigation }) {
           height: 70, // Height of the navbar
           paddingBottom: 10,
           paddingTop: 10,
-          justifyContent: 'center', // Center the icons
+          justifyContent: "center", // Center the icons
           paddingHorizontal: 20, // Adjust horizontal padding to center icons
         },
         headerShown: false,
@@ -92,25 +93,20 @@ function MainTabNavigator({ navigation }) {
     >
       <Tab.Screen name="Gifts" component={GiftsScreen} />
       <Tab.Screen name="Chats" component={ChatsScreen} />
-      <Tab.Screen name="Calls" component={CallsScreen} />
+      <Tab.Screen name="Calls" component={RecentCalls} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
     </Tab.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
-  icon: {
-    // Default size will be overridden by iconSizeMap
-  },
   iconContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 2, // Reduced padding to bring icons closer
-    marginHorizontal: 5, // Add margin to space out the icons evenly
   },
   label: {
     fontSize: 13,
-    marginLeft: 3, // Reduced margin to bring label closer to icon
+    marginLeft: 3, 
   },
   activeBubble: {
     borderRadius: 20,

@@ -17,17 +17,4 @@ const CallsScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    display: "flex",
-    padding: 10,
-    backgroundColor: "#fff",
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 20,
-    marginBottom: 10,
-  },
-});
-
 export default CallsScreen;

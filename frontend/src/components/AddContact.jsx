@@ -8,6 +8,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  SafeAreaView,
 } from "react-native";
 import { debounce } from "lodash"; // Install lodash if not already done
 import useStore from "../store/store";
@@ -30,7 +31,8 @@ const AddContact = ({ toggleModal }) => {
       const { data, error } = await supabase
         .from("profiles")
         .select("id, username, first_name, last_name")
-        .ilike("username", `%${query}%`);
+        .ilike("username", `%${query}%`)
+        .neq("id", user.id);
 
       if (error) {
         console.error("Error searching profiles:", error);
@@ -102,7 +104,7 @@ const AddContact = ({ toggleModal }) => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <TextInput
         style={styles.searchInput}
         placeholder="Search by username..."
@@ -125,7 +127,7 @@ const AddContact = ({ toggleModal }) => {
       ) : (
         <Text style={styles.emptyText}>No profiles found</Text>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
