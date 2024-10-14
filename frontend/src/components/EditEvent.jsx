@@ -3,6 +3,7 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, Image, B
 import { supabase } from '../lib/supabase';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import useStore from '../store/store';
+import DeleteEvent from "../components/DeleteEvent";
 
 const getMoodColor = (mood) => {
   switch (mood) {
@@ -21,87 +22,96 @@ const getMoodColor = (mood) => {
   }
 };
 
-const EditEvent = ({ onClose }) => {
-  const{ user } = useStore();
-  const [titleValue, settitleValue] = useState(""); // Title
-  const [date, setDate] = useState(new Date()); // Date
-  const [showDatePicker, setShowDatePicker] = useState(false); // Toggle date picker
-  const [startTime, setStartTime] = useState(new Date()); // Start time state
-  const [endTime, setEndTime] = useState(new Date()); // End time state
-  const [showStartTimePicker, setShowStartTimePicker] = useState(false); // State to show start time picker
-  const [showEndTimePicker, setShowEndTimePicker] = useState(false); // State to show end time picker
-  const [description, setDescription] = useState(""); // Description
-  const [participants, setparticipants] = useState(['459abcb2-481d-4a3c-9f9b-2b018fe7e829', '0c9d97dd-b1b8-43b7-bc30-f089d60c9c47', '26ab9d92-a7c0-4a6b-a469-8dfc75d4860e']); // Selected participants
-  const [newMember, setNewMember] = useState(''); // Input for new member
-  const [mood, setMood] = useState(null); // Selected mood
+const EditEvent = ({ eventId, onClose }) => {
+    const { user } = useStore();
+    const [titleValue, settitleValue] = useState(""); // Title
+    const [date, setDate] = useState(new Date()); // Date
+    const [showDatePicker, setShowDatePicker] = useState(false); // Toggle date picker
+    const [startTime, setStartTime] = useState(new Date()); // Start time state
+    const [endTime, setEndTime] = useState(new Date()); // End time state
+    const [showStartTimePicker, setShowStartTimePicker] = useState(false); // State to show start time picker
+    const [showEndTimePicker, setShowEndTimePicker] = useState(false); // State to show end time picker
+    const [description, setDescription] = useState(""); // Description
+    const [participants, setparticipants] = useState(['459abcb2-481d-4a3c-9f9b-2b018fe7e829', '0c9d97dd-b1b8-43b7-bc30-f089d60c9c47', '26ab9d92-a7c0-4a6b-a469-8dfc75d4860e']); // Selected participants
+    const [newMember, setNewMember] = useState(''); // Input for new member
+    const [mood, setMood] = useState(null); // Selected mood
+    const [deletePopupVisible, setDeletePopupVisible] = useState(false); // Controls visibility of DeleteEvent
   
-  const handleEditEvent = async () => {
-    const formatTime = (date) => {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-    };
+    const handleEditEvent = async () => {
+      const formatTime = (date) => {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+      };
   
-    const formattedStartTime = formatTime(startTime);  
-    const formattedEndTime = formatTime(endTime);  
+      const formattedStartTime = formatTime(startTime);
+      const formattedEndTime = formatTime(endTime);
   
-    console.log({ titleValue, date, startTime: formattedStartTime, endTime: formattedEndTime, description, participants, mood });
+      console.log({ titleValue, date, startTime: formattedStartTime, endTime: formattedEndTime, description, participants, mood });
   
-    try {
-      const { data, error } = await supabase
-        .from('event')
-        .insert([{
-          title: titleValue,
-          date,
-          start_time: formattedStartTime,  
-          end_time: formattedEndTime,     
-          description,
-          mood
-        }])
-        .select();
-  
-      if (error) {
-        console.error(error.message);
-      } else {
-        settitleValue('');
-        setDescription('');
-        setMood(null);
-        onClose();
-        console.log(data);
-  
-        // Get the event ID from the inserted data and add participants
-        const eventID = data[0].id;
-        await EditEventParticipants(eventID);
-      }
-    } catch (error) {
-      console.error("Error adding event:", error);
-    }
-  };
-  
-  const EditEventParticipants = async (eventID) => {
-    try {
-      // Iterate over the participants array
-      for (let participantId of participants) {
+      try {
         const { data, error } = await supabase
-          .from('event_participants')
-          .insert({ user_id: participantId, event_id: eventID })
-          .select();
+          .from('event')
+          .update({
+            title: titleValue,
+            date,
+            start_time: formattedStartTime,
+            end_time: formattedEndTime,
+            description,
+            mood
+          })
+          .eq('id', eventId); // Update the event with the given eventId
   
         if (error) {
-          console.error(`Error adding participant ${participantId}:`, error.message);
+          console.error(error.message);
         } else {
-          console.log(`Participant ${participantId} added successfully:`, data);
+          settitleValue('');
+          setDescription('');
+          setMood(null);
+          onClose();
+          console.log('Event updated:', data);
+  
+          // Update participants for the event
+          await EditEventParticipants(eventId);
         }
+      } catch (error) {
+        console.error("Error updating event:", error);
       }
-    } catch (error) {
-      console.error("Error adding participants:", error);
-    }
-  };
+    };
   
+    const EditEventParticipants = async (eventID) => {
+      try {
+        // First, delete all existing participants for the event
+        const { error: deleteError } = await supabase
+          .from('event_participants')
+          .delete()
+          .eq('event_id', eventID);
   
-  const onDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || date;
-    setShowDatePicker(false);
-    setDate(currentDate);
-  };
+        if (deleteError) {
+          console.error("Error deleting old participants:", deleteError.message);
+          return;
+        }
+  
+        // Then, add the new participants
+        for (let participantId of participants) {
+          const { data, error } = await supabase
+            .from('event_participants')
+            .insert({ user_id: participantId, event_id: eventID });
+  
+          if (error) {
+            console.error(`Error adding participant ${participantId}:`, error.message);
+          } else {
+            console.log(`Participant ${participantId} added successfully:`, data);
+          }
+        }
+      } catch (error) {
+        console.error("Error updating participants:", error);
+      }
+    };
+  
+    const onDateChange = (event, selectedDate) => {
+      const currentDate = selectedDate || date;
+      setShowDatePicker(false);
+      setDate(currentDate);
+    };
 
   const predefinedPFPs = [
     require('../../assets/icons/pfp1.png'),
@@ -109,6 +119,21 @@ const EditEvent = ({ onClose }) => {
     require('../../assets/icons/pfp3.webp'),
     require('../../assets/icons/add_person.png'),
   ];
+
+  const handleTrashIconPress = () => {
+    setDeletePopupVisible(true); // Show DeleteEvent popup when trash icon is pressed
+  };
+
+  const handleDeleteEvent = () => {
+    // Logic for deleting the event
+    console.log("Event Deleted:", selectedEvent);
+    setDeletePopupVisible(false); // Close delete popup
+    setEditEventVisible(false);   // Close EditEvent view
+  };
+
+  const handleCloseDeletePopup = () => {
+    setDeletePopupVisible(false); // Close the popup without deleting the event
+  };
   
 
   return (
@@ -119,16 +144,27 @@ const EditEvent = ({ onClose }) => {
             <Text style={styles.title}>Edit Event</Text>
         </View>
 
-        {/* Trash Icon */}
-        <TouchableOpacity 
-            style={styles.trashIconContainer} 
-            onPress={() => { /* Handle trash icon press */ }}
-        >
-            <Image 
+      {/* Trash Icon */}
+      <TouchableOpacity 
+          style={styles.trashIconContainer} 
+          onPress={handleTrashIconPress} // Handle trash icon press
+      >
+          <Image 
             source={require('../../assets/icons/trash_icon.png')} 
             style={[styles.trashIcon, { width: 16, height: 16 }]} 
+          />
+      </TouchableOpacity>
+
+        {/* Conditionally render the DeleteEvent component */}
+        {deletePopupVisible && (
+            <DeleteEvent
+            visible={deletePopupVisible}
+            onClose={handleCloseDeletePopup} // Close without deletion
+            onConfirm={handleDeleteEvent} // Delete and close popup
             />
-        </TouchableOpacity>
+        )}
+
+
         </View>
 
 
