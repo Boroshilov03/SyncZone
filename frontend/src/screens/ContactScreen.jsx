@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AddContact from "../components/AddContact";
 import {
   TouchableOpacity,
@@ -7,12 +7,13 @@ import {
   View,
   Modal,
   Pressable,
+  KeyboardAvoidingView,
   SafeAreaView,
   FlatList,
 } from "react-native";
 import useStore from "../store/store";
 import { supabase } from "../lib/supabase";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FontAwesome } from "@expo/vector-icons"; // For chat and call icons
 
 // Fetch mutual contacts from Supabase
@@ -30,17 +31,40 @@ const fetchMutualContacts = async ({ queryKey }) => {
 const ContactScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const { user } = useStore();
+  const queryClient = useQueryClient();
 
-  // Correct useQuery syntax for v5, passing options as a single object
+  // Correct useQuery syntax for v5
   const {
     data: contacts,
     error,
     isLoading,
   } = useQuery({
     queryKey: ["contacts", user?.id], // Query key as an array with the user id
-    queryFn: fetchMutualContacts, // Function to fetch the contacts
+    queryFn: fetchMutualContacts,
     enabled: !!user, // Only run query if the user is defined
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("schema-db-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "contacts",
+        },
+        () => {
+          // Refetch contacts whenever a change occurs
+          queryClient.invalidateQueries(["contacts", user?.id]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
 
   if (isLoading) {
     return (
@@ -59,9 +83,6 @@ const ContactScreen = ({ navigation }) => {
   }
 
   const createChat = async (contactID) => {
-    // console.log("my id", user.id);
-    // console.log("creating chat... with ", contactID);
-
     // Check if a 1-on-1 chat already exists between the two users
     const { data: existingChats, error: chatError } = await supabase
       .from("chats")
@@ -94,8 +115,23 @@ const ContactScreen = ({ navigation }) => {
     // If chat already exists, return its ID
     if (existingChats && existingChats.length > 0) {
       const chatId = existingChats[0].id;
-      console.log("Chat already exists with ID:", chatId);
-      navigation.navigate("ChatDetail", { chatId }); // Navigate to the chat screen
+      // Fetch the contact's details for navigation
+      const { data: contactData, error: contactError } = await supabase
+        .from("profiles")
+        .select("username, avatar_url")
+        .eq("id", contactID)
+        .single();
+
+      if (contactError) {
+        console.error("Error fetching contact data:", contactError);
+        return;
+      }
+
+      navigation.navigate("ChatDetail", {
+        chatId: chatId,
+        username: contactData.username,
+        otherPFP: contactData.avatar_url,
+      });
       return;
     }
 
@@ -111,7 +147,7 @@ const ContactScreen = ({ navigation }) => {
     }
 
     // Add both users to the participants table
-    const { data: participants, error: participantsError } = await supabase
+    const { error: participantsError } = await supabase
       .from("chat_participants")
       .insert([
         { chat_id: newChat[0].id, user_id: user.id },
@@ -122,13 +158,28 @@ const ContactScreen = ({ navigation }) => {
       console.error("Error adding participants:", participantsError);
       return;
     }
-    const chatId = newChat[0].id;
-    navigation.navigate("ChatDetail", { chatId }); // Navigate to the chat screen
-    console.log("Chat created with ID:", newChat[0].id);
+
+    // Fetch the contact's details for navigation
+    const { data: contactData, error: contactError } = await supabase
+      .from("profiles")
+      .select("username, avatar_url")
+      .eq("id", contactID)
+      .single();
+
+    if (contactError) {
+      console.error("Error fetching contact data:", contactError);
+      return;
+    }
+
+    navigation.navigate("ChatDetail", {
+      chatId: newChat[0].id,
+      username: contactData.username,
+      otherPFP: contactData.avatar_url,
+    });
   };
 
   const createCall = (contactID) => {
-    console.log("creating call...with", contactID);
+    console.log("Creating call with", contactID);
   };
 
   const renderContact = ({ item }) => (
@@ -169,7 +220,6 @@ const ContactScreen = ({ navigation }) => {
         <Text style={styles.backButtonText}>← Back</Text>
       </TouchableOpacity>
       <Text style={styles.title}>Contacts</Text>
-      {/* Contact List */}
       <FlatList
         data={contacts}
         renderItem={renderContact}
@@ -178,7 +228,6 @@ const ContactScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Custom Add Contact button */}
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => setModalVisible(true)}
@@ -186,7 +235,6 @@ const ContactScreen = ({ navigation }) => {
         <Text style={styles.addButtonText}>+ Add Contact</Text>
       </TouchableOpacity>
 
-      {/* Modal for adding contacts */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -195,16 +243,13 @@ const ContactScreen = ({ navigation }) => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            {/* Close button for modal */}
             <Pressable
               onPress={() => setModalVisible(false)}
               style={styles.closeButton}
             >
               <Text style={styles.closeButtonText}>×</Text>
             </Pressable>
-
-            {/* Render the AddContact component inside the modal */}
-            <AddContact />
+            <AddContact onClose={() => setModalVisible(false)} />
           </View>
         </View>
       </Modal>
@@ -234,76 +279,64 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
     textAlign: "center",
   },
-  addButton: {
-    padding: 15,
-    backgroundColor: "#11b0A5",
-    borderRadius: 5,
+  contactList: {
+    marginBottom: 20,
+  },
+  contactItem: {
+    borderBottomWidth: 1,
+    borderColor: "#ccc",
+    paddingVertical: 15,
+  },
+  wrapperRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 20,
+  },
+  wrapperCol: {
+    flex: 1,
+  },
+  contactText: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  contactUsername: {
+    fontSize: 14,
+    color: "#555",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  chatButton: {
+    backgroundColor: "#007BAF",
+    borderRadius: 5,
+    padding: 10,
+    marginRight: 5,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  callButton: {
+    backgroundColor: "#28a745",
+    borderRadius: 5,
+    padding: 10,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    marginLeft: 5,
+  },
+  addButton: {
+    backgroundColor: "#007BAF",
+    borderRadius: 5,
+    padding: 10,
+    alignItems: "center",
   },
   addButtonText: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "bold",
-  },
-  contactList: {
-    flex: 1,
-    marginVertical: 10,
-  },
-  wrapperRow: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between", // Space out items in the row
-    alignItems: "center",
-  },
-  wrapperCol: {
-    display: "flex",
-  },
-  contactItem: {
-    padding: 15,
-    backgroundColor: "#fff",
-    borderRadius: 5,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  contactText: {
-    fontSize: 18,
-    color: "#333",
-  },
-  contactUsername: {
-    fontSize: 14,
-    color: "#777",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-  },
-  chatButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#4CAF50", // Green for chat
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  callButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#007BAF", // Blue for call
-    padding: 10,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    marginLeft: 5,
   },
   modalContainer: {
     flex: 1,
@@ -324,7 +357,9 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   closeButton: {
-    alignSelf: "flex-end",
+    position: "absolute",
+    top: 10,
+    right: 10,
   },
   closeButtonText: {
     fontSize: 24,
