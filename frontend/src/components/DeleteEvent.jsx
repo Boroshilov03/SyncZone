@@ -65,17 +65,17 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     marginHorizontal: 10,
-    elevation: 5,  // Added shadow for buttons
+    elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
   },
   confirmButton: {
-    backgroundColor: '#FF4C4C', // Red color for the confirmation button
+    backgroundColor: '#FF4C4C',
   },
   cancelButton: {
-    backgroundColor: '#5A5A5A', // Gray color for the cancel button
+    backgroundColor: '#5A5A5A',
   },
   buttonText: {
     color: 'white',
