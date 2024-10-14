@@ -9,6 +9,10 @@ const CallsScreen = ({ navigation }) => {
         title="Add Contact"
         onPress={() => navigation.navigate("Contact")}
       />
+      <Button
+        title="go to profile"
+        onPress={() => navigation.navigate("Profile")}
+      />
     </SafeAreaView>
   );
 };

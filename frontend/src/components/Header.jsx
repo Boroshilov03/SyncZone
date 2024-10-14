@@ -1,8 +1,8 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import React from 'react';
 
-const profilePic = require('../../assets/icons/pfp_icon.png'); 
-const rightImage = require('../../assets/icons/add_calendar.png'); 
+const profilePic = require('../../assets/icons/pfp_icon.png');
+const rightImage = require('../../assets/icons/add_calendar.png');
 
 const Header = ({ toggleAddEventModal }) => {
   return (
@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
     padding: 10,
     marginLeft: 10,
     marginRight: 10,
@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
   profilePic: {
     width: 40,
     height: 40,
-    borderRadius: 20, 
+    borderRadius: 20,
   },
   headerText: {
     fontSize: 20,
