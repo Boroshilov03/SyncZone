@@ -54,97 +54,108 @@ export default function SignInScreen({ navigation }) {
   });
 
   return (
-    <SafeAreaView style={styles.safeview}>
-      <LinearGradient
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.parent}
-        colors={["#f2c4e0", "#96ddea"]}
-      >
-        <View style={styles.space}>
-          <Image source={require("../images/logo.png")} style={styles.logo} />
+    // <SafeAreaView
+    //   style={styles.safeview}
+    // >
+    <LinearGradient
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={styles.parent}
+      colors={['#FFDDF7', '#C5ECFF']}>
+      <View style={styles.space}>
+        <Image
+          source={require('../images/logosz.png')}
+          style={styles.logo}
+
+        />
+      </View>
+      <View style={styles.container}>
+        <View style={styles.loginbox}>
+          <Text style={styles.title} fontFamily={"Karla-Medium"}>Login</Text>
         </View>
-        <View style={styles.container}>
-          <Text style={styles.title}>Login</Text>
-          <View style={styles.fields}>
-            <View style={[styles.verticallySpaced, styles.mt20]}>
-              <Input
-                label="Email"
-                leftIcon={{ type: "font-awesome", name: "envelope" }}
-                onChangeText={setEmail}
-                value={email}
-                placeholder="email@address.com"
-                autoCapitalize="none"
-              />
-            </View>
-            <View style={styles.verticallySpaced}>
-              <Input
-                label="Password"
-                leftIcon={{ type: "font-awesome", name: "lock" }}
-                onChangeText={setPassword}
-                value={password}
-                secureTextEntry
-                placeholder="Password"
-                autoCapitalize="none"
-              />
-            </View>
+        <View style={styles.fields}>
+          <View style={[styles.verticallySpaced, styles.mt20]}>
+            <Input
+              label="Email"
+              leftIcon={{ type: "font-awesome", name: "envelope" }}
+              onChangeText={setEmail}
+              value={email}
+              placeholder="email@address.com"
+              autoCapitalize="none"
+            />
           </View>
-          <View style={styles.buttonbox}>
-            <LinearGradient
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              // style={styles.parent}
-              colors={["#f2c4e0", "#96ddea"]}
-              style={styles.gradient}
-            >
-              <Pressable
-                style={styles.button}
-                onPress={() => signInWithEmail()}
-                disabled={isLoading} // Disable the button when loading
-                borderRadius={20}
-              >
-                <Text style={styles.buttontext}>Sign In</Text>
-              </Pressable>
-            </LinearGradient>
-          </View>
-          <Text style={styles.signInText}>
-            Don't have an account?{" "}
-            <Text
-              style={styles.signInLink}
-              onPress={() => navigation.navigate("SignUp")}
-            >
-              Sign Up
-            </Text>
-          </Text>
-        </View>
-        <View style={styles.syncbox}>
-          <View style={styles.box}>
-            <GradientText
-              text={"SyncZone"}
-              fontSize={40}
-              isGradientFill
-              isGradientStroke
-              gradientColors={["#f2c4e0", "#accdf2"]}
-              // fontFamily={"Gill Sans"}
-              //gradientColors={["#D49AC0", "#6FD2E2"]}
-              // fontFamily={"Gill Sans"}
+          <View style={styles.verticallySpaced}>
+            <Input
+              label="Password"
+              leftIcon={{ type: "font-awesome", name: "lock" }}
+              onChangeText={setPassword}
+              value={password}
+              secureTextEntry
+              placeholder="Password"
+              autoCapitalize="none"
             />
           </View>
         </View>
-      </LinearGradient>
-    </SafeAreaView>
+        <View style={styles.buttonbox}>
+          <LinearGradient
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            // style={styles.parent}
+            colors={['#FFDDF7', '#C5ECFF', '#FFDDF7']}
+            style={styles.gradient}
+
+
+          >
+            <Pressable
+              style={styles.button}
+              onPress={() => signInWithEmail()}
+              disabled={isLoading} // Disable the button when loading
+              borderRadius={20}
+            >
+              <Text style={styles.buttontext} fontFamily={"Karla-Medium"}>Login</Text>
+            </Pressable>
+          </LinearGradient>
+        </View>
+        <Text style={styles.signInText}>
+          Don't have an account?{" "}
+          <Text
+            style={styles.signInLink}
+            onPress={() => navigation.navigate("SignUp")}
+          >
+            Sign Up
+          </Text>
+        </Text>
+      </View>
+      <View style={styles.syncbox}>
+        <View style={styles.box}>
+          <GradientText
+            text={"SyncZone"}
+            fontSize={40}
+            isGradientFill
+            isGradientStroke
+            gradientColors={['#FFDDF7', "#C5ECFF", '#FFDDF7']}
+            fontFamily={"Karla-Medium"}
+          //gradientColors={["#D49AC0", "#6FD2E2"]}
+          // fontFamily={"Gill Sans"}
+          />
+        </View>
+      </View>
+    </LinearGradient>
+    //</SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeview: {
     flex: 1,
+    flex: 1,
   },
   parent: {
     flex: 1,
-    height: 1000,
-    marginTop: 40,
-    backgroundColor: "rgba(52, 52, 52, alpha)",
+    //borderWidth: 4,
+
+    //height: 1000,
+    backgroundColor: 'rgba(52, 52, 52, alpha)',
     // padding: 12,
     //backgroundColor: '#966dab',
   },
@@ -157,21 +168,49 @@ const styles = StyleSheet.create({
   container: {
     flex: 4,
     flexDirection: "column",
+    justifyContent: 'space-between',
+    flexDirection: 'column',
     padding: 42,
     backgroundColor: "#fffbf5",
     borderTopLeftRadius: 40,
     borderTopRightRadius: 90,
+    //borderWidth: 3,
+  },
+  loginbox: {
+    flex: 5,
+    padding: 10,
+    // margin: 8,
+    //borderWidth: 3,
   },
   fields: {
-    flex: 1,
-    height: 50,
-    justifyContent: "center",
-    backgroundColor: "#fffbf5",
+    flex: 10,
+    justifyContent: 'space-between',
+    padding: 5,
+    //margin: 5,
+    //justifyContent: 'center',
+    backgroundColor: '#fffbf5',
+    //borderWidth: 3,
+    //height: '50%',
+    rowGap: 5
+  },
+  buttonbox: {
+    flex: 0,
+    padding: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    //margin: 5,
+    //borderWidth: 3,
   },
   syncbox: {
     flex: 2,
     justifyContent: "center",
-    backgroundColor: "#fffbf5",
+    backgroundColor: '#fffbf5',
+  },
+  verticallySpaced: {
+    flex: 1,
+    padding: 5,
+    margin: 5,
+    position: 'relative'
   },
   logo: {
     width: 250,
@@ -179,9 +218,10 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
   title: {
-    fontSize: 35,
-    color: "#363131",
-    fontWeight: "bold",
+    fontSize: 32,
+    color: '#616061',
+    fontWeight: 'bold',
+    lineHeight: 34,
   },
   box: {
     minWidth: 10,
@@ -190,17 +230,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   gradient: {
-    overflow: "hidden",
-    backgroundColor: "transparent",
+    overflow: 'hidden',
+    //backgroundColor: 'transparent',
     borderRadius: 30,
   },
-  buttonbox: {
-    flex: 0,
-    padding: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 10,
-  },
+
   button: {
     alignItems: "center",
     justifyContent: "center",
@@ -211,10 +245,11 @@ const styles = StyleSheet.create({
   buttontext: {
     fontWeight: "bold",
     fontSize: 21,
-    color: "#fffbf5",
+    color: '#fffbf5',
+    //padding: 100,
   },
   mt20: {
-    marginTop: 20,
+    marginTop: 0,
   },
   signInText: {
     textAlign: "center",

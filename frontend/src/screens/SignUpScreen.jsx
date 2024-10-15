@@ -20,6 +20,7 @@ import useStore from "../store/store";
 import { decode } from "base64-arraybuffer";
 import { signupSchema } from "../utils/validation";
 import { LinearGradient } from "expo-linear-gradient";
+import GradientText from "react-native-gradient-texts";
 
 export default function SignupScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -158,6 +159,12 @@ export default function SignupScreen({ navigation }) {
       <KeyboardAvoidingView behavior="padding" style={styles.container}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView contentContainerStyle={styles.scrollView}>
+            <View style={styles.titlebox} flexDirection={'row'}>
+              <View style={styles.open}>
+                <Text style={styles.title} fontFamily={"Karla-Medium"}>Create an account</Text>
+              </View>
+
+            </View>
             <TouchableWithoutFeedback onPress={pickImage}>
               <View style={styles.imageContainer}>
                 {profilePhoto ? (
@@ -169,20 +176,40 @@ export default function SignupScreen({ navigation }) {
                 )}
               </View>
             </TouchableWithoutFeedback>
-            {["username", "firstname", "lastname", "email", "password1", "password2", "location"].map((field) => (
-              <Input
-                key={field}
-                title={field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, " $1")}
-                value={formData[field]}
-                error={errors[field]}
-                setValue={(value) => handleInputChange(field, value)}
-                secureTextEntry={field.includes("password")}
-              />
-            ))}
+            <View style={styles.inputbox}>
+              {["username", "firstname", "lastname", "email", "password1", "password2", "location"].map((field) => (
+                <Input
+                  key={field}
+                  title={field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, " $1")}
+                  value={formData[field]}
+                  error={errors[field]}
+                  setValue={(value) => handleInputChange(field, value)}
+                  secureTextEntry={field.includes("password")}
+                />
+              ))}
+            </View>
             <View style={styles.buttonbox}>
-              <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={["#f2c4e0", "#96ddea"]} style={styles.gradient}>
-                <Pressable style={styles.button} onPress={onSignUp} disabled={loading}>
-                  <Text style={styles.buttontext}>{loading ? "Signing Up..." : "Sign Up"}</Text>
+              <LinearGradient
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                // style={styles.parent}
+                colors={['#FFDDF7', '#C5ECFF', '#FFDDF7']}
+                style={styles.gradient}
+
+
+              >
+                <Pressable
+                  style={styles.button}
+                  onPress={onSignUp} disabled={loading}
+                  borderRadius={20}
+                >
+                  {/* <Text style={styles.buttontext} fontFamily={"Karla-Medium"}>Login</Text> */}
+                  <Text
+                    style={styles.buttontext}
+                    fontFamily={"Karla-Medium"}
+                  >
+                    {loading ? "Signing Up..." : "Sign Up"}
+                  </Text>
                 </Pressable>
               </LinearGradient>
             </View>
@@ -192,6 +219,18 @@ export default function SignupScreen({ navigation }) {
                 Sign In
               </Text>
             </Text>
+            <View style={styles.box}>
+              <GradientText
+                text={"SyncZone"}
+                fontSize={40}
+                isGradientFill
+                isGradientStroke
+                gradientColors={['#FFDDF7', "#C5ECFF", '#FFDDF7']}
+                fontFamily={"Karla-Medium"}
+              //gradientColors={["#D49AC0", "#6FD2E2"]}
+              // fontFamily={"Gill Sans"}
+              />
+            </View>
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
@@ -212,6 +251,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
+    padding: 5,
+    //borderWidth: 3,
   },
   image: {
     width: 100,
@@ -219,24 +260,60 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     backgroundColor: "green",
   },
-  buttonbox: {
+  title: {
+    fontSize: 34,
+    //borderWidth: 3,
+  },
+
+  titlebox: {
     flex: 1,
+    //flexDirection: 'row',
+    padding: 20,
+    width: 'auto',
+
+    //borderWidth: 3,
+  },
+
+  open: {
+    flex: 1,
+    //borderWidth: 3,
+    //justifyContent: 'flex-start',
+    alignItems: 'flex-start'
+  },
+  inputbox: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonbox: {
+    flex: 0,
     padding: 15,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    //margin: 5,
+    //borderWidth: 3,
   },
   gradient: {
-    width: "100%",
-    borderRadius: 5,
+    overflow: 'hidden',
+    //backgroundColor: 'transparent',
+    borderRadius: 30,
+
   },
+
   button: {
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 15,
-    alignItems: "center",
-    borderRadius: 5,
+    borderRadius: 50,
+    width: 190,
+
   },
   buttontext: {
-    fontSize: 16,
-    color: "white",
+    fontWeight: 'bold',
+    fontSize: 21,
+    color: '#fffbf5',
+    //padding: 100,
   },
   signInText: {
     marginTop: 16,
@@ -256,6 +333,13 @@ const styles = StyleSheet.create({
   },
   imagePlaceholderText: {
     color: "#757575",
+  },
+  box: {
+    minWidth: 10,
+    marginTop: 20,
+    padding: 5,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
 });
 
