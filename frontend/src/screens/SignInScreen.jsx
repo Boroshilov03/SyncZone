@@ -1,9 +1,16 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Text, Pressable, Image, SafeAreaView } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Pressable,
+  Image,
+  SafeAreaView,
+} from "react-native";
 import { supabase } from "../lib/supabase";
 import { Input } from "@rneui/themed";
 import GradientText from "react-native-gradient-texts";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
 import useStore from "../store/store"; // Assuming this handles user and tokens
 import { loginSchema } from "../utils/validation"; // Import the login schema
 import { useMutation } from "@tanstack/react-query"; // Import useMutation
@@ -141,6 +148,7 @@ export default function SignInScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeview: {
     flex: 1,
+    flex: 1,
   },
   parent: {
     flex: 1,
@@ -154,15 +162,16 @@ const styles = StyleSheet.create({
   space: {
     flex: 1,
     padding: 42,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   container: {
     flex: 4,
+    flexDirection: "column",
     justifyContent: 'space-between',
     flexDirection: 'column',
     padding: 42,
-    backgroundColor: '#fffbf5',
+    backgroundColor: "#fffbf5",
     borderTopLeftRadius: 40,
     borderTopRightRadius: 90,
     //borderWidth: 3,
@@ -206,7 +215,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 250,
     height: 250,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   title: {
     fontSize: 32,
@@ -224,18 +233,17 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     //backgroundColor: 'transparent',
     borderRadius: 30,
-
   },
 
   button: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 15,
     borderRadius: 50,
     width: 190,
   },
   buttontext: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 21,
     color: '#fffbf5',
     //padding: 100,
@@ -250,9 +258,10 @@ const styles = StyleSheet.create({
     color: "#007BFF",
     fontWeight: "bold",
   },
-  errorText: { // New style for error messages
-    color: 'red', // Change color as needed
+  errorText: {
+    // New style for error messages
+    color: "red", // Change color as needed
     marginTop: 10,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

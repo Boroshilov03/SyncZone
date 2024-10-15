@@ -37,7 +37,6 @@ const labelMap = {
   Calendar: "Calendar",
 };
 
-// Define icon sizes for different tabs
 const iconSizeMap = {
   Gifts: { width: 30, height: 25 },
   Chats: { width: 25, height: 22 },
@@ -50,13 +49,22 @@ function MainTabNavigator({ navigation }) {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarShowLabel: false,
-        tabBarStyle: {
-          height: 70, // Height of the navbar
-          paddingBottom: 10,
-          paddingTop: 10,
-          justifyContent: "center", // Center the icons
-          paddingHorizontal: 20, // Adjust horizontal padding to center icons
-        },
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            position: "absolute", // Make it absolute to overlay the content
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(255, 255, 255, 0.75)", // More transparent white
+            backdropFilter: "blur(2px)", // Glassy effect
+            elevation: 10,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 5 },
+            shadowOpacity: 0.2,
+            shadowRadius: 6.27,
+          },
+        ],
         headerShown: false,
         tabBarIcon: ({ focused }) => {
           const icon = iconMap[route.name];
@@ -100,18 +108,34 @@ function MainTabNavigator({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  tabBar: {
+    height: 70, // Height of the navbar
+    paddingBottom: 10,
+    paddingTop: 10,
+    justifyContent: "center", // Center the icons
+    paddingHorizontal: 20, // Adjust horizontal padding to center icons
+    borderTopWidth: 0, // Remove top border
+    borderTopLeftRadius: 20, // Rounded corners
+    borderTopRightRadius: 20, // Rounded corners
+    overflow: "hidden", // Ensure borders don’t overflow
+  },
   iconContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
   label: {
     fontSize: 13,
-    marginLeft: 3, 
+    marginLeft: 3,
   },
   activeBubble: {
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 5,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6.27,
   },
 });
 
