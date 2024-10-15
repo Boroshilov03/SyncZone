@@ -12,8 +12,10 @@ import React, { useEffect, useState } from "react";
 import Dog from "../../assets/icons/Dogo.gif"; // Import the animated image
 import { supabase } from "../lib/supabase"; // Import Supabase client
 import useStore from "../store/store"; // Assuming this handles user and tokens
+import Header from "../components/Header";
 
-const GiftsScreen = () => {
+
+const GiftsScreen = (navigation) => {
   const { user } = useStore(); // Retrieve the user from the store
   const [userId, setUserId] = useState(null);
   const [banners, setBanners] = useState([]); // State for storing fetched banners
@@ -172,10 +174,10 @@ const GiftsScreen = () => {
   };
 
   return (
-    <SafeAreaView>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Shop</Text>
+    <View>
+      <Header event="call" navigation={navigation} title="Shop" />
 
+      <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.categoryBox}>
           <Text style={styles.categoryText}>Banners</Text>
         </View>
@@ -252,7 +254,7 @@ const GiftsScreen = () => {
           ))}
         </ScrollView>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -265,11 +267,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 0,
   },
-  title: {
-    fontSize: 50,
-    fontWeight: "bold",
-    marginBottom: 30,
-  },
   categoryBox: {
     width: 360,
     height: 58,
@@ -278,7 +275,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "flex-start",
     paddingLeft: 15,
-    marginBottom: 30,
+    marginBottom: 20,
+    marginTop: 10,
     borderRadius: 13,
   },
   categoryText: {

@@ -1,6 +1,8 @@
-import { View, Image, StyleSheet, TouchableOpacity, Text } from "react-native";
+import { View, Image, StyleSheet, TouchableOpacity, Text, Dimensions } from "react-native";
 import React from "react";
 import useStore from "../store/store";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 
 const profilePic = require("../../assets/icons/pfp_icon.png");
 const calendarImage = require("../../assets/icons/add_calendar.png");
@@ -27,7 +29,7 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
     : null;
 
   return (
-    <View style={styles.headerContainer}>
+    <SafeAreaView style={styles.headerContainer}>
       <TouchableOpacity onPress={() => navigation.navigate("Settings", { profilephoto: avatarUrl })}>
         <Image
           accessibilityLabel=""
@@ -45,7 +47,7 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
           <Image source={callImage} style={styles.callIcon} />
         ) : null}
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -57,6 +59,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginLeft: 10,
     marginRight: 10,
+    marginBottom: -40, 
   },
   title: {
     fontSize: 20,
