@@ -175,7 +175,7 @@ const GiftsScreen = (navigation) => {
 
   return (
     <View>
-      <Header event="call" navigation={navigation} title="Shop" />
+      <Header event="shop" navigation={navigation} title="Shop" />
 
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.categoryBox}>

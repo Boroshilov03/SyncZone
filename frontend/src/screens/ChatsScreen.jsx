@@ -219,7 +219,7 @@ export default ChatsScreen;
 
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: 24,
+    paddingBottom: 50,
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,

@@ -5,8 +5,9 @@ import {
   TouchableOpacity,
   Text,
   Dimensions,
+  Switch,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react"; // Import useState
 import useStore from "../store/store";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -17,6 +18,7 @@ const callImage = require("../../assets/icons/add_call.png");
 
 const Header = ({ toggleAddEventModal, event, navigation, title }) => {
   const { user } = useStore();
+  const [form, setForm] = useState({ emailNotifications: false }); // Initialize state for email notifications
 
   // Handle the action based on the event type
   const handleHeaderPress = () => {
@@ -26,6 +28,12 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
       toggleAddEventModal();
     } else if (event === "call") {
       navigation.navigate("Contact");
+    } else if (event === "shop") {
+      // Toggle email notifications state
+      setForm((prevForm) => ({
+        ...prevForm,
+        emailNotifications: !prevForm.emailNotifications,
+      }));
     }
   };
 
@@ -58,6 +66,17 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
           <Image source={callImage} style={styles.callIcon} />
         ) : null}
       </TouchableOpacity>
+      {event === "shop" && ( // Render the Switch only if the event is "shop"
+        <View>
+          <Switch
+            onValueChange={(emailNotifications) =>
+              setForm({ ...form, emailNotifications })
+            }
+            style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
+            value={form.emailNotifications}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 };
