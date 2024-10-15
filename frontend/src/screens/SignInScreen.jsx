@@ -77,22 +77,40 @@ export default function SignInScreen({ navigation }) {
           <View style={[styles.verticallySpaced, styles.mt20]}>
             <Input
               label="Email"
-              leftIcon={{ type: "font-awesome", name: "envelope" }}
+              labelStyle={{ position: 'absolute', top: -25, left: 25, color: '#616061' }}
+              leftIcon={{ type: "font-awesome", name: "envelope", color: '#616061', size: 18 }}
               onChangeText={setEmail}
               value={email}
-              placeholder="email@address.com"
+              //placeholder="email@address.com"
               autoCapitalize="none"
+              inputContainerStyle={{
+                borderRadius: 30,
+                borderWidth: 3,
+                borderColor: '#616061',
+                width: 280,
+                paddingLeft: 15,
+                height: 40
+              }}
             />
           </View>
           <View style={styles.verticallySpaced}>
             <Input
               label="Password"
-              leftIcon={{ type: "font-awesome", name: "lock" }}
+              labelStyle={{ position: 'absolute', top: -25, left: 25, color: '#616061' }}
+              leftIcon={{ type: "font-awesome", name: "lock", color: '#616061', size: 20 }}
               onChangeText={setPassword}
               value={password}
               secureTextEntry
-              placeholder="Password"
+              //placeholder="Password"
               autoCapitalize="none"
+              inputContainerStyle={{
+                borderRadius: 30,
+                borderWidth: 3,
+                borderColor: '#616061',
+                width: 280,
+                paddingLeft: 15,
+                height: 40
+              }}
             />
           </View>
         </View>
