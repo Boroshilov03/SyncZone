@@ -9,7 +9,7 @@ import CallsScreen from "../screens/CallsScreen";
 import CalendarScreen from "../screens/CalendarScreen";
 import MainTabNavigator from "../components/MainTabNavigator";
 import useStore from "../store/store";
-import RecentCalls from "../screens/TempRecentCalls";
+import RecentCalls from "../screens/RecentCalls";
 import SettingsScreen from "../screens/SettingsScreen";
 import Header from "../components/Header";
 

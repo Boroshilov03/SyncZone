@@ -5,7 +5,7 @@ import GiftsScreen from "../screens/GiftsScreen";
 import CallsScreen from "../screens/CallsScreen";
 import CalendarScreen from "../screens/CalendarScreen";
 import ChatsScreen from "../screens/ChatsScreen";
-import RecentCalls from "../screens/TempRecentCalls";
+import RecentCalls from "../screens/RecentCalls";
 
 const Tab = createBottomTabNavigator();
 
@@ -91,7 +91,9 @@ function MainTabNavigator({ navigation }) {
                   focused && { tintColor: color },
                 ]}
               />
-              {focused && <Text style={[styles.label, { color }]}>{label}</Text>}
+              {focused && (
+                <Text style={[styles.label, { color }]}>{label}</Text>
+              )}
             </View>
           );
         },
