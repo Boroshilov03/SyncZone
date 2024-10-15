@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet, Pressable, Text } from "react-native";
+import { View, SafeAreaView, StyleSheet, Pressable, Text } from "react-native";
 import React, { useState } from "react";
 import MyCalendar from "../components/MyCalendar";
 import AddEvent from "../components/AddEvent";
@@ -6,6 +6,10 @@ import EditEvent from "../components/EditEvent";
 import ListEvent from "../components/ListEvent";
 import Header from "../components/Header";
 import DeleteEvent from "../components/DeleteEvent";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+
+const Tab = createBottomTabNavigator();
+
 
 const CalendarScreen = ({ navigation }) => {
   const [isAddEventVisible, setAddEventVisible] = useState(false);
@@ -34,7 +38,7 @@ const CalendarScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <Header
         toggleAddEventModal={toggleAddEventModal}
         event="calendar"
@@ -56,7 +60,7 @@ const CalendarScreen = ({ navigation }) => {
         onClose={toggleDeletePopup}
         onConfirm={handleDeleteEvent}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

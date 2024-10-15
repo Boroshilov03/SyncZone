@@ -3,7 +3,7 @@ import React from "react";
 
 const CallsScreen = ({ navigation }) => {
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>CallsScreen</Text>
       <Button
         title="Add Contact"
@@ -13,7 +13,7 @@ const CallsScreen = ({ navigation }) => {
         title="go to profile"
         onPress={() => navigation.navigate("Profile")}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

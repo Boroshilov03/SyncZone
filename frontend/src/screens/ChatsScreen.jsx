@@ -161,7 +161,7 @@ const ChatsScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <Header event="message" navigation={navigation} title="Recent Chats" />
       <View style={styles.container}>
         <View style={styles.searchWrapper}>
@@ -193,7 +193,7 @@ const ChatsScreen = ({ navigation }) => {
           <Text style={styles.searchEmpty}>No results</Text>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

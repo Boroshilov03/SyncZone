@@ -51,7 +51,7 @@ const RecentCalls = ({ navigation }) => {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {/* Top Bar */}
       <Header event="call" navigation={navigation} title="Recent Calls" />
 
@@ -73,7 +73,7 @@ const RecentCalls = ({ navigation }) => {
           </TouchableOpacity>
         )}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
