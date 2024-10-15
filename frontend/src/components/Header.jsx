@@ -4,9 +4,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   Text,
-  Dimensions,
+  Switch,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react"; // Import useState
 import useStore from "../store/store";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -15,8 +15,9 @@ const calendarImage = require("../../assets/icons/add_calendar.png");
 const messageImage = require("../../assets/icons/add_message.png");
 const callImage = require("../../assets/icons/add_call.png");
 
-const Header = ({ toggleAddEventModal, event, navigation, title }) => {
+const Header = ({ toggleAddEventModal, event, navigation, title, toggleSwitch, switchValue }) => {
   const { user } = useStore();
+  const [form, setForm] = useState({ emailNotifications: false }); // Initialize state for email notifications
 
   // Handle the action based on the event type
   const handleHeaderPress = () => {
@@ -48,7 +49,10 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
           style={styles.profilePic}
         />
       </TouchableOpacity>
+
+      {/* Center the title */}
       <Text style={styles.title}>{title}</Text>
+
       <TouchableOpacity onPress={handleHeaderPress}>
         {event === "calendar" ? (
           <Image source={calendarImage} style={styles.calendarIcon} />
@@ -58,6 +62,19 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
           <Image source={callImage} style={styles.callIcon} />
         ) : null}
       </TouchableOpacity>
+
+      {event === "shop" && ( // Render the Switch only if the event is "shop"
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>
+            {switchValue ? "Show Owned" : "Show All"}
+          </Text>
+          <Switch
+            onValueChange={toggleSwitch}
+            style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
+            value={switchValue}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -74,6 +91,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
+    flex: 1, // Make the title take up available space
+    textAlign: 'center', // Center the text
   },
   profilePic: {
     width: 40,
@@ -91,6 +110,13 @@ const styles = StyleSheet.create({
   callIcon: {
     width: 23,
     height: 23,
+  },
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  switchLabel: {
+    marginRight: 8,
   },
 });
 
