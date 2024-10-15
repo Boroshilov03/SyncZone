@@ -2,85 +2,185 @@ import {
   StyleSheet,
   Text,
   View,
-  Button,
-  Image,
-  FlatList,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   SafeAreaView,
+  FlatList,
+  Image,
 } from "react-native";
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import Header from "../components/Header";
-
-const users = [
-  {
-    img: "",
-    name: "Bell Burgess",
-    phone: "+1 (887) 478-2693",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80",
-    name: "Bernard Baker",
-    phone: "+1 (862) 581-3022",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80",
-    name: "Elma Chapman",
-    phone: "+1 (913) 497-2020",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2340&q=80",
-    name: "Knapp Berry",
-    phone: "+1 (951) 472-2967",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80",
-    name: "Larson Ashbee",
-    phone: "+1 (972) 566-2684",
-  },
-  {
-    img: "",
-    name: "Lorraine Abbott",
-    phone: "+1 (959) 422-3635",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=987&q=80",
-    name: "Rosie Arterton",
-    phone: "+1 (845) 456-2237",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1573497019236-17f8177b81e8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2340&q=80",
-    name: "Shelby Ballard",
-    phone: "+1 (824) 467-3579",
-  },
-];
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const ChatsScreen = ({ navigation }) => {
-  const { setUser, setAccessToken, setRefreshToken, user } = useStore();
-
   const [input, setInput] = useState("");
-  const filteredRows = useMemo(() => {
-    const rows = [];
-    const query = input.toLowerCase();
-    for (const item of users) {
-      const nameIndex = item.name.toLowerCase().search(query);
-      if (nameIndex !== -1) {
-        rows.push({
-          ...item,
-          index: nameIndex,
-        });
-      }
+  const { user } = useStore();
+  const queryClient = useQueryClient(); // For refetching chats
+  const { data: chats = [], error, isLoading } = useQuery({
+    queryKey: ["recentChats", user.id],
+    queryFn: fetchChats,
+    enabled: !!user.id,
+    refetchOnWindowFocus: true,
+  });
+
+  async function fetchChats() {
+    const { data: chatParticipants, error: chatError } = await supabase
+      .from("chat_participants")
+      .select("chat_id")
+      .eq("user_id", user.id);
+
+    if (chatError) {
+      throw new Error("Error fetching chat participants: " + chatError.message);
     }
-    return rows.sort((a, b) => a.index - b.index);
-  }, [input]);
+
+    const chatIds = chatParticipants.map((chat) => chat.chat_id);
+    const { data, error } = await supabase
+      .from("chats")
+      .select(
+        `id, created_at, chat_participants!inner (
+            user_id,
+            profiles (
+              id,
+              username,
+              avatar_url
+            )
+          )`
+      )
+      .in("id", chatIds)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (error) {
+      throw new Error("Error fetching chats: " + error.message);
+    }
+
+    return data;
+  }
+
+  // Set up real-time subscription for chat updates
+  useEffect(() => {
+    if (!user.id) return;
+
+    const channel = supabase
+      .channel('chats-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'chats' },
+        (payload) => {
+          console.log("New change in chats table:", payload);
+          queryClient.invalidateQueries(["recentChats", user.id]); // Refetch chats when changes occur
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'chat_participants' },
+        (payload) => {
+          console.log("New change in chat_participants table:", payload);
+          queryClient.invalidateQueries(["recentChats", user.id]); // Refetch chats when changes occur
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe(); // Clean up the subscription on component unmount
+    };
+  }, [user.id, queryClient]);
+
+  const filteredChats = useMemo(() => {
+    return chats.filter((chat) => {
+      const participants = chat.chat_participants;
+
+      return (
+        participants.length > 1 &&
+        participants.some((participant) => {
+          return (
+            participant.profiles &&
+            participant.profiles.username &&
+            participant.user_id !== user.id &&
+            participant.profiles.username.toLowerCase().includes(input.toLowerCase())
+          );
+        })
+      );
+    });
+  }, [input, chats, user.id]);
+
+  const renderChatItem = ({ item }) => {
+    const participants = item.chat_participants;
+    const otherParticipants = participants.filter(
+      (participant) => participant.user_id !== user.id
+    );
+
+    if (otherParticipants.length > 0) {
+      const participant = otherParticipants[0];
+      const profile = participant.profiles;
+
+      if (!profile) return null;
+
+      return (
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("ChatDetail", {
+              chatId: item.id,
+              username: profile.username,
+              otherPFP: profile.avatar_url,
+            })
+          }
+        >
+          <View style={styles.card}>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate("Profile", {
+                  contactID: profile.id,
+                  contactPFP: profile.avatar_url,
+                  contactFirst: profile.first_name,
+                  contactLast: profile.last_name,
+                  contactUsername: profile.username,
+                })
+              }
+            >
+              {profile.avatar_url ? (
+                <Image
+                  alt="Avatar"
+                  resizeMode="cover"
+                  source={{ uri: profile.avatar_url }}
+                  style={styles.cardImg}
+                />
+              ) : (
+                <View style={[styles.cardImg, styles.cardAvatar]}>
+                  <Text style={styles.cardAvatarText}>{profile.username[0]}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <View style={styles.cardBody}>
+              <Text style={styles.cardTitle}>{profile.username}</Text>
+              <Text style={styles.cardTimestamp}>
+                {new Date(item.created_at).toLocaleString()}
+              </Text>
+            </View>
+            <View style={styles.cardAction}>
+              <FeatherIcon color="#9ca3af" name="chevron-right" size={22} />
+            </View>
+          </View>
+        </TouchableOpacity>
+      );
+    }
+    return null;
+  };
+
+  if (isLoading) {
+    return <Text>Loading...</Text>;
+  }
+
+  if (error) {
+    return <Text>Error: {error.message}</Text>;
+  }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <Header event="message" navigation={navigation} title="Recent Chats"/>
+    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+      <Header event="message" navigation={navigation} title="Recent Chats" />
       <View style={styles.container}>
         <View style={styles.searchWrapper}>
           <View style={styles.search}>
@@ -100,51 +200,18 @@ const ChatsScreen = ({ navigation }) => {
             />
           </View>
         </View>
-        <ScrollView contentContainerStyle={styles.searchContent}>
-          {filteredRows.length ? (
-            filteredRows.map(({ img, name, phone }, index) => {
-              return (
-                <View key={index} style={styles.cardWrapper}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      // handle onPress
-                    }}
-                  >
-                    <View style={styles.card}>
-                      {img ? (
-                        <Image
-                          alt=""
-                          resizeMode="cover"
-                          source={{ uri: img }}
-                          style={styles.cardImg}
-                        />
-                      ) : (
-                        <View style={[styles.cardImg, styles.cardAvatar]}>
-                          <Text style={styles.cardAvatarText}>{name[0]}</Text>
-                        </View>
-                      )}
-                      <View style={styles.cardBody}>
-                        <Text style={styles.cardTitle}>{name}</Text>
-                        <Text style={styles.cardPhone}>{phone}</Text>
-                      </View>
-                      <View style={styles.cardAction}>
-                        <FeatherIcon
-                          color="#9ca3af"
-                          name="chevron-right"
-                          size={22}
-                        />
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-              );
-            })
-          ) : (
-            <Text style={styles.searchEmpty}>No results</Text>
-          )}
-        </ScrollView>
+        {filteredChats.length ? (
+          <FlatList
+            data={filteredChats}
+            keyExtractor={(item) => item.id}
+            renderItem={renderChatItem}
+            contentContainerStyle={styles.searchContent}
+          />
+        ) : (
+          <Text style={styles.searchEmpty}>No results</Text>
+        )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -152,7 +219,7 @@ export default ChatsScreen;
 
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: 24,
+    paddingBottom: 50,
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,
@@ -207,10 +274,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-start",
   },
-  cardWrapper: {
-    borderBottomWidth: 1,
-    borderColor: "#d6d6d6",
-  },
   cardImg: {
     width: 42,
     height: 42,
@@ -224,69 +287,21 @@ const styles = StyleSheet.create({
   },
   cardAvatarText: {
     fontSize: 19,
-    fontWeight: "bold",
     color: "#fff",
   },
   cardBody: {
-    marginRight: "auto",
-    marginLeft: 12,
+    flex: 1,
+    paddingHorizontal: 16,
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#000",
-  },
-  cardPhone: {
     fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "500",
-    color: "#616d79",
-    marginTop: 3,
+    fontWeight: "600",
+  },
+  cardTimestamp: {
+    color: "#9ca3af",
+    fontSize: 12,
   },
   cardAction: {
     paddingRight: 16,
-  },
-  profilePhoto: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 20,
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  userEmail: {
-    fontSize: 16,
-    color: "gray",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  messageContainer: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  messageContent: {
-    fontSize: 16,
-  },
-  messageTimestamp: {
-    fontSize: 12,
-    color: "#aaa",
-    textAlign: "right",
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-  },
-  input: {
-    flex: 1,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    padding: 10,
-    marginRight: 10,
   },
 });

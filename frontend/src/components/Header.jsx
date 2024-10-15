@@ -1,5 +1,15 @@
-import { View, Image, StyleSheet, TouchableOpacity, Text } from "react-native";
-import React from "react";
+import {
+  View,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  Dimensions,
+  Switch,
+} from "react-native";
+import React, { useState } from "react"; // Import useState
+import useStore from "../store/store";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const profilePic = require("../../assets/icons/pfp_icon.png");
 const calendarImage = require("../../assets/icons/add_calendar.png");
@@ -7,24 +17,43 @@ const messageImage = require("../../assets/icons/add_message.png");
 const callImage = require("../../assets/icons/add_call.png");
 
 const Header = ({ toggleAddEventModal, event, navigation, title }) => {
+  const { user } = useStore();
+  const [form, setForm] = useState({ emailNotifications: false }); // Initialize state for email notifications
+
   // Handle the action based on the event type
   const handleHeaderPress = () => {
     if (event === "message") {
       navigation.navigate("Contact");
     } else if (event === "calendar") {
-      toggleAddEventModal(); // Open the modal for adding events
+      toggleAddEventModal();
     } else if (event === "call") {
       navigation.navigate("Contact");
+    } else if (event === "shop") {
+      // Toggle email notifications state
+      setForm((prevForm) => ({
+        ...prevForm,
+        emailNotifications: !prevForm.emailNotifications,
+      }));
     }
   };
 
+  // Validate avatar_url
+  const avatarUrl =
+    typeof user.user_metadata?.avatar_url === "string"
+      ? user.user_metadata.avatar_url
+      : null;
+
   return (
-    <View style={styles.headerContainer}>
-      <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
+    <SafeAreaView style={styles.headerContainer}>
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("Settings", { profilephoto: avatarUrl })
+        }
+      >
         <Image
-          source={profilePic}
+          accessibilityLabel=""
+          source={avatarUrl ? { uri: avatarUrl } : profilePic} // Use the profilePic if avatarUrl is not a valid string
           style={styles.profilePic}
-          onPress={() => navigation.navigate("Settings")}
         />
       </TouchableOpacity>
       <Text style={styles.title}>{title}</Text>
@@ -37,7 +66,18 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
           <Image source={callImage} style={styles.callIcon} />
         ) : null}
       </TouchableOpacity>
-    </View>
+      {event === "shop" && ( // Render the Switch only if the event is "shop"
+        <View>
+          <Switch
+            onValueChange={(emailNotifications) =>
+              setForm({ ...form, emailNotifications })
+            }
+            style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
+            value={form.emailNotifications}
+          />
+        </View>
+      )}
+    </SafeAreaView>
   );
 };
 
@@ -46,7 +86,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 10,
+    padding: 5,
     marginLeft: 10,
     marginRight: 10,
   },
@@ -60,16 +100,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   calendarIcon: {
-    width: 35,    
-    height: 35,  
+    width: 35,
+    height: 35,
   },
   messageIcon: {
-    width: 30, 
-    height: 30, 
+    width: 30,
+    height: 30,
   },
   callIcon: {
-    width: 23,   
-    height: 23,   
+    width: 23,
+    height: 23,
   },
 });
 

@@ -13,9 +13,12 @@ import FeatherIcon from "react-native-vector-icons/Feather";
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
 const profilePic = require("../../assets/icons/pfp_icon.png");
+import { useRoute } from "@react-navigation/native";
 
 export default function Example({ navigation }) {
   const { setUser, setAccessToken, setRefreshToken, user } = useStore();
+  const route = useRoute();
+  const { profilephoto } = route.params; // Make sure this param is passed correctly
 
   const [form, setForm] = useState({
     emailNotifications: true,
@@ -49,7 +52,7 @@ export default function Example({ navigation }) {
         <View style={[styles.headerAction, { alignItems: "flex-end" }]}>
           <TouchableOpacity
             onPress={() => {
-              // handle onPress
+              /* handle onPress */
             }}
           >
             <FeatherIcon color="#000" name="more-vertical" size={24} />
@@ -65,14 +68,14 @@ export default function Example({ navigation }) {
             <View style={styles.sectionBody}>
               <TouchableOpacity
                 onPress={() => {
-                  // handle onPress
+                  /* handle onPress */
                 }}
                 style={styles.profile}
               >
                 <Image
                   accessibilityLabel=""
                   source={{
-                    uri: user.user_metadata?.avatar_url || profilePic,
+                    uri: profilephoto || profilePic.uri, // Use profilePic.uri if profilePic is an image
                   }}
                   style={styles.profileAvatar}
                 />
@@ -101,6 +104,7 @@ export default function Example({ navigation }) {
             <Text>No user logged in</Text>
           </View>
         )}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>
 
