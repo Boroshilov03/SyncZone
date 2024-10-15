@@ -54,17 +54,17 @@ export default function SignInScreen({ navigation }) {
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.parent}
-      colors={['#f2c4e0', '#96ddea']}>
+      colors={['#FFDDF7', '#C5ECFF']}>
       <View style={styles.space}>
         <Image
-          source={require('../images/logo.png')}
+          source={require('../images/logosz.png')}
           style={styles.logo}
 
         />
       </View>
       <View style={styles.container}>
         <View style={styles.loginbox}>
-          <Text style={styles.title} >Login</Text>
+          <Text style={styles.title} fontFamily={"Karla-Light"}>Login</Text>
         </View>
         <View style={styles.fields}>
           <View style={[styles.verticallySpaced, styles.mt20]}>
@@ -94,7 +94,7 @@ export default function SignInScreen({ navigation }) {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             // style={styles.parent}
-            colors={['#f2c4e0', '#96ddea']}
+            colors={['#FFDDF7', '#C5ECFF', '#FFDDF7']}
             style={styles.gradient}
 
 
@@ -105,7 +105,7 @@ export default function SignInScreen({ navigation }) {
               disabled={isLoading} // Disable the button when loading
               borderRadius={20}
             >
-              <Text style={styles.buttontext}>Login</Text>
+              <Text style={styles.buttontext} fontFamily={"Karla-Medium"}>Login</Text>
             </Pressable>
           </LinearGradient>
         </View>
@@ -126,8 +126,8 @@ export default function SignInScreen({ navigation }) {
             fontSize={40}
             isGradientFill
             isGradientStroke
-            gradientColors={["#f2c4e0", "#accdf2"]}
-          // fontFamily={"Gill Sans"}
+            gradientColors={['#FFDDF7', "#C5ECFF", '#FFDDF7']}
+            fontFamily={"Karla-Medium"}
           //gradientColors={["#D49AC0", "#6FD2E2"]}
           // fontFamily={"Gill Sans"}
           />
@@ -204,8 +204,8 @@ const styles = StyleSheet.create({
     position: 'relative'
   },
   logo: {
-    width: 170,
-    height: 0,
+    width: 250,
+    height: 250,
     resizeMode: 'contain',
   },
   title: {
