@@ -1,8 +1,14 @@
-import { View, Image, StyleSheet, TouchableOpacity, Text, Dimensions } from "react-native";
+import {
+  View,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  Dimensions,
+} from "react-native";
 import React from "react";
 import useStore from "../store/store";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 
 const profilePic = require("../../assets/icons/pfp_icon.png");
 const calendarImage = require("../../assets/icons/add_calendar.png");
@@ -24,13 +30,18 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
   };
 
   // Validate avatar_url
-  const avatarUrl = typeof user.user_metadata?.avatar_url === 'string' 
-    ? user.user_metadata.avatar_url 
-    : null;
+  const avatarUrl =
+    typeof user.user_metadata?.avatar_url === "string"
+      ? user.user_metadata.avatar_url
+      : null;
 
   return (
     <SafeAreaView style={styles.headerContainer}>
-      <TouchableOpacity onPress={() => navigation.navigate("Settings", { profilephoto: avatarUrl })}>
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("Settings", { profilephoto: avatarUrl })
+        }
+      >
         <Image
           accessibilityLabel=""
           source={avatarUrl ? { uri: avatarUrl } : profilePic} // Use the profilePic if avatarUrl is not a valid string
@@ -56,10 +67,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 10,
+    padding: 5,
     marginLeft: 10,
     marginRight: 10,
-    marginBottom: -40, 
   },
   title: {
     fontSize: 20,
