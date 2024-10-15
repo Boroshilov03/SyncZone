@@ -64,7 +64,7 @@ export default function SignInScreen({ navigation }) {
       </View>
       <View style={styles.container}>
         <View style={styles.loginbox}>
-          <Text style={styles.title} fontFamily={"Karla-Light"}>Login</Text>
+          <Text style={styles.title} fontFamily={"Karla-Medium"}>Login</Text>
         </View>
         <View style={styles.fields}>
           <View style={[styles.verticallySpaced, styles.mt20]}>
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    color: '#363131',
+    color: '#616061',
     fontWeight: 'bold',
     lineHeight: 34,
   },
