@@ -268,7 +268,10 @@ const ContactScreen = ({ navigation }) => {
             >
               <Text style={styles.closeButtonText}>×</Text>
             </Pressable>
-            <AddContact onClose={() => setModalVisible(false)} />
+            <AddContact
+              onClose={() => setModalVisible(false)}
+              contacts={contacts}
+            />
           </View>
         </View>
       </Modal>
@@ -371,8 +374,9 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: 300,
-    height: 300,
+    height: 500, // Changed to auto to fit content dynamically
     padding: 20,
+    paddingTop: 40, // Added top padding to create space for the close button
     backgroundColor: "#fff",
     borderRadius: 10,
     shadowColor: "#000",
