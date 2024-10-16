@@ -16,6 +16,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
+import { initializeWebSocket, saveMessageToSupabase } from "../../emotion/api";
+import { saveEmotionAnalysis } from "../../emotion/emotionAnalysis";
 const noProfilePic = require("../../assets/icons/pfp_icon.png");
 
 const ChatDetailScreen = () => {
@@ -30,6 +32,17 @@ const ChatDetailScreen = () => {
   const [newMessage, setNewMessage] = useState("");
   const [typingUser, setTypingUser] = useState(null);
   const typingTimeoutRef = useRef(null);
+  const wsRef = useRef(null);
+
+  // Utility function to encode a string to Base64
+  const encodeToBase64 = (str) => {
+    try {
+      return btoa(unescape(encodeURIComponent(str)));
+    } catch (e) {
+      console.error("Failed to encode text to Base64:", e);
+      return "";
+    }
+  };
 
   useEffect(() => {
     const channel = supabase.channel(`chat-room-${chatId}`);
@@ -37,39 +50,24 @@ const ChatDetailScreen = () => {
     channel
       .on("broadcast", { event: "new-message" }, (payload) => {
         const receivedMessage = payload.payload;
-        setMessages((prevMessages) => [receivedMessage, ...prevMessages]);
-      })
-      .on("broadcast", { event: "typing" }, async (payload) => {
-        const { userId, isTyping } = payload.payload;
-
-        if (isTyping) {
-          try {
-            const { data: profile, error } = await supabase
-              .from("profiles")
-              .select("username")
-              .eq("id", userId)
-              .single();
-
-            if (error) {
-              console.error("Error fetching username:", error);
-              return;
-            }
-
-            if (profile) {
-              setTypingUser(profile.username);
-            }
-          } catch (error) {
-            console.error("Error fetching profile:", error);
+        setMessages((prevMessages) => {
+          if (prevMessages.find((msg) => msg.id === receivedMessage.id)) {
+            return prevMessages;
           }
-        } else {
-          setTypingUser(null);
-        }
+          return [receivedMessage, ...prevMessages];
+        });
       })
       .subscribe();
+
+    // Initialize WebSocket for emotion analysis
+    wsRef.current = initializeWebSocket(handleWebSocketMessage);
 
     return () => {
       channel.unsubscribe();
       supabase.removeChannel(channel);
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
     };
   }, [chatId]);
 
@@ -115,58 +113,154 @@ const ChatDetailScreen = () => {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
+  
+    const messageContent = newMessage.trim();
+    setNewMessage("");
+  
+    // Save message to Supabase
+    const savedMessage = await saveMessageToSupabase(messageContent, user.id, chatId);
+  
+    if (savedMessage) {
+      // Update local state immediately
+      setMessages((prevMessages) => [savedMessage, ...prevMessages]);
+  
+      // Encode the message content to Base64
+      const base64MessageContent = encodeToBase64(messageContent);
+  
+      // Send message for emotion analysis with correct payload format for Hume API
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          data: base64MessageContent,
+          models: {
+            language: {
+              granularity: "sentence",
+            },
+          },
+        }));
 
-    const { data, error } = await supabase
-      .from("messages")
-      .insert([
-        {
-          content: newMessage.trim(),
-          chat_id: chatId,
-          sender_id: user.id,
-          created_at: new Date(),
-        },
-      ])
-      .select("*");
+        // Listen for emotion analysis response
+        wsRef.current.onmessage = async (event) => {
+          const emotionResponse = JSON.parse(event.data);
 
-    if (error) {
-      console.error("Error inserting message:", error);
-      return;
-    }
+          if (emotionResponse.language && emotionResponse.language.predictions.length > 0) {
+            const emotions = emotionResponse.language.predictions[0].emotions;
 
-    if (data && data.length > 0) {
+            // Log emotions received for debugging
+            console.log("Emotions received:", emotions);
+
+            // Save emotion analysis to Supabase
+            await saveEmotionAnalysis(savedMessage.id, emotions);
+
+            // Update local state with the top emotion
+            const topEmotion = emotions.reduce((prev, current) => (prev.score > current.score ? prev : current));
+            setMessages((prevMessages) =>
+              prevMessages.map((msg) =>
+                msg.id === savedMessage.id ? { ...msg, emotion: topEmotion } : msg
+              )
+            );
+          }
+        };
+      }
+
+      // Broadcast new message to other users
       supabase.channel(`chat-room-${chatId}`).send({
         type: "broadcast",
         event: "new-message",
-        payload: data[0],
+        payload: savedMessage,
       });
     }
+  };
+  
+  const handleWebSocketMessage = (event) => {
+    const response = JSON.parse(event.data);
+    console.log('Emotion analysis response:', response);
+  
+    if (response.error) {
+      console.error('Emotion analysis error:', response.error);
+      return;
+    }
+  
+    if (response.language && response.language.predictions.length > 0) {
+      const emotionScores = response.language.predictions[0].emotions;
+      const topEmotion = emotionScores.reduce((prev, current) => (prev.score > current.score) ? prev : current);
+  
+      // Update the message with emotion data
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.content === response.language.predictions[0].text && !msg.emotion
+            ? { ...msg, emotion: topEmotion }
+            : msg
+        )
+      );
+  
+      // Save emotion analysis to the database
+      const message = messages.find((msg) => msg.content === response.language.predictions[0].text);
+      if (message) {
+        saveEmotionAnalysis(message.id, [topEmotion]);
+      }
+    }
+  };
 
-    setNewMessage("");
+  const emotionColorMap = {
+    Joy: "#FFD700",
+    Sadness: "#4169E1",
+    Anger: "#FF4500",
+    Fear: "#8B008B",
+    Surprise: "#FF69B4",
+    Disgust: "#32CD32",
+    Love: "#FF1493",
+    Confusion: "#808080",
+    Neutral: "#A9A9A9",
+    Interest: "#FDA172",
+    Calmness: "#63C5DA",
+    Enthusiasm: "#8A3324",
+    Horror: "#8D021F",
+    Excitement: "#FFEF00",
+    'Surprise (negative)': "#4A3728",
   };
 
   const renderMessage = ({ item }) => {
     const isMyMessage = item.sender_id === user.id;
-
+  
     return (
-      <View
-        style={[
-          styles.messageContainer,
-          isMyMessage
-            ? styles.myMessageContainer
-            : styles.otherMessageContainer,
-        ]}
-      >
-        <Text
+      <View style={styles.messageWrapper}>
+        <View
           style={[
-            styles.messageText,
-            isMyMessage ? styles.myMessageText : styles.otherMessageText,
+            styles.messageContainer,
+            isMyMessage
+              ? styles.myMessageContainer
+              : styles.otherMessageContainer,
           ]}
         >
-          {item.content}
-        </Text>
-        <Text style={styles.messageTimestamp}>
-          {new Date(item.created_at).toLocaleTimeString()}
-        </Text>
+          <Text
+            style={[
+              styles.messageText,
+              isMyMessage ? styles.myMessageText : styles.otherMessageText,
+            ]}
+          >
+            {item.content}
+          </Text>
+          <Text style={styles.messageTimestamp}>
+            {new Date(item.created_at).toLocaleTimeString()}
+          </Text>
+        </View>
+  
+        {item.emotion && (
+          <View
+            style={[
+              styles.emotionContainer,
+              isMyMessage ? styles.myEmotionContainer : styles.otherEmotionContainer,
+            ]}
+          >
+            <View
+              style={[
+                styles.emotionCircle,
+                { backgroundColor: emotionColorMap[item.emotion.name] || 'gray' },
+              ]}
+            />
+            <Text style={styles.emotionText}>{item.emotion.name}</Text>
+          </View>
+        )}
       </View>
     );
   };
@@ -306,6 +400,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginVertical: 10,
   },
+  messageWrapper: {
+    marginVertical: 5,
+  },
   messageList: {
     marginTop: 20,
   },
@@ -317,10 +414,12 @@ const styles = StyleSheet.create({
   },
   myMessageContainer: {
     alignSelf: "flex-end",
+    marginRight: 10,
     backgroundColor: "#007BFF",
   },
   otherMessageContainer: {
     alignSelf: "flex-start",
+    marginLeft: 10,
     backgroundColor: "#E5E5E5",
   },
   messageText: {
@@ -363,5 +462,29 @@ const styles = StyleSheet.create({
     color: "red",
     textAlign: "center",
     marginVertical: 10,
+  },
+  emotionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 10, 
+  },  
+  myEmotionContainer: {
+    marginRight: 10,
+    alignSelf: "flex-end",
+  },
+  otherEmotionContainer: {
+    marginLeft: 10,
+    alignSelf: "flex-start",
+  },
+  emotionCircle: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 4,
+  },
+  emotionText: {
+    fontSize: 12,
+    color: 'black',
   },
 });
