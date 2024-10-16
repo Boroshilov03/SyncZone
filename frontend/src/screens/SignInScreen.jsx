@@ -135,7 +135,7 @@ export default function SignInScreen({ navigation }) {
           </LinearGradient>
         </View>
         <Text style={styles.signInText}>
-          Don't have an account?{" "}
+          Don't have an account?{"  "}
           <Text
             style={styles.signInLink}
             onPress={() => navigation.navigate("SignUp")}
@@ -273,6 +273,7 @@ const styles = StyleSheet.create({
   },
   signInText: {
     textAlign: "center",
+    color: '#616061'
   },
   signInLink: {
     color: "#3F8CC5",
