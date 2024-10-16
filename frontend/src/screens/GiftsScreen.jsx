@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   categoryBox: {
-    marginVertical: 10,
+    marginVertical: 25,
     padding: 10,
     backgroundColor: "#e0e0e0",
     borderRadius: 10,
