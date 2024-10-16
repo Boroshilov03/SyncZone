@@ -274,6 +274,8 @@ const GiftsScreen = ({ navigation }) => {
                     style={styles.image}
                     resizeMode="contain"
                   />
+                  {/* Banner Name */}
+                  <Text style={styles.bannerName}>{banner.name}</Text>
                   <TouchableOpacity
                     onPress={() => handleGetBanner(banner.id)}
                     style={styles.getButton}
@@ -304,6 +306,8 @@ const GiftsScreen = ({ navigation }) => {
                     style={styles.image}
                     resizeMode="contain"
                   />
+                  {/* Sticker Name */}
+                  <Text style={styles.stickerName}>{sticker.name}</Text>
                   <TouchableOpacity
                     onPress={() => handleGetSticker(sticker.id)}
                     style={styles.getButton}
@@ -320,61 +324,66 @@ const GiftsScreen = ({ navigation }) => {
   );
 };
 
+export default GiftsScreen;
+
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    alignItems: "flex-start", // Align items to the left
-  },
-  categoryBox: {
-    marginBottom: 10,
-    borderWidth: 2,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    padding: 10,
-    width: "100%", // Full width for category boxes
-  },
-  categoryText: {
-    fontSize: 24, // Larger font size for category names
-    fontWeight: "bold",
-    textAlign: "left",
+    paddingBottom: 20,
   },
   scrollContainer: {
-    flexDirection: "row",
-    marginBottom: 20, // Space between categories
+    paddingHorizontal: 10,
   },
   itemsContainer: {
     flexDirection: "row",
-    alignItems: "flex-start", // Align items to the top
-    height: 200, // Increased height for better visibility
+    marginVertical: 10,
   },
   mergedFrame: {
-    marginRight: 10,
+    marginRight: 20,
   },
   itemFrame: {
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "#000",
-    borderRadius: 20,
-    width: 180, // Width of the item
-    height: 200, // Height of the item
-    justifyContent: "center",
+    padding: 10,
+    borderRadius: 10,
+    width: 150,
     alignItems: "center",
-    padding: 20, // Adjusted padding
-    overflow: "hidden", // Ensures image doesn't overflow
   },
   image: {
-    width: "100%",
-    height: "100%", // Adjusted height to fit within the item frame
-    marginBottom: -5, // Space between image and button
+    width: 100,
+    height: 100,
   },
   getButton: {
     backgroundColor: "#4CAF50",
-    padding: 10, // Reduced padding for the button
-    borderRadius: 10,
+    padding: 8,
+    borderRadius: 5,
+    marginTop: 10,
   },
   buttonText: {
     color: "#fff",
+    fontSize: 16,
+  },
+  categoryBox: {
+    marginVertical: 25,
+    padding: 10,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 10,
+    width: "95%",
+    alignSelf: "center",
+  },
+  categoryText: {
+    fontSize: 20,
     fontWeight: "bold",
   },
+  bannerName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginVertical: 5, // Space between image and button
+    textAlign: "center",
+  },
+  stickerName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginVertical: 5, // Space between image and button
+    textAlign: "center",
+  },
 });
-
-export default GiftsScreen;
