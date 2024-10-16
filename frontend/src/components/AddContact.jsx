@@ -10,15 +10,35 @@ import {
   ActivityIndicator,
   SafeAreaView,
 } from "react-native";
-import { debounce } from "lodash"; // Install lodash if not already done
+import { debounce } from "lodash"; // Ensure lodash is installed
 import useStore from "../store/store";
 
 const AddContact = ({ toggleModal }) => {
   const [searchQuery, setSearchQuery] = useState(""); // Store search query
   const [profiles, setProfiles] = useState([]); // Store search results
+  const [contacts, setContacts] = useState([]); // Store user's contacts
   const [loading, setLoading] = useState(false); // Loading state
   const [error, setError] = useState(""); // Error state
   const { user } = useStore();
+
+  // Fetch contacts for the user when component mounts or user changes
+  React.useEffect(() => {
+    const fetchContacts = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from("contacts")
+          .select("contact_id")
+          .eq("user_id", user.id);
+        if (error) {
+          console.error("Error fetching contacts:", error);
+        } else {
+          setContacts(data || []);
+        }
+      }
+    };
+
+    fetchContacts();
+  }, [user]);
 
   // Function to fetch profiles based on the search query
   const searchProfiles = async (query) => {
@@ -32,14 +52,20 @@ const AddContact = ({ toggleModal }) => {
         .from("profiles")
         .select("id, username, first_name, last_name")
         .ilike("username", `%${query}%`)
-        .neq("id", user.id);
+        .neq("id", user.id); // Ensure you exclude the current user
 
       if (error) {
         console.error("Error searching profiles:", error);
         setError("Failed to fetch profiles. Please try again.");
       } else {
         console.log("Fetched profiles:", data); // Debugging
-        setProfiles(data || []); // Update state with fetched profiles
+
+        // Filter out contacts already in user's contacts
+        const filteredData = data.filter(
+          (profile) =>
+            !contacts.some((contact) => contact.contact_id === profile.id) // Correct filtering
+        );
+        setProfiles(filteredData || []); // Update state with fetched profiles
       }
     } catch (err) {
       console.error("Unexpected error during search:", err);
@@ -81,6 +107,7 @@ const AddContact = ({ toggleModal }) => {
         setError("Failed to add contact. Please try again.");
       } else {
         console.log("Contact added successfully:", data);
+        setContacts([...contacts, { contact_id: contactID }]); // Update contacts state
       }
     } catch (err) {
       console.error("Unexpected error while adding contact:", err);
@@ -90,15 +117,19 @@ const AddContact = ({ toggleModal }) => {
 
   // Render each profile in the FlatList
   const renderProfile = ({ item }) => (
-    <View style={styles.profileContainer}>
-      <View style={styles.profileUsername}>
-        <Text>
+    <View style={styles.profileCard}>
+      <View style={styles.profileDetails}>
+        <Text style={styles.profileName}>
           {item.first_name} {item.last_name}
         </Text>
-        <Text>{item.username}</Text>
+        <Text style={styles.profileUsername}>{item.username}</Text>
       </View>
-      <TouchableOpacity onPress={() => handleAdd(item.id)}>
-        <Text style={styles.addButton}>Add</Text>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => handleAdd(item.id)}
+        activeOpacity={0.7} // Feedback on press
+      >
+        <Text style={styles.addButtonText}>Add</Text>
       </TouchableOpacity>
     </View>
   );
@@ -112,7 +143,11 @@ const AddContact = ({ toggleModal }) => {
         onChangeText={handleSearchChange}
       />
       {loading ? (
-        <ActivityIndicator size="large" color="#007BFF" />
+        <ActivityIndicator
+          size="large"
+          color="#007BFF"
+          style={styles.loading}
+        />
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : profiles.length > 0 ? (
@@ -134,28 +169,56 @@ const AddContact = ({ toggleModal }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: "#fff",
+    padding: 20,
+    backgroundColor: "#f7f7f7",
   },
   searchInput: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    paddingHorizontal: 10,
+    height: 45,
+    borderColor: "#007BFF",
+    borderWidth: 2,
+    paddingHorizontal: 15,
     marginBottom: 10,
     borderRadius: 5,
+    backgroundColor: "#fff",
   },
-  profileContainer: {
+  loading: {
+    marginTop: 20,
+  },
+  profileCard: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    margin: 5,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    elevation: 3, // Shadow effect for Android
+    shadowColor: "#000", // Shadow effect for iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  profileDetails: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#333",
   },
   profileUsername: {
-    fontSize: 16,
-    color: "#000",
+    fontSize: 14,
+    color: "#666",
+  },
+  addButton: {
+    backgroundColor: "#007BFF",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  addButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
   emptyText: {
     textAlign: "center",
@@ -168,9 +231,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 16,
     color: "red",
-  },
-  addButton: {
-    color: "#007BFF",
     fontWeight: "bold",
   },
 });

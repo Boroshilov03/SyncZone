@@ -21,7 +21,9 @@ function Input({ title, value, error, setValue, secureTextEntry }) {
           borderWidth: 1,
           borderColor: error ? "#ff5555" : "#d1d5db",
           borderRadius: 40,
+          borderWidth: 2,
           padding: 10,
+          width: 350,
           color: "black",
         }}
         value={value}
