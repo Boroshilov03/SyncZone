@@ -72,8 +72,12 @@ export default function SignupScreen({ navigation }) {
     setErrors({});
     setLoading(true);
 
+    console.log("Form Data:", formData); // Log the form data to see if it's correct
+
     // Validate the form using the Zod schema
     const validationResult = signupSchema.safeParse(formData);
+    console.log("Validation Result:", validationResult); // Log the validation result
+
     if (!validationResult.success) {
       const formattedErrors = validationResult.error.errors.reduce(
         (acc, error) => {
@@ -83,6 +87,7 @@ export default function SignupScreen({ navigation }) {
         {}
       );
       setErrors(formattedErrors);
+      console.log("Validation Errors:", formattedErrors); // Log formatted validation errors
       setLoading(false);
       return;
     }
@@ -101,8 +106,13 @@ export default function SignupScreen({ navigation }) {
         },
       });
 
+      // Log Supabase response to see if signup was successful or not
+      console.log("Supabase SignUp Data:", data);
+      console.log("Supabase SignUp Error:", error);
+
       if (error) {
         Alert.alert("Error", error.message);
+        setLoading(false);
         return;
       }
 
@@ -112,22 +122,29 @@ export default function SignupScreen({ navigation }) {
       // Upload avatar photo if available
       if (base64Photo) {
         const photoPath = `${user.id}/${uuid.v4()}.png`;
+        console.log("Uploading image to path:", photoPath); // Log photo path
+
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("avatars")
           .upload(photoPath, decode(base64Photo), {
             contentType: "image/png",
           });
 
+        console.log("Image Upload Data:", uploadData); // Log upload result
+        console.log("Image Upload Error:", uploadError); // Log any upload errors
+
         if (uploadError) {
           Alert.alert(
             "Error",
             "Failed to upload profile photo: " + uploadError.message
           );
+          setLoading(false);
           return;
         }
 
         avatarUrl = supabase.storage.from("avatars").getPublicUrl(photoPath)
           .data.publicUrl;
+        console.log("Avatar URL:", avatarUrl); // Log avatar URL to see if it's correct
       }
 
       // Update the profiles table with the avatar URL
@@ -136,12 +153,14 @@ export default function SignupScreen({ navigation }) {
         .update({ avatar_url: avatarUrl })
         .eq("id", user.id);
 
+      // If an error occurred updating the profile, show error and return
       if (updateProfileError) {
         Alert.alert(
           "Error",
           "Failed to update avatar URL in profiles table: " +
             updateProfileError.message
         );
+        setLoading(false);
         return;
       }
 
@@ -155,11 +174,11 @@ export default function SignupScreen({ navigation }) {
             "Error",
             "Failed to update user session: " + updateError.message
           );
+          setLoading(false);
           return;
         }
       }
 
-      Alert.alert("Success", "User registered successfully!");
       const { session } = data;
       const { setAuthenticated, setUser, setAccessToken, setRefreshToken } =
         useStore();
@@ -169,7 +188,7 @@ export default function SignupScreen({ navigation }) {
       setRefreshToken(session.refresh_token);
       navigation.navigate("MainTabs");
     } catch (error) {
-      Alert.alert("Error", "An error occurred. Please try again.");
+      console.log("Catch Error:", error); // Log the error caught in the catch block
     } finally {
       setLoading(false);
     }
@@ -214,24 +233,21 @@ export default function SignupScreen({ navigation }) {
             </TouchableWithoutFeedback>
             <View style={styles.inputbox}>
               {[
-                "username",
-                "firstname",
-                "lastname",
-                "email",
-                "password",
-                "confirm Password",
-                "location",
-              ].map((field) => (
+                { key: "username", label: "Username" },
+                { key: "firstname", label: "First Name" },
+                { key: "lastname", label: "Last Name" },
+                { key: "email", label: "Email" },
+                { key: "password1", label: "Password" },
+                { key: "password2", label: "Confirm Password" },
+                { key: "location", label: "Location" },
+              ].map(({ key, label }) => (
                 <Input
-                  key={field}
-                  title={
-                    field.charAt(0).toUpperCase() +
-                    field.slice(1).replace(/([A-Z])/g, " $1")
-                  }
-                  value={formData[field]}
-                  error={errors[field]}
-                  setValue={(value) => handleInputChange(field, value)}
-                  secureTextEntry={field.includes("password")}
+                  key={key}
+                  title={label}
+                  value={formData[key]}
+                  error={errors[key]}
+                  setValue={(value) => handleInputChange(key, value)}
+                  secureTextEntry={key === "password1" || key === "password2"}
                 />
               ))}
             </View>
