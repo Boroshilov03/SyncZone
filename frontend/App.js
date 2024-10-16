@@ -8,6 +8,7 @@ import useSession from "./src/hooks/useSession"; // Import your custom hook
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; // Import QueryClient and QueryClientProvider
 import { StatusBar } from "react-native"; // Import StatusBar from React Native
 
+
 // Create a new instance of QueryClient
 const queryClient = new QueryClient();
 

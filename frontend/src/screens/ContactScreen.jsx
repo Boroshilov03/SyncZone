@@ -189,6 +189,7 @@ const ContactScreen = ({ navigation }) => {
     <View style={styles.contactItem}>
       <View style={styles.wrapperRow}>
         <TouchableOpacity
+          style={styles.touch}
           onPress={() =>
             navigation.navigate("Profile", {
               contactID: item.profiles.id,
@@ -196,6 +197,7 @@ const ContactScreen = ({ navigation }) => {
               contactFirst: item.profiles.first_name,
               contactLast: item.profiles.last_name,
               contactUsername: item.profiles.username,
+
             })
           }
         >
@@ -203,6 +205,7 @@ const ContactScreen = ({ navigation }) => {
             source={{ uri: item.profiles.avatar_url }} // Use avatar_url to load the image
             style={styles.profileImage}
           />
+          <Text>go to profile page</Text>
         </TouchableOpacity>
         <View style={styles.wrapperCol}>
           <Text style={styles.contactText}>
@@ -235,6 +238,7 @@ const ContactScreen = ({ navigation }) => {
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.navigate("MainTabs")}
+
       >
         <Text style={styles.backButtonText}>← Back</Text>
       </TouchableOpacity>
@@ -316,6 +320,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#ccc",
     paddingVertical: 15,
+
   },
   wrapperRow: {
     flexDirection: "row",
@@ -361,6 +366,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     alignItems: "center",
+
+
   },
   addButtonText: {
     color: "#fff",
@@ -393,6 +400,9 @@ const styles = StyleSheet.create({
   closeButtonText: {
     fontSize: 24,
     color: "#333",
+  },
+  touch: {
+    borderWidth: 1,
   },
 });
 

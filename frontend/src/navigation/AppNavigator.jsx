@@ -34,7 +34,7 @@ export function AppNavigator() {
           <Stack.Screen name="Calendar" component={CalendarScreen} />
           <Stack.Screen name="RecentCall" component={RecentCalls} />
           <Stack.Screen name="Contact" component={ContactScreen} />
-          <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen name="Profile" component={ProfileScreen} options={{ presentation: 'modal' }} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="Header" component={Header} />
         </>
