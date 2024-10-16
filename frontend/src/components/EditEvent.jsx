@@ -91,14 +91,18 @@ const EditEvent = ({ event, onClose }) => {
   ];
 
   const handleTrashIconPress = () => {
-    setDeletePopupVisible(true); // Show DeleteEvent popup when trash icon is pressed
+    setDeletePopupVisible(true); // Show DeleteEvent popup
   };
+  
 
-  const handleDeleteEvent = () => {
-    // Logic for deleting the event
-    console.log("Event Deleted:", selectedEvent);
+  const handleDeleteEvent = async () => {
+     const { error } = await supabase
+    .from('event')
+    .delete()
+    .eq('id', event.id) 
+    console.log("Event Deleted:", event.id);
     setDeletePopupVisible(false); // Close delete popup
-    setEditEventVisible(false);   // Close EditEvent view
+    onClose();   // Close EditEvent view
   };
 
   const handleCloseDeletePopup = () => {
@@ -131,6 +135,7 @@ const EditEvent = ({ event, onClose }) => {
             visible={deletePopupVisible}
             onClose={handleCloseDeletePopup} // Close without deletion
             onConfirm={handleDeleteEvent} // Delete and close popup
+            eventID={event.id}
             />
         )}
 
