@@ -19,12 +19,13 @@ function Input({ title, value, error, setValue, secureTextEntry }) {
         style={{
           backgroundColor: "#f3f4f6",
           borderWidth: 1,
-          borderColor: error ? "#ff5555" : "#d1d5db",
+          borderColor: error ? "#ff5555" : "#8e9091",
           borderRadius: 40,
           borderWidth: 2,
           padding: 10,
-          width: 350,
+          width: 310,
           color: "black",
+          height: 40
         }}
         value={value}
         onChangeText={(text) => {
