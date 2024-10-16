@@ -27,11 +27,11 @@ const MyCalendar = () => {
             disableTouchEvent: true,
             selectedColor: "#A7C7E7",
           },
-          "2024-10-15": { marked: true, dotColor: '#E3F2FD', activeOpacity: 0 },
-          "2024-10-25": { marked: true, dotColor: "pink", activeOpacity: 0 },
-          // "2024-09-26": { marked: true, dotColor: "red", activeOpacity: 0 },
-          // "2024-09-27": { marked: true, dotColor: "green", activeOpacity: 0 },
-          // "2024-09-28": { marked: true, dotColor: "yellow", activeOpacity: 0 },
+          // "2024-10-15": { marked: true, dotColor: '#E3F2FD', activeOpacity: 0 },
+          // "2024-10-25": { marked: true, dotColor: "pink", activeOpacity: 0 },
+          // // "2024-09-26": { marked: true, dotColor: "red", activeOpacity: 0 },
+          // // "2024-09-27": { marked: true, dotColor: "green", activeOpacity: 0 },
+          // // "2024-09-28": { marked: true, dotColor: "yellow", activeOpacity: 0 },
         }}
       />
     </SafeAreaView>
