@@ -21,6 +21,7 @@ import { decode } from "base64-arraybuffer";
 import { signupSchema } from "../utils/validation";
 import { LinearGradient } from "expo-linear-gradient";
 import GradientText from "react-native-gradient-texts";
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 export default function SignupScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -161,23 +162,30 @@ export default function SignupScreen({ navigation }) {
           <ScrollView contentContainerStyle={styles.scrollView}>
             <View style={styles.titlebox} flexDirection={'row'}>
               <View style={styles.open}>
-                <Text style={styles.title} fontFamily={"Karla-Medium"}>Create an account</Text>
+                <Text style={styles.title} fontFamily={"Karla-Medium"}>Create an <Text style={styles.color}>account</Text></Text>
               </View>
-
             </View>
-            <TouchableWithoutFeedback onPress={pickImage}>
-              <View style={styles.imageContainer}>
+
+            <TouchableWithoutFeedback >
+              <View style={styles.imageContainer} >
+                <View style={styles.cam}>
+                  <Icon name="camera" size={35} color='#616061' onPress={pickImage}></Icon>
+                </View>
                 {profilePhoto ? (
                   <Image source={{ uri: profilePhoto }} style={styles.image} />
                 ) : (
-                  <View style={styles.imagePlaceholder}>
+                  <Pressable style={styles.imagePlaceholder} >
                     <Text style={styles.imagePlaceholderText}>Upload Photo</Text>
-                  </View>
+                  </Pressable>
                 )}
+                <View style={styles.cancel}>
+                  <Icon name="remove" size={35} color='#616061'></Icon>
+                </View>
               </View>
+
             </TouchableWithoutFeedback>
             <View style={styles.inputbox}>
-              {["username", "firstname", "lastname", "email", "password1", "password2", "location"].map((field) => (
+              {["username", "firstname", "lastname", "email", "password", "confirm Password", "location"].map((field) => (
                 <Input
                   key={field}
                   title={field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, " $1")}
@@ -195,8 +203,6 @@ export default function SignupScreen({ navigation }) {
                 // style={styles.parent}
                 colors={['#FFDDF7', '#C5ECFF', '#FFDDF7']}
                 style={styles.gradient}
-
-
               >
                 <Pressable
                   style={styles.button}
@@ -213,10 +219,10 @@ export default function SignupScreen({ navigation }) {
                 </Pressable>
               </LinearGradient>
             </View>
-            <Text style={styles.signInText}>
-              Already have an account?{" "}
+            <Text style={styles.signInText} >
+              Already have an account? {" "}
               <Text style={styles.signInLink} onPress={() => navigation.navigate("SignIn")}>
-                Sign In
+                Login
               </Text>
             </Text>
             <View style={styles.box}>
@@ -233,8 +239,8 @@ export default function SignupScreen({ navigation }) {
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </KeyboardAvoidingView >
+    </SafeAreaView >
   );
 }
 
@@ -249,6 +255,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     alignItems: "center",
+    flexDirection: 'row',
     justifyContent: "center",
     marginBottom: 16,
     padding: 5,
@@ -262,6 +269,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 34,
+    color: '#616061',
     //borderWidth: 3,
   },
 
@@ -280,6 +288,17 @@ const styles = StyleSheet.create({
     //justifyContent: 'flex-start',
     alignItems: 'flex-start'
   },
+  cam: {
+    flex: 0,
+    padding: 40
+  },
+  cancel: {
+    flex: 0,
+    padding: 40
+  },
+  color: {
+    color: '#d87af0'
+  },
   inputbox: {
     flex: 1,
     justifyContent: 'center',
@@ -288,6 +307,7 @@ const styles = StyleSheet.create({
   buttonbox: {
     flex: 0,
     padding: 15,
+    paddingTop: 40,
     justifyContent: 'center',
     alignItems: 'center',
 
@@ -298,15 +318,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     //backgroundColor: 'transparent',
     borderRadius: 30,
+    elevation: 5,
 
   },
-
   button: {
     alignItems: 'center',
     justifyContent: 'center',
     padding: 15,
     borderRadius: 50,
     width: 190,
+
 
   },
   buttontext: {
@@ -318,9 +339,10 @@ const styles = StyleSheet.create({
   signInText: {
     marginTop: 16,
     textAlign: "center",
+    color: '#8e9091'
   },
   signInLink: {
-    color: "blue",
+    color: '#3F8CC5',
     fontWeight: "bold",
   },
   imagePlaceholder: {
@@ -335,9 +357,9 @@ const styles = StyleSheet.create({
     color: "#757575",
   },
   box: {
-    minWidth: 10,
-    marginTop: 20,
-    padding: 5,
+    //minWidth: 10,
+    marginTop: 10,
+    padding: 0,
     justifyContent: 'flex-end',
     alignItems: 'center',
   },

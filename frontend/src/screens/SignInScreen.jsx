@@ -86,8 +86,8 @@ export default function SignInScreen({ navigation }) {
               inputContainerStyle={{
                 borderRadius: 30,
                 borderWidth: 3,
-                borderColor: '#616061',
-                width: 280,
+                borderColor: '#8e9091',
+                width: 270,
                 paddingLeft: 15,
                 height: 40
               }}
@@ -106,8 +106,8 @@ export default function SignInScreen({ navigation }) {
               inputContainerStyle={{
                 borderRadius: 30,
                 borderWidth: 3,
-                borderColor: '#616061',
-                width: 280,
+                borderColor: '#8e9091',
+                width: 270,
                 paddingLeft: 15,
                 height: 40
               }}
@@ -251,6 +251,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     //backgroundColor: 'transparent',
     borderRadius: 30,
+    elevation: 5,
   },
 
   button: {
@@ -259,6 +260,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 50,
     width: 190,
+
   },
   buttontext: {
     fontWeight: "bold",
@@ -273,7 +275,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   signInLink: {
-    color: "#007BFF",
+    color: "#3F8CC5",
     fontWeight: "bold",
   },
   errorText: {

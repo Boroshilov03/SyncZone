@@ -22,19 +22,20 @@ const getMoodColor = (mood) => {
   }
 };
 
-const EditEvent = ({ eventId, onClose }) => {
+const EditEvent = ({ event, onClose }) => {
+  console.log(event)
     const { user } = useStore();
-    const [titleValue, settitleValue] = useState(""); // Title
+    const [titleValue, settitleValue] = useState(event.title); // Title
     const [date, setDate] = useState(new Date()); // Date
     const [showDatePicker, setShowDatePicker] = useState(false); // Toggle date picker
     const [startTime, setStartTime] = useState(new Date()); // Start time state
     const [endTime, setEndTime] = useState(new Date()); // End time state
     const [showStartTimePicker, setShowStartTimePicker] = useState(false); // State to show start time picker
     const [showEndTimePicker, setShowEndTimePicker] = useState(false); // State to show end time picker
-    const [description, setDescription] = useState(""); // Description
-    const [participants, setparticipants] = useState(['459abcb2-481d-4a3c-9f9b-2b018fe7e829', '0c9d97dd-b1b8-43b7-bc30-f089d60c9c47', '26ab9d92-a7c0-4a6b-a469-8dfc75d4860e']); // Selected participants
+    const [description, setDescription] = useState(event.description); // Description
+    const [participants, setparticipants] = useState([]); // Selected participants
     const [newMember, setNewMember] = useState(''); // Input for new member
-    const [mood, setMood] = useState(null); // Selected mood
+    const [mood, setMood] = useState(event.mood); // Selected mood
     const [deletePopupVisible, setDeletePopupVisible] = useState(false); // Controls visibility of DeleteEvent
   
     const handleEditEvent = async () => {
@@ -43,47 +44,16 @@ const EditEvent = ({ eventId, onClose }) => {
       };
   
       const formattedStartTime = formatTime(startTime);
-      const formattedEndTime = formatTime(endTime);
-  
-      console.log({ titleValue, date, startTime: formattedStartTime, endTime: formattedEndTime, description, participants, mood });
-  
-      try {
-        const { data, error } = await supabase
-          .from('event')
-          .update({
-            title: titleValue,
-            date,
-            start_time: formattedStartTime,
-            end_time: formattedEndTime,
-            description,
-            mood
-          })
-          .eq('id', eventId); // Update the event with the given eventId
-  
-        if (error) {
-          console.error(error.message);
-        } else {
-          settitleValue('');
-          setDescription('');
-          setMood(null);
-          onClose();
-          console.log('Event updated:', data);
-  
-          // Update participants for the event
-          await EditEventParticipants(eventId);
-        }
-      } catch (error) {
-        console.error("Error updating event:", error);
-      }
+      const formattedEndTime = formatTime(endTime);  
     };
   
-    const EditEventParticipants = async (eventID) => {
+    const EditEventParticipants = async () => {
       try {
         // First, delete all existing participants for the event
         const { error: deleteError } = await supabase
           .from('event_participants')
           .delete()
-          .eq('event_id', eventID);
+          .eq('event_id', event.id);
   
         if (deleteError) {
           console.error("Error deleting old participants:", deleteError.message);
@@ -94,7 +64,7 @@ const EditEvent = ({ eventId, onClose }) => {
         for (let participantId of participants) {
           const { data, error } = await supabase
             .from('event_participants')
-            .insert({ user_id: participantId, event_id: eventID });
+            .insert({ user_id: participantId, event_id: event.id });
   
           if (error) {
             console.error(`Error adding participant ${participantId}:`, error.message);
@@ -121,14 +91,18 @@ const EditEvent = ({ eventId, onClose }) => {
   ];
 
   const handleTrashIconPress = () => {
-    setDeletePopupVisible(true); // Show DeleteEvent popup when trash icon is pressed
+    setDeletePopupVisible(true); // Show DeleteEvent popup
   };
+  
 
-  const handleDeleteEvent = () => {
-    // Logic for deleting the event
-    console.log("Event Deleted:", selectedEvent);
+  const handleDeleteEvent = async () => {
+     const { error } = await supabase
+    .from('event')
+    .delete()
+    .eq('id', event.id) 
+    console.log("Event Deleted:", event.id);
     setDeletePopupVisible(false); // Close delete popup
-    setEditEventVisible(false);   // Close EditEvent view
+    onClose();   // Close EditEvent view
   };
 
   const handleCloseDeletePopup = () => {
@@ -161,6 +135,7 @@ const EditEvent = ({ eventId, onClose }) => {
             visible={deletePopupVisible}
             onClose={handleCloseDeletePopup} // Close without deletion
             onConfirm={handleDeleteEvent} // Delete and close popup
+            eventID={event.id}
             />
         )}
 
