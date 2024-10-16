@@ -4,7 +4,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Text,
-  Dimensions,
   Switch,
 } from "react-native";
 import React, { useState } from "react"; // Import useState
@@ -16,7 +15,7 @@ const calendarImage = require("../../assets/icons/add_calendar.png");
 const messageImage = require("../../assets/icons/add_message.png");
 const callImage = require("../../assets/icons/add_call.png");
 
-const Header = ({ toggleAddEventModal, event, navigation, title }) => {
+const Header = ({ toggleAddEventModal, event, navigation, title, toggleSwitch, switchValue }) => {
   const { user } = useStore();
   const [form, setForm] = useState({ emailNotifications: false }); // Initialize state for email notifications
 
@@ -28,12 +27,6 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
       toggleAddEventModal();
     } else if (event === "call") {
       navigation.navigate("Contact");
-    } else if (event === "shop") {
-      // Toggle email notifications state
-      setForm((prevForm) => ({
-        ...prevForm,
-        emailNotifications: !prevForm.emailNotifications,
-      }));
     }
   };
 
@@ -56,7 +49,10 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
           style={styles.profilePic}
         />
       </TouchableOpacity>
+
+      {/* Center the title */}
       <Text style={styles.title}>{title}</Text>
+
       <TouchableOpacity onPress={handleHeaderPress}>
         {event === "calendar" ? (
           <Image source={calendarImage} style={styles.calendarIcon} />
@@ -66,14 +62,16 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
           <Image source={callImage} style={styles.callIcon} />
         ) : null}
       </TouchableOpacity>
+
       {event === "shop" && ( // Render the Switch only if the event is "shop"
-        <View>
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>
+            {switchValue ? "Show Owned" : "Show All"}
+          </Text>
           <Switch
-            onValueChange={(emailNotifications) =>
-              setForm({ ...form, emailNotifications })
-            }
+            onValueChange={toggleSwitch}
             style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
-            value={form.emailNotifications}
+            value={switchValue}
           />
         </View>
       )}
@@ -93,6 +91,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
+    flex: 1, // Make the title take up available space
+    textAlign: 'center', // Center the text
   },
   profilePic: {
     width: 40,
@@ -110,6 +110,13 @@ const styles = StyleSheet.create({
   callIcon: {
     width: 23,
     height: 23,
+  },
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  switchLabel: {
+    marginRight: 8,
   },
 });
 
