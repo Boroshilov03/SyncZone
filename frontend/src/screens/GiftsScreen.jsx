@@ -13,6 +13,7 @@ import useStore from "../store/store"; // Assuming this handles user and tokens
 import Header from "../components/Header";
 
 const GiftsScreen = ({ navigation }) => {
+
   const { user } = useStore(); // Retrieve the user from the store
   const [userId, setUserId] = useState(null);
   const [banners, setBanners] = useState([]); // State for storing fetched banners
