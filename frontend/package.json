@@ -40,6 +40,7 @@
     "react-native-gesture-handler": "^2.20.0",
     "react-native-gradient-texts": "^0.1.0",
     "react-native-ionicons": "^4.6.5",
+    "react-native-linear-gradient": "^2.8.3",
     "react-native-reanimated": "^3.15.5",
     "react-native-safe-area-context": "^4.11.0",
     "react-native-screens": "^3.34.0",
