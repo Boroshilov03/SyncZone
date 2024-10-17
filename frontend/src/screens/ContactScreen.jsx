@@ -11,11 +11,13 @@ import {
   SafeAreaView,
   FlatList,
   Image,
+  TextInput,
 } from "react-native";
 import useStore from "../store/store";
 import { supabase } from "../lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FontAwesome } from "@expo/vector-icons"; // For chat and call icons
+import FeatherIcon from "react-native-vector-icons/Feather";
 
 // Fetch mutual contacts from Supabase
 const fetchMutualContacts = async ({ queryKey }) => {
@@ -35,6 +37,7 @@ const ContactScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const { user } = useStore();
   const queryClient = useQueryClient();
+  const [input, setInput] = useState("");
 
   // Correct useQuery syntax for v5
   const {
@@ -189,7 +192,6 @@ const ContactScreen = ({ navigation }) => {
     <View style={styles.contactItem}>
       <View style={styles.wrapperRow}>
         <TouchableOpacity
-          style={styles.touch}
           onPress={() =>
             navigation.navigate("Profile", {
               contactID: item.profiles.id,
@@ -233,13 +235,34 @@ const ContactScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.navigate("MainTabs")}
-      >
-        <Text style={styles.backButtonText}>← Back</Text>
-      </TouchableOpacity>
-      <Text style={styles.title}>Contacts</Text>
+      <View style={{ display: "flex", flexDirection: "row" }}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.navigate("MainTabs")}
+        >
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Contacts</Text>
+      </View>
+
+      <View style={styles.searchWrapper}>
+        <View style={styles.search}>
+          <View style={styles.searchIcon}>
+            <FeatherIcon color="#848484" name="search" size={17} />
+          </View>
+          <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            clearButtonMode="while-editing"
+            onChangeText={(val) => setInput(val)}
+            placeholder="Search.."
+            placeholderTextColor="#848484"
+            returnKeyType="done"
+            style={styles.searchControl}
+            value={input}
+          />
+        </View>
+      </View>
       <FlatList
         data={contacts}
         renderItem={renderContact}
@@ -395,8 +418,41 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: "#333",
   },
-  touch: {
-    borderWidth: 1,
+  search: {
+    position: "relative",
+    backgroundColor: "#efefef",
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    minHeight: "7%",
+  },
+  searchWrapper: {
+    paddingTop: 8,
+    paddingBottom: 16,
+    borderColor: "#efefef",
+    width: "100%", // Make searchWrapper take full width
+  },
+  searchContent: {
+    width: "100%", // Ensure it matches the other components
+  },
+  searchIcon: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 34,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2,
+  },
+  searchControl: {
+    paddingVertical: 10,
+    paddingLeft: 34, // Ensure space for the icon
+    width: "100%",
+    fontSize: 16, // Adjust this font size to make the text and placeholder visible
+    fontWeight: "500",
+    color: "#000", // Ensure text color is visible
   },
 });
 

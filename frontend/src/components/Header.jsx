@@ -37,7 +37,7 @@ const Header = ({ toggleAddEventModal, event, navigation, title, toggleSwitch, s
       : null;
 
   return (
-    <SafeAreaView style={styles.headerContainer}>
+    <View style={styles.headerContainer}>
       <TouchableOpacity
         onPress={() =>
           navigation.navigate("Settings", { profilephoto: avatarUrl })
@@ -75,7 +75,7 @@ const Header = ({ toggleAddEventModal, event, navigation, title, toggleSwitch, s
           />
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -85,8 +85,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 5,
-    marginLeft: 10,
-    marginRight: 10,
+    marginTop: 20,
   },
   title: {
     fontSize: 20,

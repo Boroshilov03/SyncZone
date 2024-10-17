@@ -126,7 +126,7 @@ const ChatsScreen = ({ navigation }) => {
     });
   }, [input, chats, user.id]);
 
-  const renderChatItem = ({ item }) => {
+  const renderChatItem = ({ item, index }) => {
     const participants = item.chat_participants;
     const otherParticipants = participants.filter(
       (participant) => participant.user_id !== user.id
@@ -138,6 +138,9 @@ const ChatsScreen = ({ navigation }) => {
 
       if (!profile) return null;
 
+      // Determine if it's the last item by comparing index with chats.length - 1
+      const isLastItem = index === filteredChats.length - 1;
+
       return (
         <TouchableOpacity
           onPress={() =>
@@ -148,7 +151,12 @@ const ChatsScreen = ({ navigation }) => {
             })
           }
         >
-          <View style={styles.card}>
+          <View
+            style={[
+              styles.card,
+              isLastItem && { marginBottom: 70 }, // Add extra margin if it's the last item
+            ]}
+          >
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate("Profile", {
@@ -278,7 +286,6 @@ export default ChatsScreen;
 
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: 50,
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,
