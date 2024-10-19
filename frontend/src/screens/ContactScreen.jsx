@@ -20,6 +20,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FontAwesome } from "@expo/vector-icons"; // For chat and call icons
 import FeatherIcon from "react-native-vector-icons/Feather";
 import FavoriteIcon from "../components/FavoriteIcon";
+import { LinearGradient } from "expo-linear-gradient";
+
 
 
 // Fetch mutual contacts from Supabase
@@ -269,6 +271,13 @@ const filteredContacts = contacts.filter(contact =>
     console.log("Creating call with", contactID);
   };
 
+  // Function to handle group chat creation
+  const createGroupChat = () => {
+    // Implement your logic here, such as navigating to a create group screen
+    console.log("Create Group Chat Pressed");
+  };
+
+
   const renderContact = ({ item }) => (
 <View style={styles.contactItem}>
   <View style={styles.wrapperRow}>
@@ -297,7 +306,6 @@ const filteredContacts = contacts.filter(contact =>
       </Text>
       <Text style={styles.contactUsername}>@{item.profiles.username}</Text>
     </View>
-
 
     {/* Chat and Call buttons */}
     <View style={styles.buttonContainer}>
@@ -372,13 +380,48 @@ const filteredContacts = contacts.filter(contact =>
           />
         </TouchableOpacity>
         <AlphabetList
-          style={styles.alphabetListContainer}
+          style={[styles.alphabetIndex, { position: 'absolute' }]} // Adding 'absolute' here
           renderItem={({ item }) => (
             <Text style={styles.alphabetItem}>{item}</Text>
           )}
           onLetterPress={(letter) => scrollToLetter(letter)}
         />
       </View>
+
+      <View style={styles.GCContainer}>
+
+      <View style={styles.groupchatContainer}>
+      {/* Group Chat Button */}
+      <LinearGradient
+        colors={['#FFDDF7', '#C5ECFF', '#DEE9FF', '#FFDCF8']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientContainer}  // Apply the gradient to the groupContainer
+      >
+        <TouchableOpacity
+          style={styles.groupButton}
+          onPress={() => {
+            // Creating a group chat
+            createGroupChat(item.profiles.id);
+          }}
+        >
+          <View style={styles.buttonContent}>
+            {/* Icon */}
+            <Image
+              source={require("../../assets/icons/group_chat.png")}
+              style={styles.groupButtonImage}
+            />
+            {/* Text */}
+            <Text style={styles.buttonText}>Create Group Chat</Text>
+          </View>
+        </TouchableOpacity>
+      </LinearGradient>
+    </View>
+    </View>
+
+
+
+
 
       <View style={styles.searchWrapper}>
         <View style={styles.search}>
@@ -644,7 +687,7 @@ const styles = StyleSheet.create({
   alphabetIndex: {
     position: 'absolute',
     right: 0,
-    top: 100,
+    top: 180,
     paddingVertical: 10,
     paddingHorizontal: 5,
   },
@@ -656,19 +699,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
   }, 
-  alphabetListContainer: {
-    position: "absolute",    // Positioning it absolutely
-    top: "40%",             // Move closer to the middle vertically
-    left: "50%",            // Center it horizontally
-    transform: [{ translateX: -80 }, { translateY: -100 }], // Adjust to truly center it
-  },
   alphabetItem: {
     fontSize: 10,           // Smaller text size
     color: "#555",          // Lighter text color
     paddingVertical: 5,     // Space between letters
-  },
-  groupContainer: {
-    padding: 5,
   },
   letterHeader: {
     fontSize: 24,
@@ -676,6 +710,57 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 5, // Space between the letter and line
     marginLeft: 10,
+  },
+  GCContainer: {
+    justifyContent: 'center',        // Vertically center content
+    alignItems: 'center',            // Horizontally center content
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  groupchatContainer: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,               // Adds depth and shadow
+    elevation: 5,                  // For Android shadow  
+    height: 35,                    // Smaller height
+    width: 200,                    // Smaller width  
+    justifyContent: 'center',       // Center content vertically
+    alignItems: 'center',           // Center content horizontally
+  },
+  gradientContainer: {
+    flexDirection: 'row',
+    borderRadius: 30,              // Circular shape (bubble effect)
+    paddingHorizontal: 5,         // Shortened padding for smaller width
+    justifyContent: 'center',
+  },
+  groupButton: {
+    flexDirection: 'row',          // Align text and icon in a row
+    alignItems: 'center',          // Vertically center the content
+    paddingHorizontal: 15,         // Shortened padding for smaller width
+    paddingVertical: 5,           // Vertical padding to make the button bigger
+    borderRadius: 30,              // Circular shape (bubble effect)
+    justifyContent: 'center',
+  },
+  groupButtonImage: {
+    width: 40,                     // Adjust the size of the icon
+    height: 40,                    // Adjust the size of the icon
+    marginRight: 10,               // Space between the icon and text
+  },
+  buttonText: {
+    fontSize: 18,                  // Adjust font size as needed
+    color: '#fff',                 // White text color
+    fontWeight: 'bold',            // Bold text for emphasis
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,               // Adds depth and shadow
+    elevation: 3,                  // For Android shadow
+  },
+  buttonContent: {
+    flexDirection: 'row',          // Arrange icon and text in a row
+    alignItems: 'center',          // Center items vertically
+    justifyContent: 'center',
   },
 });
 
