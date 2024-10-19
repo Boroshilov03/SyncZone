@@ -109,7 +109,7 @@ function MainTabNavigator({ navigation }) {
 
 const styles = StyleSheet.create({
   tabBar: {
-    height: 70, // Height of the navbar
+    height: 60, // Height of the navbar
     paddingBottom: 10,
     paddingTop: 10,
     justifyContent: "center", // Center the icons

@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import useStore from '../store/store';
 
 
+
 const ListEvent = ({ toggleEditEventModal }) => {
   const [allEvents, setAllEvents] = useState([]);
   const { user } = useStore();
@@ -174,16 +175,16 @@ const styles = StyleSheet.create({
   imageContainer: {
     position: "relative",
     width: 80,
-    height: 45,
+    height: 40,
   },
   monthText: {
     position: "absolute",
     top: "89%",
     left: "50%",
-    transform: [{ translateX: -55 }, { translateY: -40 }],
+    transform: [{ translateX: -55 }, { translateY: -36 }],
     color: "black",
     fontWeight: "300",
-    fontSize: 22,
+    fontSize: 20,
     textAlign: "center",
     width: "100%",
   },
@@ -194,7 +195,7 @@ const styles = StyleSheet.create({
     transform: [{ translateX: -55 }, { translateY: -7 }],
     color: "black",
     fontWeight: "300",
-    fontSize: 25,
+    fontSize: 23,
     textAlign: "center",
     width: "100%",
   },
@@ -204,18 +205,18 @@ const styles = StyleSheet.create({
     right: 10,
   },
   pencilIcon: {
-    width: 17,
-    height: 17,
+    width: 20,
+    height: 20,
   },
   title: {
     fontWeight: "bold",
     fontSize: 18,
-    marginLeft: 10,
+    marginLeft: -10,
   },
   timeText: {
     fontSize: 14,
     color: "grey",
-    marginLeft: 10,
+    marginLeft: -10,
   },
   textContainer: {
     flex: 1,

@@ -14,6 +14,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import useStore from "../store/store"; // Assuming this handles user and tokens
 import { loginSchema } from "../utils/validation"; // Import the login schema
 import { useMutation } from "@tanstack/react-query"; // Import useMutation
+import SpinningLogo from "../components/SpinningLogo";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 export default function SignInScreen({ navigation }) {
   const { setUser, setAccessToken, setRefreshToken } = useStore();
@@ -61,24 +63,33 @@ export default function SignInScreen({ navigation }) {
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.parent}
-      colors={['#FFDDF7', '#C5ECFF']}>
+      colors={["#FFDDF7", "#C5ECFF"]}
+    >
       <View style={styles.space}>
-        <Image
-          source={require('../images/logosz.png')}
-          style={styles.logo}
-
-        />
+        <SpinningLogo />
       </View>
       <View style={styles.container}>
         <View style={styles.loginbox}>
-          <Text style={styles.title} fontFamily={"Karla-Medium"}>Login</Text>
+          <Text style={styles.title} fontFamily={"Karla-Medium"}>
+            Login
+          </Text>
         </View>
         <View style={styles.fields}>
           <View style={[styles.verticallySpaced, styles.mt20]}>
             <Input
               label="Email"
-              labelStyle={{ position: 'absolute', top: -25, left: 25, color: '#616061' }}
-              leftIcon={{ type: "font-awesome", name: "envelope", color: '#616061', size: 18 }}
+              labelStyle={{
+                position: "absolute",
+                top: -25,
+                left: 25,
+                color: "#616061",
+              }}
+              leftIcon={{
+                type: "font-awesome",
+                name: "envelope",
+                color: "#616061",
+                size: 18,
+              }}
               onChangeText={setEmail}
               value={email}
               //placeholder="email@address.com"
@@ -86,18 +97,28 @@ export default function SignInScreen({ navigation }) {
               inputContainerStyle={{
                 borderRadius: 30,
                 borderWidth: 3,
-                borderColor: '#8e9091',
+                borderColor: "#8e9091",
                 width: 270,
                 paddingLeft: 15,
-                height: 40
+                height: 40,
               }}
             />
           </View>
           <View style={styles.verticallySpaced}>
             <Input
               label="Password"
-              labelStyle={{ position: 'absolute', top: -25, left: 25, color: '#616061' }}
-              leftIcon={{ type: "font-awesome", name: "lock", color: '#616061', size: 20 }}
+              labelStyle={{
+                position: "absolute",
+                top: -25,
+                left: 25,
+                color: "#616061",
+              }}
+              leftIcon={{
+                type: "font-awesome",
+                name: "lock",
+                color: "#616061",
+                size: 20,
+              }}
               onChangeText={setPassword}
               value={password}
               secureTextEntry
@@ -106,10 +127,10 @@ export default function SignInScreen({ navigation }) {
               inputContainerStyle={{
                 borderRadius: 30,
                 borderWidth: 3,
-                borderColor: '#8e9091',
+                borderColor: "#8e9091",
                 width: 270,
                 paddingLeft: 15,
-                height: 40
+                height: 40,
               }}
             />
           </View>
@@ -119,23 +140,23 @@ export default function SignInScreen({ navigation }) {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             // style={styles.parent}
-            colors={['#FFDDF7', '#C5ECFF', '#FFDDF7']}
+            colors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
             style={styles.gradient}
-
-
           >
-            <Pressable
+            <TouchableOpacity
               style={styles.button}
               onPress={() => signInWithEmail()}
               disabled={isLoading} // Disable the button when loading
               borderRadius={20}
             >
-              <Text style={styles.buttontext} fontFamily={"Karla-Medium"}>Login</Text>
-            </Pressable>
+              <Text style={styles.buttontext} fontFamily={"Karla-Medium"}>
+                Login
+              </Text>
+            </TouchableOpacity>
           </LinearGradient>
         </View>
         <Text style={styles.signInText}>
-          Don't have an account?{" "}
+          Don't have an account?{"  "}
           <Text
             style={styles.signInLink}
             onPress={() => navigation.navigate("SignUp")}
@@ -151,10 +172,10 @@ export default function SignInScreen({ navigation }) {
             fontSize={40}
             isGradientFill
             isGradientStroke
-            gradientColors={['#FFDDF7', "#C5ECFF", '#FFDDF7']}
+            gradientColors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
             fontFamily={"Karla-Medium"}
-          //gradientColors={["#D49AC0", "#6FD2E2"]}
-          // fontFamily={"Gill Sans"}
+            //gradientColors={["#D49AC0", "#6FD2E2"]}
+            // fontFamily={"Gill Sans"}
           />
         </View>
       </View>
@@ -173,7 +194,7 @@ const styles = StyleSheet.create({
     //borderWidth: 4,
 
     //height: 1000,
-    backgroundColor: 'rgba(52, 52, 52, alpha)',
+    backgroundColor: "rgba(52, 52, 52, alpha)",
     // padding: 12,
     //backgroundColor: '#966dab',
   },
@@ -186,8 +207,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 4,
     flexDirection: "column",
-    justifyContent: 'space-between',
-    flexDirection: 'column',
+    justifyContent: "space-between",
+    flexDirection: "column",
     padding: 42,
     backgroundColor: "#fffbf5",
     borderTopLeftRadius: 40,
@@ -202,33 +223,33 @@ const styles = StyleSheet.create({
   },
   fields: {
     flex: 10,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     padding: 5,
     //margin: 5,
     //justifyContent: 'center',
-    backgroundColor: '#fffbf5',
+    backgroundColor: "#fffbf5",
     //borderWidth: 3,
     //height: '50%',
-    rowGap: 5
+    rowGap: 5,
   },
   buttonbox: {
     flex: 0,
     padding: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     //margin: 5,
     //borderWidth: 3,
   },
   syncbox: {
     flex: 2,
     justifyContent: "center",
-    backgroundColor: '#fffbf5',
+    backgroundColor: "#fffbf5",
   },
   verticallySpaced: {
     flex: 1,
     padding: 5,
     margin: 5,
-    position: 'relative'
+    position: "relative",
   },
   logo: {
     width: 250,
@@ -237,8 +258,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    color: '#616061',
-    fontWeight: 'bold',
+    color: "#616061",
+    fontWeight: "bold",
     lineHeight: 34,
   },
   box: {
@@ -248,7 +269,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   gradient: {
-    overflow: 'hidden',
+    overflow: "hidden",
     //backgroundColor: 'transparent',
     borderRadius: 30,
     elevation: 5,
@@ -260,12 +281,11 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 50,
     width: 190,
-
   },
   buttontext: {
     fontWeight: "bold",
     fontSize: 21,
-    color: '#fffbf5',
+    color: "#fffbf5",
     //padding: 100,
   },
   mt20: {
@@ -273,6 +293,7 @@ const styles = StyleSheet.create({
   },
   signInText: {
     textAlign: "center",
+    color: "#616061",
   },
   signInLink: {
     color: "#3F8CC5",
