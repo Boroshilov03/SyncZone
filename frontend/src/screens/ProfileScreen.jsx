@@ -6,18 +6,18 @@ import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import * as Font from 'expo-font';
 
 
-const ProfileScreen = ({ navigation, route }) => {
+const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst, contactLast, contactUsername }) => {
   // Destructure the parameters passed from navigation
   const [modalVisible, setModalVisible] = useState(false);
 
-  const {
-    contactID,
-    contactPFP,
-    contactFirst,
-    contactLast,
-    contactUsername,
-  } = route.params;
-
+  // const {
+  //   contactID,
+  //   contactPFP,
+  //   contactFirst,
+  //   contactLast,
+  //   contactUsername,
+  // } = route.params;
+  //const { contactID, contactPFP, contactFirst, contactLast, contactUsername } = route?.params || {};
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
   useEffect(() => {
@@ -70,7 +70,7 @@ const ProfileScreen = ({ navigation, route }) => {
       </Modal>
 
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate("MainTabs")}>
-        <Text style={styles.backButtonText}>Back</Text>
+        <Text style={styles.backButtonText}>Back button for chat page</Text>
       </TouchableOpacity>
 
       <View style={styles.profileContainer}>
@@ -78,7 +78,9 @@ const ProfileScreen = ({ navigation, route }) => {
           <Text style={styles.weatherText}>Barcelona, Spain</Text>
         </View>
         <View style={styles.midbox}>
-          <Text style={styles.weatherText}>62°F   </Text>
+          <View style={styles.temp}>
+            <Text style={styles.weatherText}>62°F   </Text>
+          </View>
           {contactPFP ? (
             <Image source={{ uri: contactPFP }} style={styles.profileImage} />
 
@@ -87,13 +89,15 @@ const ProfileScreen = ({ navigation, route }) => {
             //<View style={styles.placeholderImage} />
             <Image source={require('../images/girl.png')} style={styles.placeholderImage} />
           )}
-          <Text style={styles.weatherText}>4:36 AM</Text>
+          <View style={styles.temp}>
+            <Text style={styles.weatherText}>4:36 AM</Text>
+          </View>
         </View>
         <Text style={styles.nameText}>
           {contactFirst} {contactLast}
         </Text>
         <Text style={styles.usernameText}>@{contactUsername}</Text>
-        <Text style={styles.idText}>User ID: {contactID}</Text>
+        {/* <Text style={styles.idText}>User ID: {contactID}</Text> */}
       </View>
       <View style={styles.buttons}>
 
@@ -107,15 +111,19 @@ const ProfileScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    //borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
     //alignItems: 'center',
     //justifyContent: 'center',
-    padding: 20,
+    //padding: 20,
     //backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   topbox: {
-    //flex: .2,
-    //borderWidth: 3,
+    flex: .2,
+    borderWidth: 3,
     alignItems: 'flex-end',
+
     margin: 20,
   },
   backButton: {
@@ -136,54 +144,64 @@ const styles = StyleSheet.create({
     right: 20,
   },
   weather: {
-    flexWrap: 'wrap',
+    flex: .3,
+    //flexWrap: 'wrap',
+
     //borderWidth: 3
   },
   weatherText: {
     fontFamily: 'Rubik-Regular',
-    fontSize: 22,
+    fontSize: 18,
   },
   midbox: {
-    flexWrap: 'wrap',
+    //flexWrap: 'wrap',
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    //borderWidth: 3,
+    //borderWidth: 1,
   },
   profileContainer: {
     flex: 3,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 60, // Adjust margin to avoid overlap with the back button
-    //borderWidth: 3,
+    marginTop: 60,
+    //borderWidth: 4,
+    width: 340,
 
   },
   profileImage: {
     width: 170,
     height: 170,
-    borderRadius: 50, // Makes the image circular
+    borderRadius: 200, // Makes the image circular
     marginBottom: 10,
+    padding: 10,
+    resizeMode: 'cover',
+
+
   },
   placeholderImage: {
     width: 170,
     height: 170,
-    borderRadius: 100,
+    borderRadius: 155,
     backgroundColor: '#ccc', // Gray color for placeholder
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
-    margin: 20,
-    borderWidth: 3
+
+    // margin: 20,
+    //borderWidth: 3,
+
   },
   nameText: {
     fontSize: 24,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
     marginBottom: 5,
-    fontFamily: 'Poppins-Regular',
+    //fontFamily: 'Poppins-Bold',
   },
   usernameText: {
     fontSize: 18,
     color: '#555',
+    fontFamily: 'Poppins-Regular',
   },
   idText: {
     fontSize: 14,
@@ -192,8 +210,16 @@ const styles = StyleSheet.create({
   buttons: {
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
+    justifyContent: 'space-between',
+    width: 150,
+    //borderWidth: 1,
+  },
+  temp: {
+    flex: 1,
+    //borderWidth: 1,
+    alignItems: 'center',
 
+    //padding: 10,
 
   },
   modalContainer: {
@@ -212,7 +238,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 25,
     alignItems: 'center',
-    borderWidth: 1,
+    //borderWidth: 1,
     borderColor: 'grey'
   },
   modalText: {
@@ -238,7 +264,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderColor: 'grey',
-    borderRightWidth: 1
+    borderRightWidth: 1,
+    padding: 10,
   },
   right: {
     flex: 1,
@@ -248,12 +275,12 @@ const styles = StyleSheet.create({
   lText: {
     color: 'red',
     //fontWeight: 'bold',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Regular',
   },
   rText: {
     color: 'blue',
     //fontWeight: 'bold',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Regular',
   },
 });
 

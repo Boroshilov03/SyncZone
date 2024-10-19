@@ -11,12 +11,13 @@ import {
   SafeAreaView,
   FlatList,
   Image,
+  Button
 } from "react-native";
 import useStore from "../store/store";
 import { supabase } from "../lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FontAwesome } from "@expo/vector-icons"; // For chat and call icons
-
+import Profile from "./ProfileScreen";
 // Fetch mutual contacts from Supabase
 const fetchMutualContacts = async ({ queryKey }) => {
   const [_, userId] = queryKey; // The second element in queryKey is userId
@@ -32,7 +33,10 @@ const fetchMutualContacts = async ({ queryKey }) => {
 };
 
 const ContactScreen = ({ navigation }) => {
+  const [profileVisible, setProfileVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
+
   const { user } = useStore();
   const queryClient = useQueryClient();
 
@@ -185,51 +189,80 @@ const ContactScreen = ({ navigation }) => {
     console.log("Creating call with", contactID);
   };
 
-  const renderContact = ({ item }) => (
-    <View style={styles.contactItem}>
-      <View style={styles.wrapperRow}>
-        <TouchableOpacity
-          style={styles.touch}
-          onPress={() =>
-            navigation.navigate("Profile", {
-              contactID: item.profiles.id,
-              contactPFP: item.profiles.avatar_url,
-              contactFirst: item.profiles.first_name,
-              contactLast: item.profiles.last_name,
-              contactUsername: item.profiles.username,
-            })
-          }
-        >
-          <Image
-            source={{ uri: item.profiles.avatar_url }} // Use avatar_url to load the image
-            style={styles.profileImage}
-          />
-        </TouchableOpacity>
-        <View style={styles.wrapperCol}>
-          <Text style={styles.contactText}>
-            {item.profiles.first_name} {item.profiles.last_name}
-          </Text>
-          <Text style={styles.contactUsername}>@{item.profiles.username}</Text>
-        </View>
-        <View style={styles.buttonContainer}>
+
+
+  const renderContact = ({ item }) => {
+    const contactInfo = {
+      contactID: item.profiles.id,
+      contactPFP: item.profiles.avatar_url,
+      contactFirst: item.profiles.first_name,
+      contactLast: item.profiles.last_name,
+      contactUsername: item.profiles.username,
+    };
+    return (
+      <View style={styles.contactItem}>
+        <View style={styles.wrapperRow}>
           <TouchableOpacity
-            style={styles.chatButton}
-            onPress={() => createChat(item.profiles.id)}
+            style={styles.touch}
+            onPress={() => {
+              setProfileVisible(true)
+              setSelectedContact(contactInfo);
+            }}
+          // onPress={() =>
+          //   navigation.navigate("Profile", {
+          //     contactID: item.profiles.id,
+          //     contactPFP: item.profiles.avatar_url,
+          //     contactFirst: item.profiles.first_name,
+          //     contactLast: item.profiles.last_name,
+          //     contactUsername: item.profiles.username,
+          // })
+          // }
           >
-            <FontAwesome name="comment" size={20} color="#fff" />
-            <Text style={styles.buttonText}>Chat</Text>
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={profileVisible}
+              onRequestClose={() => setProfileVisible(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Button title="Close" onPress={() => setProfileVisible(false)} />
+                  <Profile {...selectedContact} />
+                </View>
+              </View>
+            </Modal>
+            <Image
+              source={{ uri: item.profiles.avatar_url }} // Use avatar_url to load the image
+              style={styles.profileImage}
+
+            />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.callButton}
-            onPress={() => createCall(item.profiles.id)}
-          >
-            <FontAwesome name="phone" size={20} color="#fff" />
-            <Text style={styles.buttonText}>Call</Text>
-          </TouchableOpacity>
+          <View style={styles.wrapperCol}>
+            <Text style={styles.contactText}>
+              {item.profiles.first_name} {item.profiles.last_name}
+            </Text>
+            <Text style={styles.contactUsername}>@{item.profiles.username}</Text>
+          </View>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.chatButton}
+              onPress={() => createChat(item.profiles.id)}
+            >
+              <FontAwesome name="comment" size={20} color="#fff" />
+              <Text style={styles.buttonText}>Chat</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.callButton}
+              onPress={() => createCall(item.profiles.id)}
+            >
+              <FontAwesome name="phone" size={20} color="#fff" />
+              <Text style={styles.buttonText}>Call</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -398,6 +431,26 @@ const styles = StyleSheet.create({
   touch: {
     borderWidth: 1,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '90%',
+    height: '80%',
+    padding: 20,
+    paddingTop: 40,
+    backgroundColor: "#fff",
+    borderRadius: 40,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+
 });
 
 export default ContactScreen;

@@ -107,7 +107,9 @@ const ChatsScreen = ({ navigation }) => {
     });
   }, [input, chats, user.id]);
 
+
   const renderChatItem = ({ item }) => {
+
     const participants = item.chat_participants;
     const otherParticipants = participants.filter(
       (participant) => participant.user_id !== user.id
