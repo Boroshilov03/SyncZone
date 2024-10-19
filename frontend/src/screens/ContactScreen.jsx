@@ -21,7 +21,7 @@ import { FontAwesome } from "@expo/vector-icons"; // For chat and call icons
 import FeatherIcon from "react-native-vector-icons/Feather";
 import FavoriteIcon from "../components/FavoriteIcon";
 import { LinearGradient } from "expo-linear-gradient";
-
+import { PanGestureHandler, GestureHandlerRootView } from "react-native-gesture-handler";
 
 
 // Fetch mutual contacts from Supabase
@@ -45,6 +45,8 @@ const ContactScreen = ({ navigation }) => {
   const [input, setInput] = useState("");
 
   const flatListRef = useRef(null); // Add this line at the top of the component
+  const [alphabetWidth, setAlphabetWidth] = useState(0); // State to store alphabet item width
+
 
 
   const { data: contacts, error, isLoading } = useQuery({
@@ -55,7 +57,7 @@ const ContactScreen = ({ navigation }) => {
 
   const groupContactsByLetter = (contacts) => {
     // First, sort contacts alphabetically by their first name
-    const sortedContacts = contacts.sort((a, b) => 
+    const sortedContacts = contacts.sort((a, b) =>
       a.profiles.first_name.localeCompare(b.profiles.first_name)
     );
   
@@ -71,21 +73,18 @@ const ContactScreen = ({ navigation }) => {
   
   // Then render the grouped data
   const groupedContacts = groupContactsByLetter(contacts || []);
-  const groupedData = Object.keys(groupedContacts).map(letter => ({
+  const groupedData = Object.keys(groupedContacts).map((letter) => ({
     letter,
     contacts: groupedContacts[letter],
   }));
   
-
+  // Function to scroll to the selected letter section
   const scrollToLetter = (letter) => {
-    const index = contacts.findIndex(contact =>
-      contact.profiles.first_name[0].toUpperCase() === letter
-    );
-    if (index !== -1) {
+    const index = groupedData.findIndex((item) => item.letter === letter); // Update here: use groupedData instead of groupedContacts
+    if (index !== -1 && flatListRef.current) {
       flatListRef.current.scrollToIndex({ index });
     }
   };
-
 
 
   useEffect(() => {
@@ -130,45 +129,56 @@ const ContactScreen = ({ navigation }) => {
     setIsFavorite(!isFavorite);
     toggleFavorite(item.profiles.id); // Call the function to handle favorite toggling
   };
+  
 
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split(""); // Alphabet array
 
-const AlphabetList = ({ onLetterPress }) => (
-  <View style={styles.alphabetIndex}>
-    {alphabet.map((letter) => (
-      <TouchableOpacity
-        key={letter}
-        style={styles.alphabetLetter}
-        onPress={() => onLetterPress(letter)}
-      >
-        <Text style={styles.alphabetText}>{letter}</Text>
-      </TouchableOpacity>
-    ))}
-  </View>
-);
+const AlphabetList = ({ onLetterPress, onSwipeLetter }) => {
 
-{/* <FlatList
-  ref={flatListRef} // Attach the ref here
-  data={contacts}
-  renderItem={renderContact}
-  keyExtractor={(item) => item.profiles.id.toString()}
-  style={styles.contactList}
-  showsVerticalScrollIndicator={false}
-/>
- */}
+  // Gesture handler for detecting swipe gestures
+  const onGestureEvent = (event) => {
+    const { translationX } = event.nativeEvent;
+    const index = Math.floor(translationX / alphabetWidth); // Calculate the letter index
+    if (index >= 0 && index < alphabet.length) {
+      onSwipeLetter(alphabet[index]); // Trigger scroll on swipe
+    }
+  };
 
-<FlatList
-  data={groupedData}
-  renderItem={renderGroup}
-  keyExtractor={(item) => item.letter} // Use the letter as the key
-  style={styles.contactList}
-  showsVerticalScrollIndicator={false}
-/>
+  // Measure the width of the alphabet letters dynamically
+  const onLayout = (event) => {
+    const { width } = event.nativeEvent.layout;
+    setAlphabetWidth(width / alphabet.length); // Calculate the width of each letter
+  };
+
+  return (
+    <View style={styles.alphabetIndex} onLayout={onLayout}>
+      {alphabet.map((letter) => (
+        <TouchableOpacity
+          key={letter}
+          style={styles.alphabetLetter} // Ensure enough padding and clickable space
+          onPress={() => onLetterPress(letter)} // Handle tap
+          activeOpacity={0.7} // Provides visual feedback on press
+        >
+          <Text style={styles.alphabetText}>{letter}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
+
+
+const handleLetterPress = (letter) => {
+  scrollToLetter(letter); // Scroll on tap
+};
+
+const handleSwipeLetter = (letter) => {
+  scrollToLetter(letter); // Scroll on swipe
+};
+
 
 const filteredContacts = contacts.filter(contact => 
   contact.profiles.username.toLowerCase().includes(input.toLowerCase())
 );
-
 
 
   const createChat = async (contactID) => {
@@ -299,12 +309,14 @@ const filteredContacts = contacts.filter(contact =>
       />
     </TouchableOpacity>
 
+
     {/* Contact's Name and Username */}
     <View style={styles.wrapperCol}>
       <Text style={styles.contactText}>
         {item.profiles.first_name} {item.profiles.last_name}
       </Text>
       <Text style={styles.contactUsername}>@{item.profiles.username}</Text>
+      
     </View>
 
     {/* Chat and Call buttons */}
@@ -334,6 +346,7 @@ const filteredContacts = contacts.filter(contact =>
 </View>
 );
 
+
   // Render grouped contacts
   const renderGroup = ({ item }) => (
     <View style={styles.groupContainer}>
@@ -354,6 +367,7 @@ const filteredContacts = contacts.filter(contact =>
 
   return (
     <SafeAreaView style={styles.container}>
+      
       <View style={styles.headerContainer}>
         {/* Back Arrow Button */}
         <TouchableOpacity
@@ -379,14 +393,15 @@ const filteredContacts = contacts.filter(contact =>
             style={styles.addPersonIcon}
           />
         </TouchableOpacity>
-        <AlphabetList
-          style={[styles.alphabetIndex, { position: 'absolute' }]} // Adding 'absolute' here
-          renderItem={({ item }) => (
-            <Text style={styles.alphabetItem}>{item}</Text>
-          )}
-          onLetterPress={(letter) => scrollToLetter(letter)}
-        />
+
       </View>
+      
+      {/* Alphabet List with swipe and click */}
+      <AlphabetList
+        onLetterPress={handleLetterPress} // Handle tap
+        onSwipeLetter={handleSwipeLetter} // Handle swipe
+      />
+
 
       <View style={styles.GCContainer}>
 
@@ -446,8 +461,13 @@ const filteredContacts = contacts.filter(contact =>
         data={groupedData}
         renderItem={renderGroup}
         keyExtractor={(item) => item.letter}
-        style={styles.contactList}
+        style={styles.flatList}
         showsVerticalScrollIndicator={false}
+        getItemLayout={(data, index) => ({
+          length: 100, // Adjust item height as needed
+          offset: 100 * index, // Adjust for the actual item height
+          index,
+        })}
       />
       <Modal
         animationType="fade"
@@ -479,7 +499,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: "#fff",
-
+    zIndex: 2,
   },
   title: {
     fontSize: 28,
@@ -499,6 +519,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: 20,
+    zIndex: 3,
   },
   backButton: {
     paddingLeft: 10,
@@ -684,15 +705,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
   }, 
+
+
+  flatList: {
+    flex: 1,
+  },
+
   alphabetIndex: {
     position: 'absolute',
     right: 0,
-    top: 180,
+    top: 250,
     paddingVertical: 10,
     paddingHorizontal: 5,
+    zIndex: 100,
   },
   alphabetLetter: {
     paddingVertical: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   alphabetText: {
     fontSize: 16,
@@ -704,11 +734,13 @@ const styles = StyleSheet.create({
     color: "#555",          // Lighter text color
     paddingVertical: 5,     // Space between letters
   },
+
+
   letterHeader: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 5, // Space between the letter and line
+    marginBottom: 5,
     marginLeft: 10,
   },
   GCContainer: {
