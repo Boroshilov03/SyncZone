@@ -28,8 +28,7 @@ const fetchMutualContacts = async ({ queryKey }) => {
   const { data, error } = await supabase
     .from("contacts")
     .select(
-      `profiles:contact_id (id, username, first_name, last_name, avatar_url)`
-    )
+      `profiles:contact_id (id, username, first_name, last_name, avatar_url)`)
     .or(`user_id.eq.${userId},contact_id.eq.${userId}`);
 
   if (error) throw new Error(error.message);
@@ -43,16 +42,49 @@ const ContactScreen = ({ navigation }) => {
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");
 
-  // Correct useQuery syntax for v5
-  const {
-    data: contacts,
-    error,
-    isLoading,
-  } = useQuery({
-    queryKey: ["contacts", user?.id], // Query key as an array with the user id
+  const flatListRef = useRef(null); // Add this line at the top of the component
+
+
+  const { data: contacts, error, isLoading } = useQuery({
+    queryKey: ["contacts", user?.id],
     queryFn: fetchMutualContacts,
-    enabled: !!user, // Only run query if the user is defined
+    enabled: !!user,
   });
+
+  const groupContactsByLetter = (contacts) => {
+    // First, sort contacts alphabetically by their first name
+    const sortedContacts = contacts.sort((a, b) => 
+      a.profiles.first_name.localeCompare(b.profiles.first_name)
+    );
+  
+    return sortedContacts.reduce((acc, contact) => {
+      const firstLetter = contact.profiles.first_name[0].toUpperCase();
+      if (!acc[firstLetter]) {
+        acc[firstLetter] = [];
+      }
+      acc[firstLetter].push(contact);
+      return acc;
+    }, {});
+  };
+  
+  // Then render the grouped data
+  const groupedContacts = groupContactsByLetter(contacts || []);
+  const groupedData = Object.keys(groupedContacts).map(letter => ({
+    letter,
+    contacts: groupedContacts[letter],
+  }));
+  
+
+  const scrollToLetter = (letter) => {
+    const index = contacts.findIndex(contact =>
+      contact.profiles.first_name[0].toUpperCase() === letter
+    );
+    if (index !== -1) {
+      flatListRef.current.scrollToIndex({ index });
+    }
+  };
+
+
 
   useEffect(() => {
     const channel = supabase
@@ -97,29 +129,23 @@ const ContactScreen = ({ navigation }) => {
     toggleFavorite(item.profiles.id); // Call the function to handle favorite toggling
   };
 
-const alphabet = "*ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split(""); // Alphabet array
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split(""); // Alphabet array
 
-const AlphabetList = ({ onLetterPress }) => {
-  return (
-    <View style={styles.alphabetIndex}>
-      {alphabet.map((letter) => (
-        <TouchableOpacity
-          key={letter}
-          style={styles.alphabetLetter}
-          onPress={() => onLetterPress(letter)}
-        >
-          <Text style={styles.alphabetText}>{letter}</Text>
-          <View style={styles.alphabetLine} />
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-};
+const AlphabetList = ({ onLetterPress }) => (
+  <View style={styles.alphabetIndex}>
+    {alphabet.map((letter) => (
+      <TouchableOpacity
+        key={letter}
+        style={styles.alphabetLetter}
+        onPress={() => onLetterPress(letter)}
+      >
+        <Text style={styles.alphabetText}>{letter}</Text>
+      </TouchableOpacity>
+    ))}
+  </View>
+);
 
-
-const flatListRef = useRef(null); // Add this line at the top of the component
-
-<FlatList
+{/* <FlatList
   ref={flatListRef} // Attach the ref here
   data={contacts}
   renderItem={renderContact}
@@ -127,17 +153,7 @@ const flatListRef = useRef(null); // Add this line at the top of the component
   style={styles.contactList}
   showsVerticalScrollIndicator={false}
 />
-
-
-const scrollToLetter = (letter) => {
-  const index = contacts.findIndex(contact =>
-    contact.name[0].toUpperCase() === letter
-  );
-  
-  if (index !== -1) {
-    flatListRef.current.scrollToIndex({ index });
-  }
-};
+ */}
 
 <FlatList
   data={groupedData}
@@ -147,46 +163,9 @@ const scrollToLetter = (letter) => {
   showsVerticalScrollIndicator={false}
 />
 
-
 const filteredContacts = contacts.filter(contact => 
   contact.profiles.username.toLowerCase().includes(input.toLowerCase())
 );
-
-
-const groupContactsByLetter = (contacts) => {
-  return contacts.reduce((acc, contact) => {
-    const firstLetter = contact.profiles.first_name[0].toUpperCase();
-    if (!acc[firstLetter]) {
-      acc[firstLetter] = [];
-    }
-    acc[firstLetter].push(contact);
-    return acc;
-  }, {});
-};
-
-
-const groupedContacts = groupContactsByLetter(filteredContacts); // Group contacts by first letter
-
-const renderGroup = ({ item }) => {
-  return (
-    <View style={styles.groupContainer}>
-      {/* Letter Header */}
-      <Text style={styles.letterHeader}>{item.letter}</Text>
-      <View style={styles.letterLine} />
-
-      {/* Contacts under this letter */}
-      {item.contacts.map(contact => renderContact({ item: contact }))}
-    </View>
-  );
-};
-
-// Convert the grouped object into an array that FlatList can use
-const groupedData = Object.keys(groupedContacts).map(letter => ({
-  letter,
-  contacts: groupedContacts[letter],
-}));
-
-
 
 
 
@@ -292,9 +271,6 @@ const groupedData = Object.keys(groupedContacts).map(letter => ({
 
   const renderContact = ({ item }) => (
 <View style={styles.contactItem}>
-
-
-
   <View style={styles.wrapperRow}>
     {/* Profile Image and Touchable to navigate to Profile */}
     <TouchableOpacity
@@ -323,11 +299,8 @@ const groupedData = Object.keys(groupedContacts).map(letter => ({
     </View>
 
 
-
     {/* Chat and Call buttons */}
     <View style={styles.buttonContainer}>
-    
-
       <Pressable
       style={styles.favoriteButton}
       onPress={() => toggleFavorite(item.profiles.id)} // Call the function to handle favorite toggling
@@ -351,8 +324,25 @@ const groupedData = Object.keys(groupedContacts).map(letter => ({
     </View>
   </View>
 </View>
+);
 
+  // Render grouped contacts
+  const renderGroup = ({ item }) => (
+    <View style={styles.groupContainer}>
+      {/* Title (letter) above the contact cards */}
+      <Text style={styles.letterHeader}>{item.letter}</Text>
+      {item.contacts.map((contact) => renderContact({ item: contact }))}
+    </View>
   );
+
+  if (isLoading) {
+    return <Text>Loading...</Text>;
+  }
+
+  if (error) {
+    return <Text>Error: {error.message}</Text>;
+  }
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -409,9 +399,10 @@ const groupedData = Object.keys(groupedContacts).map(letter => ({
         </View>
       </View>
       <FlatList
-        data={contacts}
-        renderItem={renderContact}
-        keyExtractor={(item) => item.profiles.id.toString()}
+        ref={flatListRef}
+        data={groupedData}
+        renderItem={renderGroup}
+        keyExtractor={(item) => item.letter}
         style={styles.contactList}
         showsVerticalScrollIndicator={false}
       />
@@ -677,18 +668,14 @@ const styles = StyleSheet.create({
     paddingVertical: 5,     // Space between letters
   },
   groupContainer: {
-    marginBottom: 20, // Space between groups
+    padding: 5,
   },
   letterHeader: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#333",
     marginBottom: 5, // Space between the letter and line
-  },
-  letterLine: {
-    height: 1,
-    backgroundColor: "#ddd",
-    marginBottom: 10, // Space between line and first contact in the group
+    marginLeft: 10,
   },
 });
 
