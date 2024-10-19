@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import AddContact from "../components/AddContact";
 import {
   TouchableOpacity,
@@ -12,12 +12,14 @@ import {
   FlatList,
   Image,
   TextInput,
+  SectionList,
 } from "react-native";
 import useStore from "../store/store";
 import { supabase } from "../lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FontAwesome } from "@expo/vector-icons"; // For chat and call icons
 import FeatherIcon from "react-native-vector-icons/Feather";
+import FavoriteIcon from "../components/FavoriteIcon";
 
 
 // Fetch mutual contacts from Supabase
@@ -33,6 +35,7 @@ const fetchMutualContacts = async ({ queryKey }) => {
   if (error) throw new Error(error.message);
   return data;
 };
+
 
 const ContactScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -88,6 +91,104 @@ const ContactScreen = ({ navigation }) => {
       </View>
     );
   }
+
+  const handleFavoriteToggle = () => {
+    setIsFavorite(!isFavorite);
+    toggleFavorite(item.profiles.id); // Call the function to handle favorite toggling
+  };
+
+const alphabet = "*ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split(""); // Alphabet array
+
+const AlphabetList = ({ onLetterPress }) => {
+  return (
+    <View style={styles.alphabetIndex}>
+      {alphabet.map((letter) => (
+        <TouchableOpacity
+          key={letter}
+          style={styles.alphabetLetter}
+          onPress={() => onLetterPress(letter)}
+        >
+          <Text style={styles.alphabetText}>{letter}</Text>
+          <View style={styles.alphabetLine} />
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
+
+
+const flatListRef = useRef(null); // Add this line at the top of the component
+
+<FlatList
+  ref={flatListRef} // Attach the ref here
+  data={contacts}
+  renderItem={renderContact}
+  keyExtractor={(item) => item.profiles.id.toString()}
+  style={styles.contactList}
+  showsVerticalScrollIndicator={false}
+/>
+
+
+const scrollToLetter = (letter) => {
+  const index = contacts.findIndex(contact =>
+    contact.name[0].toUpperCase() === letter
+  );
+  
+  if (index !== -1) {
+    flatListRef.current.scrollToIndex({ index });
+  }
+};
+
+<FlatList
+  data={groupedData}
+  renderItem={renderGroup}
+  keyExtractor={(item) => item.letter} // Use the letter as the key
+  style={styles.contactList}
+  showsVerticalScrollIndicator={false}
+/>
+
+
+const filteredContacts = contacts.filter(contact => 
+  contact.profiles.username.toLowerCase().includes(input.toLowerCase())
+);
+
+
+const groupContactsByLetter = (contacts) => {
+  return contacts.reduce((acc, contact) => {
+    const firstLetter = contact.profiles.first_name[0].toUpperCase();
+    if (!acc[firstLetter]) {
+      acc[firstLetter] = [];
+    }
+    acc[firstLetter].push(contact);
+    return acc;
+  }, {});
+};
+
+
+const groupedContacts = groupContactsByLetter(filteredContacts); // Group contacts by first letter
+
+const renderGroup = ({ item }) => {
+  return (
+    <View style={styles.groupContainer}>
+      {/* Letter Header */}
+      <Text style={styles.letterHeader}>{item.letter}</Text>
+      <View style={styles.letterLine} />
+
+      {/* Contacts under this letter */}
+      {item.contacts.map(contact => renderContact({ item: contact }))}
+    </View>
+  );
+};
+
+// Convert the grouped object into an array that FlatList can use
+const groupedData = Object.keys(groupedContacts).map(letter => ({
+  letter,
+  contacts: groupedContacts[letter],
+}));
+
+
+
+
 
   const createChat = async (contactID) => {
     // Check if a 1-on-1 chat already exists between the two users
@@ -190,48 +291,67 @@ const ContactScreen = ({ navigation }) => {
   };
 
   const renderContact = ({ item }) => (
-    <View style={styles.contactItem}>
-      <View style={styles.wrapperRow}>
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate("Profile", {
-              contactID: item.profiles.id,
-              contactPFP: item.profiles.avatar_url,
-              contactFirst: item.profiles.first_name,
-              contactLast: item.profiles.last_name,
-              contactUsername: item.profiles.username,
-            })
-          }
-        >
-          <Image
-            source={{ uri: item.profiles.avatar_url }} // Use avatar_url to load the image
-            style={styles.profileImage}
-          />
-        </TouchableOpacity>
-        <View style={styles.wrapperCol}>
-          <Text style={styles.contactText}>
-            {item.profiles.first_name} {item.profiles.last_name}
-          </Text>
-          <Text style={styles.contactUsername}>@{item.profiles.username}</Text>
-        </View>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.chatButton}
-            onPress={() => createChat(item.profiles.id)}
-          >
-            <FontAwesome name="comment" size={20} color="#fff" />
-            <Text style={styles.buttonText}>Chat</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.callButton}
-            onPress={() => createCall(item.profiles.id)}
-          >
-            <FontAwesome name="phone" size={20} color="#fff" />
-            <Text style={styles.buttonText}>Call</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+<View style={styles.contactItem}>
+
+
+
+  <View style={styles.wrapperRow}>
+    {/* Profile Image and Touchable to navigate to Profile */}
+    <TouchableOpacity
+      onPress={() =>
+        navigation.navigate("Profile", {
+          contactID: item.profiles.id,
+          contactPFP: item.profiles.avatar_url,
+          contactFirst: item.profiles.first_name,
+          contactLast: item.profiles.last_name,
+          contactUsername: item.profiles.username,
+        })
+      }
+    >
+      <Image
+        source={{ uri: item.profiles.avatar_url }} // Load the profile image using avatar_url
+        style={styles.profileImage}
+      />
+    </TouchableOpacity>
+
+    {/* Contact's Name and Username */}
+    <View style={styles.wrapperCol}>
+      <Text style={styles.contactText}>
+        {item.profiles.first_name} {item.profiles.last_name}
+      </Text>
+      <Text style={styles.contactUsername}>@{item.profiles.username}</Text>
     </View>
+
+
+
+    {/* Chat and Call buttons */}
+    <View style={styles.buttonContainer}>
+    
+
+      <Pressable
+      style={styles.favoriteButton}
+      onPress={() => toggleFavorite(item.profiles.id)} // Call the function to handle favorite toggling
+    >
+      <FavoriteIcon isFavorite={item.profiles.isFavorite} />
+    </Pressable>
+    <TouchableOpacity
+        style={styles.chatButton}
+        onPress={() => createChat(item.profiles.id)}
+      >
+        <FontAwesome name="comment" size={20} color="#fff" style={styles.chatIcon} />
+      </TouchableOpacity>
+
+      {/* Call Button */}
+      <TouchableOpacity
+        style={styles.callButton}
+        onPress={() => createCall(item.profiles.id)}
+      >
+        <FontAwesome name="phone" size={20} color="#fff" style={styles.callIcon} />
+      </TouchableOpacity>
+    </View>
+  </View>
+</View>
+
   );
 
   return (
@@ -261,6 +381,13 @@ const ContactScreen = ({ navigation }) => {
             style={styles.addPersonIcon}
           />
         </TouchableOpacity>
+        <AlphabetList
+          style={styles.alphabetListContainer}
+          renderItem={({ item }) => (
+            <Text style={styles.alphabetItem}>{item}</Text>
+          )}
+          onLetterPress={(letter) => scrollToLetter(letter)}
+        />
       </View>
 
       <View style={styles.searchWrapper}>
@@ -317,7 +444,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    margin: 10,
+    backgroundColor: "#fff",
+
   },
   title: {
     fontSize: 28,
@@ -335,11 +463,11 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',  // Distribute space between items (arrow, title, add icon)
+    justifyContent: 'space-between',
     marginTop: 20,
   },
   backButton: {
-    paddingLeft: 10,  // Adds spacing to the left
+    paddingLeft: 10,
   },
   backArrow: {
     width: 30,
@@ -350,23 +478,43 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: 'black',
-    flex: 1,  // Takes up remaining space between arrow and add person icon
-    textAlign: 'center',  // Centers the title
+    flex: 1,
+    textAlign: 'center',
   },
   addPersonButton: {
-    paddingRight: 10,  // Adds spacing to the right
+    paddingRight: 10,
   },
   addPersonIcon: {
-    width: 30,  // Adjust size of Add Person icon
-    height: 30,
-  },
-  contactList: {
-    marginBottom: 20,
+    width: 25,
+    height: 25,
   },
   contactItem: {
-    borderBottomWidth: 1,
-    borderColor: "#ccc",
-    paddingVertical: 15,
+    marginTop: 8,
+    backgroundColor: "#D1EBEF",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3, 
+    flexDirection: "row", // Align content horizontally
+    // alignItems: "center", // Center the profile image and text
+    alignItems: "left", // Center the profile image and text
+    justifyContent: "space-between", // Space between profile and contact details
+    // borderWidth: 1,
+    // borderColor: "#000",
+    borderRadius: 25,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+    marginHorizontal: 10,
+    marginBottom: 5,
+    width: '90%', // Adjust the width to a percentage or fixed value
   },
   wrapperRow: {
     flexDirection: "row",
@@ -387,35 +535,61 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "flex-end",
+    alignItems: "center",     // Center them horizontally
   },
   chatButton: {
-    backgroundColor: "#007BAF",
-    borderRadius: 5,
+    backgroundColor: "rgba(195, 217, 246, 0.85)",  // Soft pastel blue (same as the original)
+    borderRadius: 25,  // Circular shape
     padding: 10,
-    marginRight: 5,
-    flexDirection: "row",
-    alignItems: "center",
+    elevation: 10,  // Depth effect
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    borderWidth: 1,
+    borderColor: "rgba(195, 217, 246, 0.85)",  // Matching pastel blue border
+    marginLeft: 3,
+    width: 35,  // Reduced button width
+    height: 35,  // Reduced button height
   },
+  
   callButton: {
-    backgroundColor: "#28a745",
-    borderRadius: 5,
+    backgroundColor: "rgba(158, 228, 173, 0.85)",  // Pastel green (soft and pastel)
+    borderRadius: 25,  // Circular shape
     padding: 10,
-    flexDirection: "row",
-    alignItems: "center",
+    elevation: 10,  // Same shadow as chatButton
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    borderWidth: 1,
+    borderColor: "rgba(158, 228, 173, 0.85)",  // Matching pastel green border
+    marginLeft: 10,
+    width: 35,  // Reduced button width
+    height: 35,  // Reduced button height
   },
-  buttonText: {
-    color: "#fff",
-    marginLeft: 5,
+  
+  chatIcon: {
+    width: 20,  // Fixed size of icon for consistency
+    height: 20, // Fixed size of icon for consistency
+    top: "45%",  // Center vertically
+    left: "50%",  // Center horizontally
+    transform: [{ translateX: -10 }, { translateY: -10 }], // Adjust to truly center it
   },
-  addButton: {
-    borderRadius: 5,
-    padding: 10,
-    alignItems: "center",
-    justifyContent: "center", // Ensures content is centered
+  
+  callIcon: {
+    width: 20,  // Fixed size of icon for consistency
+    height: 20, // Fixed size of icon for consistency
+    top: "50%",  // Center vertically
+    right: 1,
+    transform: [{ translateY: -9 }], // Adjust to center it vertically
   },
+  
+  
+  
   addButtonImage: {
-    width: 50, // Adjust the size as needed
-    height: 50, // Adjust the size as needed
+    width: 50,
+    height: 50,
   },
   modalContainer: {
     flex: 1,
@@ -425,9 +599,9 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: 300,
-    height: 500, // Changed to auto to fit content dynamically
+    height: 500,
     padding: 20,
-    paddingTop: 40, // Added top padding to create space for the close button
+    paddingTop: 40,
     backgroundColor: "#fff",
     borderRadius: 10,
     shadowColor: "#000",
@@ -447,24 +621,24 @@ const styles = StyleSheet.create({
   },
   searchWrapper: {
     marginVertical: 15,
-    alignItems: "center", // Center horizontally
-    justifyContent: "center", // Center vertically if needed
-    flexDirection: "row", // Align in a row
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
   },
   search: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgb(225, 225, 225)", // Lighter grey background
-    borderRadius: 25, // Rounded edges
+    backgroundColor: "rgb(240, 240, 240)",
+    borderRadius: 25,
     paddingHorizontal: 15,
-    paddingVertical: 5, // Adjust vertical padding for a shorter height
+    paddingVertical: 5,
     borderWidth: 1,
-    borderColor: "#d1d1d1", // Light border for definition
-    width: '95%', // Set the width to 70% of the container (or adjust as needed)
+    borderColor: "#d1d1d1",
+    width: '90%',
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 }, // Slight offset to make the shadow subtle
-    shadowOpacity: 0.15, 
-    shadowRadius: 5, 
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
     elevation: 3,
   },
   searchIcon: {
@@ -472,9 +646,49 @@ const styles = StyleSheet.create({
   },
   searchControl: {
     flex: 1,
-    height: 30, // Shorter height for a more compact input
+    height: 30,
     fontSize: 16,
-    color: "#333", // Darker text for contrast
+    color: "#333",
+  }, 
+  alphabetIndex: {
+    position: 'absolute',
+    right: 0,
+    top: 100,
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+  },
+  alphabetLetter: {
+    paddingVertical: 1,
+  },
+  alphabetText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+  }, 
+  alphabetListContainer: {
+    position: "absolute",    // Positioning it absolutely
+    top: "40%",             // Move closer to the middle vertically
+    left: "50%",            // Center it horizontally
+    transform: [{ translateX: -80 }, { translateY: -100 }], // Adjust to truly center it
+  },
+  alphabetItem: {
+    fontSize: 10,           // Smaller text size
+    color: "#555",          // Lighter text color
+    paddingVertical: 5,     // Space between letters
+  },
+  groupContainer: {
+    marginBottom: 20, // Space between groups
+  },
+  letterHeader: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 5, // Space between the letter and line
+  },
+  letterLine: {
+    height: 1,
+    backgroundColor: "#ddd",
+    marginBottom: 10, // Space between line and first contact in the group
   },
 });
 
