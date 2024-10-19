@@ -12,16 +12,16 @@ import { supabase } from "../lib/supabase"; // Import Supabase client
 import useStore from "../store/store"; // Assuming this handles user and tokens
 import Header from "../components/Header";
 
-const GiftsScreen = ({ navigation }) => {
+const GiftsScreen = ({ navigation }) => { 
 
   const { user } = useStore(); // Retrieve the user from the store
   const [userId, setUserId] = useState(null);
-  const [banners, setBanners] = useState([]); // State for storing fetched banners
-  const [stickers, setStickers] = useState([]); // State for storing fetched stickers
+  const [banners, setBanners] = useState([]); // State for storing fetched banners. (Stores an array of Banners)
+  const [stickers, setStickers] = useState([]); // State for storing fetched stickers (Stores an array of Stickers)
   const [showOwned, setShowOwned] = useState(false); // State for toggle switch
 
   // Fetch and log user ID, banners (IDs), stickers (IDs), user_banners (IDs), and user_stickers (IDs)
-  useEffect(() => {
+  useEffect(() => { 
     const logUserData = async () => {
       if (user) {
         setUserId(user.id);
