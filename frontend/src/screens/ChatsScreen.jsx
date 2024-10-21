@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
   search: {
     position: "relative",
     backgroundColor: "#efefef",
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
@@ -325,13 +325,12 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     left: 0,
-    width: 34,
+    width: 40,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 2,
   },
   searchControl: {
-    paddingVertical: 10,
     paddingLeft: 34, // Ensure space for the icon
     width: "100%",
     fontSize: 16, // Adjust this font size to make the text and placeholder visible
@@ -355,7 +354,6 @@ const styles = StyleSheet.create({
   },
   searchEmpty: {
     textAlign: "center",
-    paddingTop: 20,
     color: "#9ca3af",
   },
 
