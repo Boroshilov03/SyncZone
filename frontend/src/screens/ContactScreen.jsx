@@ -13,6 +13,8 @@ import {
   Image,
   TextInput,
   SectionList,
+  ScrollView,
+  PanResponder,
 } from "react-native";
 import useStore from "../store/store";
 import { supabase } from "../lib/supabase";
@@ -21,7 +23,7 @@ import { FontAwesome } from "@expo/vector-icons"; // For chat and call icons
 import FeatherIcon from "react-native-vector-icons/Feather";
 import FavoriteIcon from "../components/FavoriteIcon";
 import { LinearGradient } from "expo-linear-gradient";
-import { PanGestureHandler, GestureHandlerRootView } from "react-native-gesture-handler";
+// import { PanGestureHandler, GestureHandlerRootView } from "react-native-gesture-handler";
 
 
 // Fetch mutual contacts from Supabase
@@ -78,14 +80,45 @@ const ContactScreen = ({ navigation }) => {
     contacts: groupedContacts[letter],
   }));
   
+
+  // Function to render grouped contacts under each letter
+  const RenderGroupedContacts = ({ item }) => (
+    <View>
+      <Text style={styles.groupHeader}>{item.letter}</Text>
+      {item.contacts.map((contact) => (
+        <renderContact key={contact.profiles.id} item={contact} />
+      ))}
+    </View>
+  );
+
   // Function to scroll to the selected letter section
   const scrollToLetter = (letter) => {
-    const index = groupedData.findIndex((item) => item.letter === letter); // Update here: use groupedData instead of groupedContacts
+    const index = groupedData.findIndex((item) => item.letter === letter);
+  
     if (index !== -1 && flatListRef.current) {
+      // If the letter exists, scroll to its section
       flatListRef.current.scrollToIndex({ index });
+    } else {
+      // If the letter does not exist, find the closest letter
+      const availableLetters = groupedData.map((item) => item.letter);
+      
+      // Find the closest letter alphabetically
+      let closestLetter = availableLetters.reduce((prev, curr) => {
+        return Math.abs(curr.charCodeAt(0) - letter.charCodeAt(0)) <
+          Math.abs(prev.charCodeAt(0) - letter.charCodeAt(0))
+          ? curr
+          : prev;
+      });
+  
+      // Find the index of the closest letter
+      const closestIndex = groupedData.findIndex((item) => item.letter === closestLetter);
+      if (closestIndex !== -1 && flatListRef.current) {
+        // Scroll to the closest available section
+        flatListRef.current.scrollToIndex({ index: closestIndex });
+      }
     }
   };
-
+  
 
   useEffect(() => {
     const channel = supabase
@@ -134,24 +167,50 @@ const ContactScreen = ({ navigation }) => {
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split(""); // Alphabet array
 
 const AlphabetList = ({ onLetterPress, onSwipeLetter }) => {
+  const [alphabetWidth, setAlphabetWidth] = useState(0); // State to store alphabet item width
+  const alphabetRef = useRef(); // Reference to track the position of the alphabet
 
-  // Gesture handler for detecting swipe gestures
-  const onGestureEvent = (event) => {
-    const { translationX } = event.nativeEvent;
-    const index = Math.floor(translationX / alphabetWidth); // Calculate the letter index
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split(""); // Alphabet array
+
+  // Helper function to calculate which letter corresponds to the Y position
+  const getLetterFromPosition = (y) => {
+    const letterHeight = alphabetWidth / alphabet.length;
+    const index = Math.floor(y / letterHeight);
     if (index >= 0 && index < alphabet.length) {
-      onSwipeLetter(alphabet[index]); // Trigger scroll on swipe
+      return alphabet[index];
     }
+    return null;
   };
+
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: (evt, gestureState) => {
+      const { y0 } = gestureState;
+      const letter = getLetterFromPosition(y0);
+      if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on touch start
+    },
+    onPanResponderMove: (evt, gestureState) => {
+      const { moveY } = gestureState;
+      const letter = getLetterFromPosition(moveY);
+      if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on move
+    },
+    onPanResponderRelease: () => {
+      // Optional: Handle release event, e.g., resetting state if needed
+    },
+  });
 
   // Measure the width of the alphabet letters dynamically
   const onLayout = (event) => {
-    const { width } = event.nativeEvent.layout;
-    setAlphabetWidth(width / alphabet.length); // Calculate the width of each letter
+    const { height } = event.nativeEvent.layout;
+    setAlphabetWidth(height); // Calculate the height of the alphabet column
   };
 
   return (
-    <View style={styles.alphabetIndex} onLayout={onLayout}>
+    <View
+      style={styles.alphabetIndex}
+      onLayout={onLayout}
+      {...panResponder.panHandlers} // Attach pan gesture handlers
+    >
       {alphabet.map((letter) => (
         <TouchableOpacity
           key={letter}
@@ -176,9 +235,17 @@ const handleSwipeLetter = (letter) => {
 };
 
 
-const filteredContacts = contacts.filter(contact => 
-  contact.profiles.username.toLowerCase().includes(input.toLowerCase())
-);
+  // Filter contacts based on search input (username, first name, last name)
+  const filteredContacts = contacts.filter(
+    (contact) =>
+      contact.profiles.username.toLowerCase().includes(input.toLowerCase()) ||
+      contact.profiles.first_name.toLowerCase().includes(input.toLowerCase()) ||
+      contact.profiles.last_name.toLowerCase().includes(input.toLowerCase())
+  );
+
+  // If no search input, show full contact list grouped by letter, otherwise show filtered contacts
+  const dataToRender = input.length > 0 ? filteredContacts : groupedData;
+
 
 
   const createChat = async (contactID) => {
@@ -448,7 +515,7 @@ const filteredContacts = contacts.filter(contact =>
             autoCorrect={false}
             clearButtonMode="while-editing"
             onChangeText={(val) => setInput(val)}
-            placeholder="Search by Username"
+            placeholder="Search by Name"
             placeholderTextColor="#848484"
             returnKeyType="done"
             style={styles.searchControl}
@@ -458,9 +525,9 @@ const filteredContacts = contacts.filter(contact =>
       </View>
       <FlatList
         ref={flatListRef}
-        data={groupedData}
-        renderItem={renderGroup}
-        keyExtractor={(item) => item.letter}
+        data={dataToRender} // Render either filtered or full contacts
+        renderItem={input.length > 0 ? renderContact : renderGroup}
+        keyExtractor={(item, index) => input.length > 0 ? item.profiles.id : item.letter + index}
         style={styles.flatList}
         showsVerticalScrollIndicator={false}
         getItemLayout={(data, index) => ({
