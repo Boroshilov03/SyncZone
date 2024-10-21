@@ -211,74 +211,77 @@ const ChatsScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff", paddingHorizontal: 12 }}>
+    <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <Header event="message" navigation={navigation} title="Chats" />
-      <View style={styles.container}>
-        <View style={styles.searchWrapper}>
-          <View style={styles.search}>
-            <View style={styles.searchIcon}>
-              <FeatherIcon color="#848484" name="search" size={17} />
-            </View>
-            <TextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              clearButtonMode="while-editing"
-              onChangeText={(val) => setInput(val)}
-              placeholder="Search.."
-              placeholderTextColor="#848484"
-              returnKeyType="done"
-              style={styles.searchControl}
-              value={input}
-            />
-          </View>
-        </View>
-
-        <View style={styles.favoritesContainer}>
-          <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "semibold",
-              marginBottom: 10,
-              fontWeight: "300",
-            }}
-          >
-            Favorites
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity>
-              <Image
-                source={require("../../assets/icons/add_favorite.png")}
-                style={styles.favoriteImg}
+        <View style={styles.container}>
+          <View style={styles.searchWrapper}>
+            <View style={styles.search}>
+              <View style={styles.searchIcon}>
+                <FeatherIcon color="#848484" name="search" size={17} />
+              </View>
+              <TextInput
+                autoCapitalize="none"
+                autoCorrect={false}
+                clearButtonMode="while-editing"
+                onChangeText={(val) => setInput(val)}
+                placeholder="Search.."
+                placeholderTextColor="#848484"
+                returnKeyType="done"
+                style={styles.searchControl}
+                value={input}
               />
-            </TouchableOpacity>
-            {favoriteUsers.map((user) => (
-              <TouchableOpacity key={user.id}>
-                {user.avatar_url ? (
-                  <Image source={user.avatar_url} style={styles.favoriteImg} />
-                ) : (
-                  <View style={[styles.favoriteImg, styles.cardAvatar]}>
-                    <Text style={styles.cardAvatarText}>
-                      {user.username[0]}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+            </View>
+          </View>
 
-        {filteredChats.length ? (
-          <FlatList
-            data={filteredChats}
-            keyExtractor={(item) => item.id}
-            renderItem={renderChatItem}
-            contentContainerStyle={styles.searchContent}
-          />
-        ) : (
-          <Text style={styles.searchEmpty}>No conversations</Text>
-        )}
+          <View style={styles.favoritesContainer}>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: "semibold",
+                marginBottom: 10,
+                fontWeight: "300",
+              }}
+            >
+              Favorites
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <TouchableOpacity>
+                <Image
+                  source={require("../../assets/icons/add_favorite.png")}
+                  style={styles.favoriteImg}
+                />
+              </TouchableOpacity>
+              {favoriteUsers.map((user) => (
+                <TouchableOpacity key={user.id}>
+                  {user.avatar_url ? (
+                    <Image
+                      source={user.avatar_url}
+                      style={styles.favoriteImg}
+                    />
+                  ) : (
+                    <View style={[styles.favoriteImg, styles.cardAvatar]}>
+                      <Text style={styles.cardAvatarText}>
+                        {user.username[0]}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {filteredChats.length ? (
+            <FlatList
+              data={filteredChats}
+              keyExtractor={(item) => item.id}
+              renderItem={renderChatItem}
+              contentContainerStyle={styles.searchContent}
+            />
+          ) : (
+            <Text style={styles.searchEmpty}>No conversations</Text>
+          )}
+        </View>
       </View>
-    </View>
   );
 };
 
@@ -302,6 +305,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexDirection: "row",
     minHeight: "7%",
+    marginHorizontal: 12,
   },
   favorites: {
     display: "flex",
@@ -341,6 +345,8 @@ const styles = StyleSheet.create({
   favoritesContainer: {
     width: "100%", // Ensure this takes the full width
     marginBottom: 10,
+    paddingLeft:12,
+
   },
   // You can also adjust the searchWrapper style if needed
   searchWrapper: {
@@ -348,9 +354,11 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderColor: "#efefef",
     width: "100%", // Make searchWrapper take full width
+
   },
   searchContent: {
     width: "100%", // Ensure it matches the other components
+    
   },
   searchEmpty: {
     textAlign: "center",
@@ -360,10 +368,10 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     padding: 12,
-    marginVertical: 2,
+    marginVertical: 4,
     backgroundColor: "#D1EBEF",
-    borderWidth: 1,
-    borderColor: "#000",
+    // borderWidth: 1,
+    // borderColor: "#000",
     borderRadius: 25,
     alignItems: "center",
     shadowColor: "#000",
@@ -374,7 +382,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
-    width: "100%", // Set width to 100% to match the container
+    width: "95%", // Set width to 100% to match the container
+    marginHorizontal: 12,
   },
   cardBody: {
     flex: 1,
