@@ -38,7 +38,9 @@ export function AppNavigator() {
           <Stack.Screen name="Contact" component={ContactScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen name="ProfileSettings" component={ProfileSettings} />
-          <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} options={{
+            presentation: 'modal'
+          }} />
           <Stack.Screen name="Header" component={Header} />
         </>
       ) : (

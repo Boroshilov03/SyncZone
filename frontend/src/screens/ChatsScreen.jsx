@@ -8,7 +8,8 @@ import {
   FlatList,
   Image,
   Modal,
-  Button
+  Button,
+  Pressable
 } from "react-native";
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase";
@@ -17,6 +18,7 @@ import FeatherIcon from "react-native-vector-icons/Feather";
 import Header from "../components/Header";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Profile from "./ProfileScreen";
+import { Ionicons } from '@expo/vector-icons';
 
 const ChatsScreen = ({ navigation }) => {
   const [profileVisible, setProfileVisible] = useState(false);
@@ -149,13 +151,7 @@ const ChatsScreen = ({ navigation }) => {
           <View style={styles.card}>
             <TouchableOpacity
               onPress={() => {
-                // navigation.navigate("Profile", {
-                //   contactID: profile.id,
-                //   contactPFP: profile.avatar_url,
-                //   contactFirst: profile.first_name,
-                //   contactLast: profile.last_name,
-                //   contactUsername: profile.username,
-                // })
+
                 setProfileVisible(true)
                 setSelectedContact(contactInfo);
               }}
@@ -168,7 +164,9 @@ const ChatsScreen = ({ navigation }) => {
               >
                 <View style={styles.modalOverlay}>
                   <View style={styles.modalContent}>
-                    <Button title="Close" onPress={() => setProfileVisible(false)} />
+                    <Pressable onPress={() => setProfileVisible(false)}>
+                      <Ionicons name="close" size={35} color='#616061' style={styles.close} />
+                    </Pressable>
                     <Profile
                       {...selectedContact}
                       setProfileVisible={setProfileVisible}
@@ -358,4 +356,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  close: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+  }
 });

@@ -11,6 +11,10 @@ import {
   SafeAreaView,
   FlatList,
   Image,
+  TextInput,
+  SectionList,
+  ScrollView,
+  PanResponder,
   Button
 } from "react-native";
 import useStore from "../store/store";
@@ -18,6 +22,9 @@ import { supabase } from "../lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FontAwesome } from "@expo/vector-icons"; // For chat and call icons
 import Profile from "./ProfileScreen";
+import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+
 // Fetch mutual contacts from Supabase
 const fetchMutualContacts = async ({ queryKey }) => {
   const [_, userId] = queryKey; // The second element in queryKey is userId
@@ -31,7 +38,7 @@ const fetchMutualContacts = async ({ queryKey }) => {
   if (error) throw new Error(error.message);
   return data;
 };
-const ContactScreen = ({ navigation }) => {
+const ContactScreen = ({ navigation, route }) => {
   const [profileVisible, setProfileVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
@@ -50,6 +57,13 @@ const ContactScreen = ({ navigation }) => {
     enabled: !!user, // Only run query if the user is defined
   });
 
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     if (route.params?.openModal) {
+  //       setProfileVisible(true);
+  //     }
+  //   }, [route.params])
+  // );
   useEffect(() => {
     const channel = supabase
       .channel("schema-db-changes")
@@ -208,15 +222,6 @@ const ContactScreen = ({ navigation }) => {
               setProfileVisible(true)
               setSelectedContact(contactInfo);
             }}
-          // onPress={() =>
-          //   navigation.navigate("Profile", {
-          //     contactID: item.profiles.id,
-          //     contactPFP: item.profiles.avatar_url,
-          //     contactFirst: item.profiles.first_name,
-          //     contactLast: item.profiles.last_name,
-          //     contactUsername: item.profiles.username,
-          // })
-          // }
           >
             <Modal
               animationType="fade"
@@ -226,7 +231,9 @@ const ContactScreen = ({ navigation }) => {
             >
               <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
-                  <Button title="Close" onPress={() => setProfileVisible(false)} />
+                  <Pressable onPress={() => setProfileVisible(false)}>
+                    <Ionicons name="close" size={35} color='#616061' style={styles.close} />
+                  </Pressable>
                   <Profile
                     {...selectedContact}
                     setProfileVisible={setProfileVisible}
@@ -425,8 +432,10 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: 40,
+    left: 20,
+    //   top: 10,
+    //   right: 10,
   },
   closeButtonText: {
     fontSize: 24,
@@ -453,8 +462,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-  },
 
+  },
+  close: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+  }
 });
 
 export default ContactScreen;
