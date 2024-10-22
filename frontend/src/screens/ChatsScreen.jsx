@@ -346,7 +346,6 @@ const styles = StyleSheet.create({
     width: "100%", // Ensure this takes the full width
     marginBottom: 10,
     paddingLeft:12,
-
   },
   // You can also adjust the searchWrapper style if needed
   searchWrapper: {
@@ -364,14 +363,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#9ca3af",
   },
-
   card: {
     flexDirection: "row",
     padding: 12,
     marginVertical: 4,
     backgroundColor: "#D1EBEF",
-    // borderWidth: 1,
-    // borderColor: "#000",
     borderRadius: 25,
     alignItems: "center",
     shadowColor: "#000",
@@ -380,13 +376,13 @@ const styles = StyleSheet.create({
       height: 2,
     },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowRadius: 3,
     elevation: 5,
-    width: "95%", // Set width to 100% to match the container
-    marginHorizontal: 12,
+    width: "95%", 
+    alignSelf: "center", 
   },
   cardBody: {
-    flex: 1,
+    flex: 1,  
   },
   cardHeader: {
     flexDirection: "row",
