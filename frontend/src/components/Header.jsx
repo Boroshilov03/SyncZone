@@ -6,7 +6,7 @@ import {
   Text,
   Switch,
 } from "react-native";
-import React, { useState } from "react"; // Import useState
+import React, { useState } from "react";
 import useStore from "../store/store";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -17,9 +17,8 @@ const callImage = require("../../assets/icons/add_call.png");
 
 const Header = ({ toggleAddEventModal, event, navigation, title, toggleSwitch, switchValue }) => {
   const { user } = useStore();
-  const [form, setForm] = useState({ emailNotifications: false }); // Initialize state for email notifications
+  const [form, setForm] = useState({ emailNotifications: false });
 
-  // Handle the action based on the event type
   const handleHeaderPress = () => {
     if (event === "message") {
       navigation.navigate("Contact");
@@ -30,7 +29,6 @@ const Header = ({ toggleAddEventModal, event, navigation, title, toggleSwitch, s
     }
   };
 
-  // Validate avatar_url
   const avatarUrl =
     typeof user.user_metadata?.avatar_url === "string"
       ? user.user_metadata.avatar_url
@@ -45,13 +43,15 @@ const Header = ({ toggleAddEventModal, event, navigation, title, toggleSwitch, s
       >
         <Image
           accessibilityLabel=""
-          source={avatarUrl ? { uri: avatarUrl } : profilePic} // Use the profilePic if avatarUrl is not a valid string
+          source={avatarUrl ? { uri: avatarUrl } : profilePic}
           style={styles.profilePic}
         />
       </TouchableOpacity>
 
-      {/* Center the title */}
-      <Text style={styles.title}>{title}</Text>
+      {/* Static Title */}
+      <View style={styles.titleContainer}>
+        <Text style={styles.title}>{title}</Text>
+      </View>
 
       <TouchableOpacity onPress={handleHeaderPress}>
         {event === "calendar" ? (
@@ -63,7 +63,7 @@ const Header = ({ toggleAddEventModal, event, navigation, title, toggleSwitch, s
         ) : null}
       </TouchableOpacity>
 
-      {event === "shop" && ( // Render the Switch only if the event is "shop"
+      {event === "shop" && (
         <View style={styles.switchContainer}>
           <Text style={styles.switchLabel}>
             {switchValue ? "Show Owned" : "Show All"}
@@ -85,15 +85,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 5,
-    marginTop: 50,
-    marginLeft: 10,
-    marginRight: 10,
+    marginTop: 20,
+    position: 'relative', // Make sure the header has a relative position
+  },
+  titleContainer: {
+    position: 'absolute', // Position the title absolutely
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    flex: 1, // Make the title take up available space
-    textAlign: 'center', // Center the text
+    textAlign: 'center',
   },
   profilePic: {
     width: 40,
