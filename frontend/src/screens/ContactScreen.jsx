@@ -542,20 +542,20 @@ const handleSwipeLetter = (letter) => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)} // Close modal when back button pressed
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Pressable
-              onPress={() => setModalVisible(false)}
-              style={styles.closeButton}
-            >
-              <Text style={styles.closeButtonText}>×</Text>
-            </Pressable>
-            <AddContact
-              onClose={() => setModalVisible(false)}
-              contacts={contacts}
-            />
-          </View>
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <AddContact
+            onClose={() => setModalVisible(false)}
+            contacts={contacts}
+          />
+          <Pressable
+            onPress={() => setModalVisible(false)}
+            style={styles.closeButton} 
+          >
+            <Text style={styles.closeButtonText}>Cancel</Text> 
+          </Pressable>
         </View>
+      </View>
       </Modal>
     </SafeAreaView>
   );
@@ -733,12 +733,23 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   closeButton: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-  },
+    backgroundColor: '#FFABAB', // Cancel button color
+    borderRadius: 25,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+    marginRight: 15,
+    width: '30%',
+    alignSelf: 'center',
+  },  
   closeButtonText: {
-    fontSize: 24,
+    fontSize: 20,
     color: "#333",
   },
   searchWrapper: {
