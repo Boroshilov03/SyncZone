@@ -211,7 +211,7 @@ const ChatsScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff", paddingHorizontal: 12 }}>
+    <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <Header event="message" navigation={navigation} title="Chats" />
       <View style={styles.container}>
         <View style={styles.searchWrapper}>
@@ -297,11 +297,12 @@ const styles = StyleSheet.create({
   search: {
     position: "relative",
     backgroundColor: "#efefef",
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
     minHeight: "7%",
+    marginHorizontal: 12,
   },
   favorites: {
     display: "flex",
@@ -325,13 +326,12 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     left: 0,
-    width: 34,
+    width: 40,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 2,
   },
   searchControl: {
-    paddingVertical: 10,
     paddingLeft: 34, // Ensure space for the icon
     width: "100%",
     fontSize: 16, // Adjust this font size to make the text and placeholder visible
@@ -342,6 +342,7 @@ const styles = StyleSheet.create({
   favoritesContainer: {
     width: "100%", // Ensure this takes the full width
     marginBottom: 10,
+    paddingLeft: 12,
   },
   // You can also adjust the searchWrapper style if needed
   searchWrapper: {
@@ -355,17 +356,16 @@ const styles = StyleSheet.create({
   },
   searchEmpty: {
     textAlign: "center",
-    paddingTop: 20,
     color: "#9ca3af",
   },
 
   card: {
     flexDirection: "row",
     padding: 12,
-    marginVertical: 2,
+    marginVertical: 4,
     backgroundColor: "#D1EBEF",
-    borderWidth: 1,
-    borderColor: "#000",
+    // borderWidth: 1,
+    // borderColor: "#000",
     borderRadius: 25,
     alignItems: "center",
     shadowColor: "#000",
@@ -376,7 +376,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
-    width: "100%", // Set width to 100% to match the container
+    width: "95%", // Set width to 100% to match the container
+    marginHorizontal: 12,
   },
   cardBody: {
     flex: 1,
