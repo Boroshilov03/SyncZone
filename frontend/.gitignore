@@ -33,11 +33,3 @@ yarn-error.*
 .env
 # typescript
 *.tsbuildinfo
-
-# .env
-declare module '@env' {
-  export const SUPABASE_URL: string;
-  export const SUPABASE_ANON_KEY: string;
-  export const HUME_WS_URL: string;
-  export const HUME_API_KEY: string;
-}
