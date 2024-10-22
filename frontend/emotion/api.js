@@ -1,7 +1,5 @@
 import { supabase } from "../src/lib/supabase";
-
-const HUME_WS_URL = "";
-const HUME_API_KEY = "";
+import { HUME_WS_URL, HUME_API_KEY } from '@env';
 
 export const saveMessageToSupabase = async (content, senderId, chatId) => {
   try {
@@ -38,17 +36,17 @@ export const initializeWebSocket = (handleWebSocketMessage) => {
   const ws = new WebSocket(`${HUME_WS_URL}?apiKey=${HUME_API_KEY}`);
 
   ws.onopen = () => {
-    console.log("WebSocket connection established");
+    console.log('WebSocket connection established');
   };
 
   ws.onmessage = handleWebSocketMessage;
 
   ws.onerror = (error) => {
-    console.error("WebSocket error:", error);
+    console.error('WebSocket error:', error);
   };
 
   ws.onclose = () => {
-    console.log("WebSocket connection closed");
+    console.log('WebSocket connection closed');
   };
 
   return ws;
