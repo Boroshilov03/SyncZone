@@ -15,15 +15,18 @@ import {
   SectionList,
   ScrollView,
   PanResponder,
+  Button
 } from "react-native";
-import useStore from "../store/store";
-import { supabase } from "../lib/supabase";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FontAwesome } from "@expo/vector-icons"; // For chat and call icons
 import FeatherIcon from "react-native-vector-icons/Feather";
 import FavoriteIcon from "../components/FavoriteIcon";
 import { LinearGradient } from "expo-linear-gradient";
-// import { PanGestureHandler, GestureHandlerRootView } from "react-native-gesture-handler";
+import useStore from "../store/store";
+import { supabase } from "../lib/supabase";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import Profile from "./ProfileScreen";
+import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 // Fetch mutual contacts from Supabase
 const fetchMutualContacts = async ({ queryKey }) => {
@@ -38,9 +41,10 @@ const fetchMutualContacts = async ({ queryKey }) => {
   if (error) throw new Error(error.message);
   return data;
 };
-
-const ContactScreen = ({ navigation }) => {
+const ContactScreen = ({ navigation, route }) => {
+  const [profileVisible, setProfileVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
   const { user } = useStore();
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");
@@ -350,72 +354,77 @@ const ContactScreen = ({ navigation }) => {
     console.log("Create Group Chat Pressed");
   };
 
-  const renderContact = ({ item }) => (
-    <View style={styles.contactItem}>
-      <View style={styles.wrapperRow}>
-        {/* Profile Image and Touchable to navigate to Profile */}
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate("Profile", {
-              contactID: item.profiles.id,
-              contactPFP: item.profiles.avatar_url,
-              contactFirst: item.profiles.first_name,
-              contactLast: item.profiles.last_name,
-              contactUsername: item.profiles.username,
-            })
-          }
-        >
-          <Image
-            source={{ uri: item.profiles.avatar_url }} // Load the profile image using avatar_url
-            style={styles.profileImage}
-          />
-        </TouchableOpacity>
-
-        {/* Contact's Name and Username */}
-        <View style={styles.wrapperCol}>
-          <Text style={styles.contactText}>
-            {item.profiles.first_name} {item.profiles.last_name}
-          </Text>
-          <Text style={styles.contactUsername}>@{item.profiles.username}</Text>
-        </View>
-
-        {/* Chat and Call buttons */}
-        <View style={styles.buttonContainer}>
-          <Pressable
-            style={styles.favoriteButton}
-            onPress={() => toggleFavorite(item.profiles.id)} // Call the function to handle favorite toggling
-          >
-            <FavoriteIcon isFavorite={item.profiles.isFavorite} />
-          </Pressable>
+  
+  const renderContact = ({ item }) => {
+    const contactInfo = {
+      contactID: item.profiles.id,
+      contactPFP: item.profiles.avatar_url,
+      contactFirst: item.profiles.first_name,
+      contactLast: item.profiles.last_name,
+      contactUsername: item.profiles.username,
+      //setModalVisible: setProfileVisible,
+    };
+    return (
+      <View style={styles.contactItem}>
+        <View style={styles.wrapperRow}>
           <TouchableOpacity
-            style={styles.chatButton}
-            onPress={() => createChat(item.profiles.id)}
+            style={styles.touch}
+            onPress={() => {
+              setProfileVisible(true)
+              setSelectedContact(contactInfo);
+            }}
           >
-            <FontAwesome
-              name="comment"
-              size={20}
-              color="#fff"
-              style={styles.chatIcon}
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={profileVisible}
+              onRequestClose={() => setProfileVisible(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Pressable onPress={() => setProfileVisible(false)}>
+                    <Ionicons name="close" size={35} color='#616061' style={styles.close} />
+                  </Pressable>
+                  <Profile
+                    {...selectedContact}
+                    setProfileVisible={setProfileVisible}
+                    navigation={navigation}
+                  />
+                </View>
+              </View>
+            </Modal>
+            <Image
+              source={{ uri: item.profiles.avatar_url }} // Use avatar_url to load the image
+              style={styles.profileImage}
+
             />
           </TouchableOpacity>
-
-          {/* Call Button */}
-          <TouchableOpacity
-            style={styles.callButton}
-            onPress={() => createCall(item.profiles.id)}
-          >
-            <FontAwesome
-              name="phone"
-              size={20}
-              color="#fff"
-              style={styles.callIcon}
-            />
-          </TouchableOpacity>
+          <View style={styles.wrapperCol}>
+            <Text style={styles.contactText}>
+              {item.profiles.first_name} {item.profiles.last_name}
+            </Text>
+            <Text style={styles.contactUsername}>@{item.profiles.username}</Text>
+          </View>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.chatButton}
+              onPress={() => createChat(item.profiles.id)}
+            >
+              <FontAwesome name="comment" size={20} color="#fff" />
+              <Text style={styles.buttonText}>Chat</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.callButton}
+              onPress={() => createCall(item.profiles.id)}
+            >
+              <FontAwesome name="phone" size={20} color="#fff" />
+              <Text style={styles.buttonText}>Call</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
-  );
-
+    );
+  };
   // Render grouped contacts
   const renderGroup = ({ item }) => (
     <View style={styles.groupContainer}>
@@ -617,7 +626,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     flexDirection: "row", // Align content horizontally
     // alignItems: "center", // Center the profile image and text
-    alignItems: "left", // Center the profile image and text
+    alignItems: "flex-start", // Center the profile image and text
     justifyContent: "space-between", // Space between profile and contact details
     // borderWidth: 1,
     // borderColor: "#000",
