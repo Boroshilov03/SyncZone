@@ -6,85 +6,119 @@ import {
   ScrollView,
   Image,
   Alert,
-  SafeAreaView,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import Dog from "../../assets/icons/Dogo.gif"; // Import the animated image
 import { supabase } from "../lib/supabase"; // Import Supabase client
 import useStore from "../store/store"; // Assuming this handles user and tokens
 import Header from "../components/Header";
 
-
-const GiftsScreen = (navigation) => {
+const GiftsScreen = ({ navigation }) => {
   const { user } = useStore(); // Retrieve the user from the store
   const [userId, setUserId] = useState(null);
   const [banners, setBanners] = useState([]); // State for storing fetched banners
   const [stickers, setStickers] = useState([]); // State for storing fetched stickers
+  const [showOwned, setShowOwned] = useState(false); // State for toggle switch
+  const [ownedBanners, setOwnedBanners] = useState(new Set()); // Set to track owned banners
+  const [ownedStickers, setOwnedStickers] = useState(new Set()); // Set to track owned stickers
 
-  // Log user ID and check if user is authenticated
+  // Fetch and log user ID, banners (IDs), stickers (IDs), user_banners (IDs), and user_stickers (IDs)
   useEffect(() => {
-    if (user) {
-      setUserId(user.id);
-      console.log("User ID:", user.id); // Log user ID
-    } else {
-      console.log("User is not authenticated");
-    }
+    const logUserData = async () => {
+      if (user) {
+        setUserId(user.id);
+        console.log("User ID:", user.id); // Log user ID
+
+        // Fetch user-owned banners
+        const { data: userBanners, error: userBannersError } = await supabase
+          .from("user_banners")
+          .select("banner_id")
+          .eq("user_id", user.id);
+
+        if (userBannersError) {
+          console.error("Error fetching user_banners:", userBannersError.message);
+        } else {
+          const userBannerIds = userBanners.map((ub) => ub.banner_id);
+          console.log("user_banners:", userBannerIds); // Log user_banners IDs once
+          setOwnedBanners(new Set(userBannerIds)); // Store owned banners in state
+        }
+
+        // Fetch user-owned stickers
+        const { data: userStickers, error: userStickersError } = await supabase
+          .from("user_stickers")
+          .select("sticker_id")
+          .eq("user_id", user.id);
+
+        if (userStickersError) {
+          console.error("Error fetching user_stickers:", userStickersError.message);
+        } else {
+          const userStickerIds = userStickers.map((us) => us.sticker_id);
+          console.log("user_stickers:", userStickerIds); // Log user_stickers IDs once
+          setOwnedStickers(new Set(userStickerIds)); // Store owned stickers in state
+        }
+      }
+    };
+
+    // Call logUserData once when component mounts
+    logUserData();
   }, [user]);
 
-  // Fetch banners
+  // Fetch banners based on toggle state
   useEffect(() => {
     const fetchBanners = async () => {
-      const { data, error } = await supabase.from("banners").select(); // Fetch all banners
+      let data;
+      let error;
+
+      // Fetch all banners
+      const { data: allBanners, error: fetchError } = await supabase
+        .from("banners")
+        .select();
+
+      data = allBanners;
+      error = fetchError;
 
       if (error) {
         console.error("Error fetching banners:", error.message);
       } else {
-        setBanners(data); // Store fetched banners
-        // Log fetched banner IDs
-        console.log(
-          "Fetched Banners IDs:",
-          data.map((banner) => banner.id)
-        ); // Log banner IDs
+        setBanners(data || []); // Store fetched banners
       }
     };
 
     fetchBanners();
   }, []);
 
-  // Fetch stickers
+  // Fetch stickers based on toggle state
   useEffect(() => {
     const fetchStickers = async () => {
-      const { data, error } = await supabase.from("stickers").select(); // Fetch all stickers
+      let data;
+      let error;
+
+      // Fetch all stickers
+      const { data: allStickers, error: fetchError } = await supabase
+        .from("stickers")
+        .select();
+
+      data = allStickers;
+      error = fetchError;
 
       if (error) {
         console.error("Error fetching stickers:", error.message);
       } else {
-        setStickers(data); // Store fetched stickers
-        // Log fetched sticker IDs
-        console.log(
-          "Fetched Stickers IDs:",
-          data.map((sticker) => sticker.id)
-        ); // Log sticker IDs
+        setStickers(data || []); // Store fetched stickers
       }
     };
 
     fetchStickers();
   }, []);
 
-  // Function to handle "Get" button press for banners
+  // Toggle function for switch
+  const toggleSwitch = () => {
+    setShowOwned((prev) => !prev);
+    console.log("Show Owned:", !showOwned); // Log the toggle switch state
+  };
+
   const handleGetBanner = async (bannerId) => {
-    if (!userId) {
-      console.log(
-        "User is not authenticated. Cannot insert into user_banners."
-      );
-      return;
-    }
+    if (!userId) return;
 
-    // Log the userId and bannerId before checking
-    console.log("User ID:", userId);
-    console.log("Checking if user already owns banner with ID:", bannerId); // Log bannerId before checking
-
-    // Check if the user already owns the banner
     const { data, error: checkError } = await supabase
       .from("user_banners")
       .select("id")
@@ -93,21 +127,14 @@ const GiftsScreen = (navigation) => {
 
     if (checkError) {
       console.error("Error checking user_banners:", checkError.message);
-      Alert.alert(
-        "Error",
-        "Failed to check banner ownership. Please try again."
-      );
+      Alert.alert("Error", "Failed to check banner ownership. Please try again.");
       return;
     }
 
     if (data.length > 0) {
-      // User already owns this banner
       Alert.alert("Notice", "You already own this banner.");
       return;
     }
-
-    // Proceed to insert into user_banners table
-    console.log("Inserting banner with ID:", bannerId); // Log bannerId before insertion
 
     const { error } = await supabase
       .from("user_banners")
@@ -117,25 +144,15 @@ const GiftsScreen = (navigation) => {
       console.error("Error inserting into user_banners:", error.message);
       Alert.alert("Error", "Failed to acquire banner. Please try again.");
     } else {
-      console.log("Banner acquired successfully!");
       Alert.alert("Success", "You have acquired the banner!");
+      console.log("Acquired Banner ID:", bannerId);
+      setOwnedBanners((prev) => new Set(prev).add(bannerId)); // Update owned banners
     }
   };
 
-  // Function to handle "Get" button press for stickers
   const handleGetSticker = async (stickerId) => {
-    if (!userId) {
-      console.log(
-        "User is not authenticated. Cannot insert into user_stickers."
-      );
-      return;
-    }
+    if (!userId) return;
 
-    // Log the userId and stickerId before checking
-    console.log("User ID:", userId);
-    console.log("Checking if user already owns sticker with ID:", stickerId); // Log stickerId before checking
-
-    // Check if the user already owns the sticker
     const { data, error: checkError } = await supabase
       .from("user_stickers")
       .select("id")
@@ -144,21 +161,14 @@ const GiftsScreen = (navigation) => {
 
     if (checkError) {
       console.error("Error checking user_stickers:", checkError.message);
-      Alert.alert(
-        "Error",
-        "Failed to check sticker ownership. Please try again."
-      );
+      Alert.alert("Error", "Failed to check sticker ownership. Please try again.");
       return;
     }
 
     if (data.length > 0) {
-      // User already owns this sticker
       Alert.alert("Notice", "You already own this sticker.");
       return;
     }
-
-    // Proceed to insert into user_stickers table
-    console.log("Inserting sticker with ID:", stickerId); // Log stickerId before insertion
 
     const { error } = await supabase
       .from("user_stickers")
@@ -168,178 +178,185 @@ const GiftsScreen = (navigation) => {
       console.error("Error inserting into user_stickers:", error.message);
       Alert.alert("Error", "Failed to acquire sticker. Please try again.");
     } else {
-      console.log("Sticker acquired successfully!");
       Alert.alert("Success", "You have acquired the sticker!");
+      console.log("Acquired Sticker ID:", stickerId);
+      setOwnedStickers((prev) => new Set(prev).add(stickerId)); // Update owned stickers
     }
   };
 
   return (
     <View>
-      <Header event="shop" navigation={navigation} title="Shop" />
+      <Header
+        event="shop"
+        navigation={navigation}
+        title="Shop"
+        toggleSwitch={toggleSwitch} // Pass toggleSwitch function
+        switchValue={showOwned} // Pass switch value
+      />
 
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.categoryBox}>
+        {/* Banners Category Box */}
+        <View style={styles.categoryContainer}>
           <Text style={styles.categoryText}>Banners</Text>
         </View>
-
-        {/* Horizontal ScrollView for Banner Items */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scrollContainer}
         >
-          {/* Render fetched banners dynamically */}
-          {banners.map((banner) => (
-            <View key={banner.id} style={styles.mergedFrame}>
-              {/* Frame for Banner Items */}
-              <View style={styles.itemFrame}>
-                <Image
-                  source={{ uri: banner.image_url }}
-                  style={styles.bannerImage}
-                />
-              </View>
-
-              {/* Line in the center near the bottom */}
-              <View style={styles.separator} />
-
-              {/* Frame for Item Name and Get Button */}
-              <View style={styles.buttonFrame}>
-                <Text style={styles.itemName}>{banner.name}</Text>
-                <TouchableOpacity
-                  style={styles.getButton}
-                  onPress={() => handleGetBanner(banner.id)}
-                >
-                  <Text style={styles.buttonText}>Get</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
+          <View style={styles.itemsContainer}>
+            {banners.map((banner) => {
+              const isOwned = ownedBanners.has(banner.id);
+              return showOwned ? (
+                isOwned ? (
+                  <View key={banner.id} style={styles.itemFrame}>
+                    <Image
+                      source={{ uri: banner.image_url }} // Assuming image_url is available
+                      style={styles.image}
+                      resizeMode="contain"
+                    />
+                    {/* Banner Name */}
+                    <Text style={styles.bannerName}>{banner.name}</Text>
+                    <TouchableOpacity
+                      style={[styles.button, styles.ownedButton]} // Always use ownedButton style
+                      disabled // Disable the button for owned items
+                    >
+                      <Text style={styles.buttonText}>Owned</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null
+              ) : !isOwned ? (
+                <View key={banner.id} style={styles.itemFrame}>
+                  <Image
+                    source={{ uri: banner.image_url }} // Assuming image_url is available
+                    style={styles.image}
+                    resizeMode="contain"
+                  />
+                  {/* Banner Name */}
+                  <Text style={styles.bannerName}>{banner.name}</Text>
+                  <TouchableOpacity
+                    style={[styles.button, styles.getButton]}
+                    onPress={() => handleGetBanner(banner.id)}
+                  >
+                    <Text style={styles.buttonText}>Get</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null;
+            })}
+          </View>
         </ScrollView>
 
-        <View style={styles.categoryBox}>
+        {/* Stickers Category Box */}
+        <View style={styles.categoryContainer}>
           <Text style={styles.categoryText}>Stickers</Text>
         </View>
-
-        {/* Horizontal ScrollView for Sticker Items */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scrollContainer}
         >
-          {/* Render fetched stickers dynamically */}
-          {stickers.map((sticker) => (
-            <View key={sticker.id} style={styles.mergedFrame}>
-              {/* Frame for Sticker Items */}
-              <View style={styles.itemFrame}>
-                <Image
-                  source={{ uri: sticker.image_url }}
-                  style={styles.bannerImage}
-                />
-              </View>
-
-              {/* Line in the center near the bottom */}
-              <View style={styles.separator} />
-
-              {/* Frame for Item Name and Get Button */}
-              <View style={styles.buttonFrame}>
-                <Text style={styles.itemName}>{sticker.name}</Text>
-                <TouchableOpacity
-                  style={styles.getButton}
-                  onPress={() => handleGetSticker(sticker.id)}
-                >
-                  <Text style={styles.buttonText}>Get</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
+          <View style={styles.itemsContainer}>
+            {stickers.map((sticker) => {
+              const isOwned = ownedStickers.has(sticker.id);
+              return showOwned ? (
+                isOwned ? (
+                  <View key={sticker.id} style={styles.itemFrame}>
+                    <Image
+                      source={{ uri: sticker.image_url }} // Assuming image_url is available
+                      style={styles.image}
+                      resizeMode="contain"
+                    />
+                    {/* Sticker Name */}
+                    <Text style={styles.bannerName}>{sticker.name}</Text>
+                    <TouchableOpacity
+                      style={[styles.button, styles.ownedButton]} // Always use ownedButton style
+                      disabled // Disable the button for owned items
+                    >
+                      <Text style={styles.buttonText}>Owned</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null
+              ) : !isOwned ? (
+                <View key={sticker.id} style={styles.itemFrame}>
+                  <Image
+                    source={{ uri: sticker.image_url }} // Assuming image_url is available
+                    style={styles.image}
+                    resizeMode="contain"
+                  />
+                  {/* Sticker Name */}
+                  <Text style={styles.bannerName}>{sticker.name}</Text>
+                  <TouchableOpacity
+                    style={[styles.button, styles.getButton]}
+                    onPress={() => handleGetSticker(sticker.id)}
+                  >
+                    <Text style={styles.buttonText}>Get</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null;
+            })}
+          </View>
         </ScrollView>
       </ScrollView>
     </View>
   );
 };
 
-export default GiftsScreen;
-
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    paddingTop: 0,
+    padding: 16,
   },
-  categoryBox: {
-    width: 360,
-    height: 58,
-    borderColor: "black",
-    borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "flex-start",
-    paddingLeft: 15,
-    marginBottom: 20,
-    marginTop: 10,
-    borderRadius: 13,
+  categoryContainer: {
+    marginBottom: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
   },
   categoryText: {
-    fontSize: 30,
-    fontWeight: "bold",
-  },
-  scrollContainer: {
-    paddingHorizontal: 10,
-  },
-  mergedFrame: {
-    width: 180,
-    borderColor: "black",
-    borderWidth: 2,
-    borderRadius: 13,
-    alignItems: "center",
-    marginRight: 15,
-    marginBottom: 30,
-  },
-  itemFrame: {
-    width: "100%",
-    height: 185,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  bannerImage: {
-    width: 150,
-    height: 150,
-    resizeMode: "contain",
-  },
-  itemFrameText: {
     fontSize: 20,
     fontWeight: "bold",
   },
-  separator: {
-    width: "100%",
-    height: 2,
-    backgroundColor: "black",
-    marginVertical: 10,
+  scrollContainer: {
+    flexDirection: "row",
+    paddingVertical: 10,
   },
-  buttonFrame: {
-    width: "100%",
-    height: 104,
-    justifyContent: "center",
-    alignItems: "center",
+  itemsContainer: {
+    flexDirection: "row",
+  },
+  itemFrame: {
+    backgroundColor: "#f9f9f9",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 10,
+    marginRight: 10,
     padding: 10,
+    alignItems: "center",
   },
-  itemName: {
-    fontSize: 17,
-    fontWeight: "bold",
+  image: {
+    width: 100,
+    height: 100,
+  },
+  bannerName: {
+    marginVertical: 5,
+    fontSize: 16,
+    textAlign: "center",
+  },
+  button: {
+    marginTop: 5,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
   },
   getButton: {
-    backgroundColor: "#007BFF",
-    padding: 7,
-    borderRadius: 5,
-    marginTop: 20,
+    backgroundColor: "#007bff",
+  },
+  ownedButton: {
+    backgroundColor: "#6c757d",
   },
   buttonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  userIdText: {
-    marginTop: 20,
-    fontSize: 16,
+    color: "#fff",
     fontWeight: "bold",
   },
 });
+
+export default GiftsScreen;

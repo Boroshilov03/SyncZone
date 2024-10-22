@@ -1,7 +1,9 @@
-import React from 'react';
 import { View, Text, Modal, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
 
-const DeleteEvent = ({ visible, onClose, onConfirm }) => {
+
+
+const DeleteEvent = ({ visible, onClose, onConfirm, eventID }) => {
   return (
     <Modal
       transparent={true}

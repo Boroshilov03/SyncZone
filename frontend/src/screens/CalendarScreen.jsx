@@ -10,7 +10,6 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 const Tab = createBottomTabNavigator();
 
-
 const CalendarScreen = ({ navigation }) => {
   const [isAddEventVisible, setAddEventVisible] = useState(false);
   const [isEditEventVisible, setEditEventVisible] = useState(false);
@@ -34,7 +33,7 @@ const CalendarScreen = ({ navigation }) => {
     // Logic for deleting the event
     console.log("Event Deleted:", selectedEvent);
     setDeletePopupVisible(false);
-    setEditEventVisible(false); 
+    setEditEventVisible(false);
   };
 
   return (
@@ -45,8 +44,7 @@ const CalendarScreen = ({ navigation }) => {
         navigation={navigation}
         title="My Events"
       />
-      <MyCalendar />
-      <ListEvent toggleEditEventModal={toggleEditEventModal} />
+      <MyCalendar toggleEditEventModal={toggleEditEventModal} />
       {isAddEventVisible && <AddEvent onClose={toggleAddEventModal} />}
       {isEditEventVisible && (
         <EditEvent

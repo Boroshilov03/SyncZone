@@ -4,10 +4,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   Text,
-  Dimensions,
   Switch,
 } from "react-native";
-import React, { useState } from "react"; // Import useState
+import React, { useState } from "react";
 import useStore from "../store/store";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -16,11 +15,10 @@ const calendarImage = require("../../assets/icons/add_calendar.png");
 const messageImage = require("../../assets/icons/add_message.png");
 const callImage = require("../../assets/icons/add_call.png");
 
-const Header = ({ toggleAddEventModal, event, navigation, title }) => {
+const Header = ({ toggleAddEventModal, event, navigation, title, toggleSwitch, switchValue }) => {
   const { user } = useStore();
-  const [form, setForm] = useState({ emailNotifications: false }); // Initialize state for email notifications
+  const [form, setForm] = useState({ emailNotifications: false });
 
-  // Handle the action based on the event type
   const handleHeaderPress = () => {
     if (event === "message") {
       navigation.navigate("Contact");
@@ -28,23 +26,16 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
       toggleAddEventModal();
     } else if (event === "call") {
       navigation.navigate("Contact");
-    } else if (event === "shop") {
-      // Toggle email notifications state
-      setForm((prevForm) => ({
-        ...prevForm,
-        emailNotifications: !prevForm.emailNotifications,
-      }));
     }
   };
 
-  // Validate avatar_url
   const avatarUrl =
     typeof user.user_metadata?.avatar_url === "string"
       ? user.user_metadata.avatar_url
       : null;
 
   return (
-    <SafeAreaView style={styles.headerContainer}>
+    <View style={styles.headerContainer}>
       <TouchableOpacity
         onPress={() =>
           navigation.navigate("Settings", { profilephoto: avatarUrl })
@@ -52,11 +43,16 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
       >
         <Image
           accessibilityLabel=""
-          source={avatarUrl ? { uri: avatarUrl } : profilePic} // Use the profilePic if avatarUrl is not a valid string
+          source={avatarUrl ? { uri: avatarUrl } : profilePic}
           style={styles.profilePic}
         />
       </TouchableOpacity>
-      <Text style={styles.title}>{title}</Text>
+
+      {/* Static Title */}
+      <View style={styles.titleContainer}>
+        <Text style={styles.title}>{title}</Text>
+      </View>
+
       <TouchableOpacity onPress={handleHeaderPress}>
         {event === "calendar" ? (
           <Image source={calendarImage} style={styles.calendarIcon} />
@@ -66,18 +62,20 @@ const Header = ({ toggleAddEventModal, event, navigation, title }) => {
           <Image source={callImage} style={styles.callIcon} />
         ) : null}
       </TouchableOpacity>
-      {event === "shop" && ( // Render the Switch only if the event is "shop"
-        <View>
+
+      {event === "shop" && (
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>
+            {switchValue ? "Show Owned" : "Show All"}
+          </Text>
           <Switch
-            onValueChange={(emailNotifications) =>
-              setForm({ ...form, emailNotifications })
-            }
+            onValueChange={toggleSwitch}
             style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
-            value={form.emailNotifications}
+            value={switchValue}
           />
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -87,12 +85,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 5,
-    marginLeft: 10,
-    marginRight: 10,
+    marginTop: 20,
+    position: 'relative', // Make sure the header has a relative position
+  },
+  titleContainer: {
+    position: 'absolute', // Position the title absolutely
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
+    textAlign: 'center',
   },
   profilePic: {
     width: 40,
@@ -110,6 +115,13 @@ const styles = StyleSheet.create({
   callIcon: {
     width: 23,
     height: 23,
+  },
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  switchLabel: {
+    marginRight: 8,
   },
 });
 
