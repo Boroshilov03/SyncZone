@@ -17,6 +17,7 @@ import { useMutation } from "@tanstack/react-query"; // Import useMutation
 import SpinningLogo from "../components/SpinningLogo";
 import { TouchableOpacity } from "react-native-gesture-handler";
 
+
 export default function SignInScreen({ navigation }) {
   const { setUser, setAccessToken, setRefreshToken } = useStore();
   const [email, setEmail] = useState("");
@@ -174,8 +175,8 @@ export default function SignInScreen({ navigation }) {
             isGradientStroke
             gradientColors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
             fontFamily={"Karla-Medium"}
-            //gradientColors={["#D49AC0", "#6FD2E2"]}
-            // fontFamily={"Gill Sans"}
+          //gradientColors={["#D49AC0", "#6FD2E2"]}
+          // fontFamily={"Gill Sans"}
           />
         </View>
       </View>

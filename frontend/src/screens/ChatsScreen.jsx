@@ -7,7 +7,9 @@ import {
   SafeAreaView,
   FlatList,
   Image,
-  ScrollView,
+  Modal,
+  Button,
+  Pressable
 } from "react-native";
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase";
@@ -15,35 +17,21 @@ import useStore from "../store/store";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import Header from "../components/Header";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import Profile from "./ProfileScreen";
+import { Ionicons } from '@expo/vector-icons';
 
 const ChatsScreen = ({ navigation }) => {
+  const [profileVisible, setProfileVisible] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
   const [input, setInput] = useState("");
   const { user } = useStore();
-  const queryClient = useQueryClient();
-
-  const {
-    data: chats = [],
-    error,
-    isLoading,
-  } = useQuery({
+  const queryClient = useQueryClient(); // For refetching chats
+  const { data: chats = [], error, isLoading } = useQuery({
     queryKey: ["recentChats", user.id],
     queryFn: fetchChats,
     enabled: !!user.id,
     refetchOnWindowFocus: true,
   });
-  const localAvatar = require("../../assets/icons/pfp2.jpg");
-
-  const [favoriteUsers, setFavoriteUsers] = useState([
-    { id: 1, username: "User1", avatar_url: localAvatar },
-    { id: 2, username: "User2", avatar_url: localAvatar },
-    { id: 3, username: "User3", avatar_url: localAvatar },
-    { id: 4, username: "User1", avatar_url: localAvatar },
-    { id: 5, username: "User2", avatar_url: localAvatar },
-    { id: 6, username: "User3", avatar_url: localAvatar },
-    { id: 7, username: "User1", avatar_url: localAvatar },
-    { id: 8, username: "User2", avatar_url: localAvatar },
-    { id: 9, username: "User3", avatar_url: localAvatar },
-  ]);
 
   async function fetchChats() {
     const { data: chatParticipants, error: chatError } = await supabase
@@ -79,37 +67,39 @@ const ChatsScreen = ({ navigation }) => {
     return data;
   }
 
+  // Set up real-time subscription for chat updates
   useEffect(() => {
     if (!user.id) return;
 
     const channel = supabase
-      .channel("chats-changes")
+      .channel('chats-changes')
       .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "chats" },
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'chats' },
         (payload) => {
           console.log("New change in chats table:", payload);
-          queryClient.invalidateQueries(["recentChats", user.id]);
+          queryClient.invalidateQueries(["recentChats", user.id]); // Refetch chats when changes occur
         }
       )
       .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "chat_participants" },
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'chat_participants' },
         (payload) => {
           console.log("New change in chat_participants table:", payload);
-          queryClient.invalidateQueries(["recentChats", user.id]);
+          queryClient.invalidateQueries(["recentChats", user.id]); // Refetch chats when changes occur
         }
       )
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      channel.unsubscribe(); // Clean up the subscription on component unmount
     };
   }, [user.id, queryClient]);
 
   const filteredChats = useMemo(() => {
     return chats.filter((chat) => {
       const participants = chat.chat_participants;
+
       return (
         participants.length > 1 &&
         participants.some((participant) => {
@@ -117,16 +107,17 @@ const ChatsScreen = ({ navigation }) => {
             participant.profiles &&
             participant.profiles.username &&
             participant.user_id !== user.id &&
-            participant.profiles.username
-              .toLowerCase()
-              .includes(input.toLowerCase())
+            participant.profiles.username.toLowerCase().includes(input.toLowerCase())
           );
         })
       );
     });
   }, [input, chats, user.id]);
 
-  const renderChatItem = ({ item, index }) => {
+
+
+  const renderChatItem = ({ item }) => {
+
     const participants = item.chat_participants;
     const otherParticipants = participants.filter(
       (participant) => participant.user_id !== user.id
@@ -138,12 +129,18 @@ const ChatsScreen = ({ navigation }) => {
 
       if (!profile) return null;
 
-      // Determine if it's the last item by comparing index with chats.length - 1
-      const isLastItem = index === filteredChats.length - 1;
+      const contactInfo = {
+        contactID: participant.profiles.id,
+        contactPFP: participant.profiles.avatar_url,
+        contactFirst: participant.profiles.first_name,
+        contactLast: participant.profiles.last_name,
+        contactUsername: participant.profiles.username,
+      };
 
       return (
         <TouchableOpacity
           onPress={() =>
+
             navigation.navigate("ChatDetail", {
               chatId: item.id,
               username: profile.username,
@@ -151,23 +148,32 @@ const ChatsScreen = ({ navigation }) => {
             })
           }
         >
-          <View
-            style={[
-              styles.card,
-              isLastItem && { marginBottom: 70 }, // Add extra margin if it's the last item
-            ]}
-          >
+          <View style={styles.card}>
             <TouchableOpacity
-              onPress={() =>
-                navigation.navigate("Profile", {
-                  contactID: profile.id,
-                  contactPFP: profile.avatar_url,
-                  contactFirst: profile.first_name,
-                  contactLast: profile.last_name,
-                  contactUsername: profile.username,
-                })
-              }
+              onPress={() => {
+
+                setProfileVisible(true)
+                setSelectedContact(contactInfo);
+              }}
             >
+              <Modal
+                animationType="fade"
+                transparent={true}
+                visible={profileVisible}
+                onRequestClose={() => setProfileVisible(false)}
+              >
+                <View style={styles.modalOverlay}>
+                  <View style={styles.modalContent}>
+                    <Pressable onPress={() => setProfileVisible(false)}>
+                      <Ionicons name="close" size={35} color='#616061' style={styles.close} />
+                    </Pressable>
+                    <Profile
+                      {...selectedContact}
+                      setProfileVisible={setProfileVisible}
+                      navigation={navigation} />
+                  </View>
+                </View>
+              </Modal>
               {profile.avatar_url ? (
                 <Image
                   alt="Avatar"
@@ -177,26 +183,21 @@ const ChatsScreen = ({ navigation }) => {
                 />
               ) : (
                 <View style={[styles.cardImg, styles.cardAvatar]}>
-                  <Text style={styles.cardAvatarText}>
-                    {profile.username[0]}
-                  </Text>
+                  <Text style={styles.cardAvatarText}>{profile.username[0]}</Text>
                 </View>
               )}
             </TouchableOpacity>
             <View style={styles.cardBody}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>{profile.username}</Text>
-                <Text style={styles.cardTimestamp}>
-                  {new Date(item.created_at).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </Text>
-              </View>
-              <Text style={styles.cardMessage}>lorem ipsum dolor</Text>
+              <Text style={styles.cardTitle}>{profile.username}</Text>
+              <Text style={styles.cardTimestamp}>
+                {new Date(item.created_at).toLocaleString()}
+              </Text>
             </View>
-          </View>
-        </TouchableOpacity>
+            <View style={styles.cardAction}>
+              <FeatherIcon color="#9ca3af" name="chevron-right" size={22} />
+            </View>
+          </View >
+        </TouchableOpacity >
       );
     }
     return null;
@@ -212,7 +213,7 @@ const ChatsScreen = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <Header event="message" navigation={navigation} title="Chats" />
+      <Header event="message" navigation={navigation} title="Recent Chats" />
       <View style={styles.container}>
         <View style={styles.searchWrapper}>
           <View style={styles.search}>
@@ -224,7 +225,7 @@ const ChatsScreen = ({ navigation }) => {
               autoCorrect={false}
               clearButtonMode="while-editing"
               onChangeText={(val) => setInput(val)}
-              placeholder="Search.."
+              placeholder="Start typing.."
               placeholderTextColor="#848484"
               returnKeyType="done"
               style={styles.searchControl}
@@ -232,41 +233,6 @@ const ChatsScreen = ({ navigation }) => {
             />
           </View>
         </View>
-
-        <View style={styles.favoritesContainer}>
-          <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "semibold",
-              marginBottom: 10,
-              fontWeight: "300",
-            }}
-          >
-            Favorites
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity>
-              <Image
-                source={require("../../assets/icons/add_favorite.png")}
-                style={styles.favoriteImg}
-              />
-            </TouchableOpacity>
-            {favoriteUsers.map((user) => (
-              <TouchableOpacity key={user.id}>
-                {user.avatar_url ? (
-                  <Image source={user.avatar_url} style={styles.favoriteImg} />
-                ) : (
-                  <View style={[styles.favoriteImg, styles.cardAvatar]}>
-                    <Text style={styles.cardAvatarText}>
-                      {user.username[0]}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
         {filteredChats.length ? (
           <FlatList
             data={filteredChats}
@@ -275,7 +241,7 @@ const ChatsScreen = ({ navigation }) => {
             contentContainerStyle={styles.searchContent}
           />
         ) : (
-          <Text style={styles.searchEmpty}>No conversations</Text>
+          <Text style={styles.searchEmpty}>No results</Text>
         )}
       </View>
     </View>
@@ -286,140 +252,113 @@ export default ChatsScreen;
 
 const styles = StyleSheet.create({
   container: {
+    paddingBottom: 50,
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,
   },
-  favoritesContainer: {
-    width: "100%", // Make the container take full width
-    marginBottom: 10, // Add some space between favorites and chats
-  },
   search: {
     position: "relative",
     backgroundColor: "#efefef",
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    minHeight: "7%",
-    marginHorizontal: 12,
   },
-  favorites: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center", // Added for better alignment
-    marginVertical: 12, // Added margin for spacing
-  },
-  favoritesTitle: {
-    fontWeight: "600",
-    fontSize: 18,
-    marginBottom: 8,
-  },
-  favoriteImg: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
+  searchWrapper: {
+    paddingTop: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderColor: "#efefef",
   },
   searchIcon: {
     position: "absolute",
     top: 0,
     bottom: 0,
     left: 0,
-    width: 40,
+    width: 34,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 2,
   },
   searchControl: {
-    paddingLeft: 34, // Ensure space for the icon
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingLeft: 34,
     width: "100%",
-    fontSize: 16, // Adjust this font size to make the text and placeholder visible
+    fontSize: 16,
     fontWeight: "500",
-    color: "#000", // Ensure text color is visible
-  },
-
-  favoritesContainer: {
-    width: "100%", // Ensure this takes the full width
-    marginBottom: 10,
-    paddingLeft: 12,
-  },
-  // You can also adjust the searchWrapper style if needed
-  searchWrapper: {
-    paddingTop: 8,
-    paddingBottom: 16,
-    borderColor: "#efefef",
-    width: "100%", // Make searchWrapper take full width
   },
   searchContent: {
-    width: "100%", // Ensure it matches the other components
+    paddingLeft: 24,
   },
   searchEmpty: {
     textAlign: "center",
-    color: "#9ca3af",
+    paddingTop: 16,
+    fontWeight: "500",
+    fontSize: 15,
+    color: "#9ca1ac",
   },
-
+  /** Card */
   card: {
+    paddingVertical: 14,
     flexDirection: "row",
-    padding: 12,
-    marginVertical: 4,
-    backgroundColor: "#D1EBEF",
-    // borderWidth: 1,
-    // borderColor: "#000",
-    borderRadius: 25,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-    width: "95%", // Set width to 100% to match the container
-    marginHorizontal: 12,
+    justifyContent: "flex-start",
+  },
+  cardImg: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+  },
+  cardAvatar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#9ca1ac",
+  },
+  cardAvatarText: {
+    fontSize: 19,
+    color: "#fff",
   },
   cardBody: {
     flex: 1,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between", // Add space between the title and timestamp
-    alignItems: "center", // Align items vertically
-    marginBottom: 4, // Add some space between the title/timestamp and message
+    paddingHorizontal: 16,
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: "semibold",
-    flex: 1, // Allow the title to take up remaining space
-  },
-  cardMessage: {
-    fontSize: 14,
-    fontWeight: "300", // Use '300' for light or '400' for regular
+    fontSize: 15,
+    fontWeight: "600",
   },
   cardTimestamp: {
+    color: "#9ca3af",
     fontSize: 12,
-    fontWeight: "300",
-    marginLeft: 8, // Add some spacing between title and timestamp
   },
-  cardImg: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 8,
+  cardAction: {
+    paddingRight: 16,
   },
-  cardAvatar: {
-    backgroundColor: "#efefef",
-    alignItems: "center",
-    justifyContent: "center",
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  cardAvatarText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#fff",
+  modalContent: {
+    width: '90%',
+    height: '80%',
+    padding: 20,
+    paddingTop: 40,
+    backgroundColor: "#fff",
+    borderRadius: 40,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  image: {
-    width: 24,
-    height: 24,
-  },
+  close: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+  }
 });
