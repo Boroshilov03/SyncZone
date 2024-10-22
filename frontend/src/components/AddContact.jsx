@@ -1,4 +1,4 @@
-import { supabase } from "../lib/supabase"; // Ensure this path is correct
+import { supabase } from "../lib/supabase";
 import React, { useState } from "react";
 import {
   View,
@@ -10,8 +10,9 @@ import {
   ActivityIndicator,
   SafeAreaView,
 } from "react-native";
-import { debounce } from "lodash"; // Ensure lodash is installed
+import { debounce } from "lodash";
 import useStore from "../store/store";
+import { Feather as FeatherIcon } from "@expo/vector-icons"; 
 
 const AddContact = ({ toggleModal }) => {
   const [searchQuery, setSearchQuery] = useState(""); // Store search query
@@ -136,18 +137,21 @@ const AddContact = ({ toggleModal }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>Add Contact</Text> 
+      <View style={styles.searchContainer}>
+      <View style={styles.searchIcon}>
+        <FeatherIcon color="#848484" name="search" size={17} />
+      </View>
       <TextInput
         style={styles.searchInput}
         placeholder="Search by username..."
+        placeholderTextColor="#B0B0B0" // Set a lighter color for the placeholder
         value={searchQuery}
         onChangeText={handleSearchChange}
       />
+      </View>
       {loading ? (
-        <ActivityIndicator
-          size="large"
-          color="#007BFF"
-          style={styles.loading}
-        />
+        <ActivityIndicator size="large" color="#007BFF" style={styles.loading} />
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : profiles.length > 0 ? (
@@ -170,16 +174,42 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f7f7f7",
+  },
+  title: {
+    fontSize: 23,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#333",
+    textAlign: "center",
+  },
+  searchContainer: {
+    flexDirection: "row", // Align items in a row
+    alignItems: "center", // Center vertically
+    backgroundColor: "rgb(240, 240, 240)", // Same background as search input
+    borderRadius: 25,
+    paddingHorizontal: 10, // Padding around the container
+    borderWidth: 1,
+    borderColor: "#d1d1d1",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 3,
+    width: "95%",
+    alignSelf: "center",
+    marginBottom: 5,
   },
   searchInput: {
-    height: 45,
-    borderColor: "#007BFF",
-    borderWidth: 2,
-    paddingHorizontal: 15,
-    marginBottom: 10,
-    borderRadius: 5,
-    backgroundColor: "#fff",
+    height: 42,
+    flexDirection: "row",
+    borderRadius: 25,
+    paddingHorizontal: 5,
+    paddingVertical: 5,
+    width: '100%',
+  },
+  searchIcon: {
+    paddingRight: 2,
+    justifyContent: 'center', // Center vertically within the icon container
   },
   loading: {
     marginTop: 20,
@@ -190,16 +220,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 10,
     margin: 5,
-    borderRadius: 10,
-    backgroundColor: "#fff",
-    elevation: 3, // Shadow effect for Android
-    shadowColor: "#000", // Shadow effect for iOS
+    borderRadius: 20,
+    elevation: 3, 
+    shadowColor: "#000", 
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
+    backgroundColor: "#D1EBEF",
+
   },
   profileDetails: {
     flex: 1,
+    marginLeft: 7,
   },
   profileName: {
     fontSize: 15,
