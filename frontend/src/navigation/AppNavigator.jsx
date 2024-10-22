@@ -15,8 +15,10 @@ import Header from "../components/Header";
 
 import ContactScreen from "../screens/ContactScreen";
 import ProfileScreen from "../screens/ProfileScreen";
+import ProfileSettings from "../screens/ProfileSettings";
 
 const Stack = createStackNavigator();
+const ModalStack = createStackNavigator();
 
 export function AppNavigator() {
   const { session } = useStore(); // Get session from store
@@ -35,6 +37,7 @@ export function AppNavigator() {
           <Stack.Screen name="RecentCall" component={RecentCalls} />
           <Stack.Screen name="Contact" component={ContactScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen name="ProfileSettings" component={ProfileSettings} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="Header" component={Header} />
         </>

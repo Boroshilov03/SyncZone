@@ -7,6 +7,8 @@ import {
   SafeAreaView,
   FlatList,
   Image,
+  Modal,
+  Button
 } from "react-native";
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase";
@@ -14,8 +16,11 @@ import useStore from "../store/store";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import Header from "../components/Header";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import Profile from "./ProfileScreen";
 
 const ChatsScreen = ({ navigation }) => {
+  const [profileVisible, setProfileVisible] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
   const [input, setInput] = useState("");
   const { user } = useStore();
   const queryClient = useQueryClient(); // For refetching chats
@@ -108,6 +113,7 @@ const ChatsScreen = ({ navigation }) => {
   }, [input, chats, user.id]);
 
 
+
   const renderChatItem = ({ item }) => {
 
     const participants = item.chat_participants;
@@ -121,9 +127,18 @@ const ChatsScreen = ({ navigation }) => {
 
       if (!profile) return null;
 
+      const contactInfo = {
+        contactID: participant.profiles.id,
+        contactPFP: participant.profiles.avatar_url,
+        contactFirst: participant.profiles.first_name,
+        contactLast: participant.profiles.last_name,
+        contactUsername: participant.profiles.username,
+      };
+
       return (
         <TouchableOpacity
           onPress={() =>
+
             navigation.navigate("ChatDetail", {
               chatId: item.id,
               username: profile.username,
@@ -133,16 +148,34 @@ const ChatsScreen = ({ navigation }) => {
         >
           <View style={styles.card}>
             <TouchableOpacity
-              onPress={() =>
-                navigation.navigate("Profile", {
-                  contactID: profile.id,
-                  contactPFP: profile.avatar_url,
-                  contactFirst: profile.first_name,
-                  contactLast: profile.last_name,
-                  contactUsername: profile.username,
-                })
-              }
+              onPress={() => {
+                // navigation.navigate("Profile", {
+                //   contactID: profile.id,
+                //   contactPFP: profile.avatar_url,
+                //   contactFirst: profile.first_name,
+                //   contactLast: profile.last_name,
+                //   contactUsername: profile.username,
+                // })
+                setProfileVisible(true)
+                setSelectedContact(contactInfo);
+              }}
             >
+              <Modal
+                animationType="fade"
+                transparent={true}
+                visible={profileVisible}
+                onRequestClose={() => setProfileVisible(false)}
+              >
+                <View style={styles.modalOverlay}>
+                  <View style={styles.modalContent}>
+                    <Button title="Close" onPress={() => setProfileVisible(false)} />
+                    <Profile
+                      {...selectedContact}
+                      setProfileVisible={setProfileVisible}
+                      navigation={navigation} />
+                  </View>
+                </View>
+              </Modal>
               {profile.avatar_url ? (
                 <Image
                   alt="Avatar"
@@ -165,8 +198,8 @@ const ChatsScreen = ({ navigation }) => {
             <View style={styles.cardAction}>
               <FeatherIcon color="#9ca3af" name="chevron-right" size={22} />
             </View>
-          </View>
-        </TouchableOpacity>
+          </View >
+        </TouchableOpacity >
       );
     }
     return null;
@@ -305,5 +338,24 @@ const styles = StyleSheet.create({
   },
   cardAction: {
     paddingRight: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '90%',
+    height: '80%',
+    padding: 20,
+    paddingTop: 40,
+    backgroundColor: "#fff",
+    borderRadius: 40,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });

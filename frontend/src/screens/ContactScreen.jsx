@@ -31,7 +31,6 @@ const fetchMutualContacts = async ({ queryKey }) => {
   if (error) throw new Error(error.message);
   return data;
 };
-
 const ContactScreen = ({ navigation }) => {
   const [profileVisible, setProfileVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -198,6 +197,7 @@ const ContactScreen = ({ navigation }) => {
       contactFirst: item.profiles.first_name,
       contactLast: item.profiles.last_name,
       contactUsername: item.profiles.username,
+      //setModalVisible: setProfileVisible,
     };
     return (
       <View style={styles.contactItem}>
@@ -227,7 +227,11 @@ const ContactScreen = ({ navigation }) => {
               <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                   <Button title="Close" onPress={() => setProfileVisible(false)} />
-                  <Profile {...selectedContact} />
+                  <Profile
+                    {...selectedContact}
+                    setProfileVisible={setProfileVisible}
+                    navigation={navigation}
+                  />
                 </View>
               </View>
             </Modal>

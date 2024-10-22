@@ -6,20 +6,13 @@ import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import * as Font from 'expo-font';
 
 
-const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst, contactLast, contactUsername }) => {
-  // Destructure the parameters passed from navigation
-  const [modalVisible, setModalVisible] = useState(false);
 
-  // const {
-  //   contactID,
-  //   contactPFP,
-  //   contactFirst,
-  //   contactLast,
-  //   contactUsername,
-  // } = route.params;
-  //const { contactID, contactPFP, contactFirst, contactLast, contactUsername } = route?.params || {};
+const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst, contactLast, contactUsername, setProfileVisible }) => {
+  //const [modalVisible, setModalVisible] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+
   const [fontsLoaded, setFontsLoaded] = useState(false);
-
   useEffect(() => {
     const loadFonts = async () => {
       await Font.loadAsync({
@@ -44,11 +37,11 @@ const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst,
   return (
     <SafeAreaView style={styles.container}>
       <Pressable style={styles.trash}>
-        <Icon name="trash" size={35} color='#616061' onPress={() => setModalVisible(true)}></Icon>
+        <Icon name="trash" size={35} color='#616061' onPress={() => setVisible(true)}></Icon>
       </Pressable>
 
       <Modal
-        visible={modalVisible}
+        visible={visible}
         animationType="fade"
         transparent={true}
       >
@@ -59,10 +52,10 @@ const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst,
             </View>
             <Pressable style={styles.modalButtons}>
               <View style={styles.left}>
-                <Text style={styles.lText} onPress={() => setModalVisible(false)}>Remove</Text>
+                <Text style={styles.lText} onPress={() => setVisible(false)}>Remove</Text>
               </View>
               <View style={styles.right}>
-                <Text style={styles.rText} onPress={() => setModalVisible(false)}>Cancel</Text>
+                <Text style={styles.rText} onPress={() => setVisible(false)}>Cancel</Text>
               </View>
             </Pressable>
           </View>
@@ -70,7 +63,7 @@ const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst,
       </Modal>
 
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate("MainTabs")}>
-        <Text style={styles.backButtonText}>Back button for chat page</Text>
+        {/* <Text style={styles.backButtonText}>Back button for chat page</Text> */}
       </TouchableOpacity>
 
       <View style={styles.profileContainer}>
@@ -99,11 +92,15 @@ const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst,
         <Text style={styles.usernameText}>@{contactUsername}</Text>
         {/* <Text style={styles.idText}>User ID: {contactID}</Text> */}
       </View>
-      <View style={styles.buttons}>
-
-        <Ionicons name="chatbox-ellipses" size={35} color='#616061'></Ionicons>
-        <Icon name="phone" size={35} color='#616061'></Icon>
-      </View>
+      <Pressable
+        style={styles.buttons}
+        onPress={() => {
+          setProfileVisible(false)
+          navigation.navigate("ProfileSettings", { setProfileVisible });
+        }}
+      >
+        <Ionicons name="create" size={35} color='#616061' />
+      </Pressable>
     </SafeAreaView >
   );
 };
@@ -126,18 +123,18 @@ const styles = StyleSheet.create({
 
     margin: 20,
   },
-  backButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    padding: 10,
-    backgroundColor: '#007bff', // Blue color for the button
-    borderRadius: 5,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
+  // backButton: {
+  //   position: 'absolute',
+  //   top: 40,
+  //   left: 20,
+  //   padding: 10,
+  //   backgroundColor: '#007bff', // Blue color for the button
+  //   borderRadius: 5,
+  // },
+  // backButtonText: {
+  //   color: '#fff',
+  //   fontSize: 16,
+  // },
   trash: {
     position: 'absolute',
     top: 40,
@@ -209,8 +206,9 @@ const styles = StyleSheet.create({
   },
   buttons: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    //flexDirection: 'row',
+    //justifyContent: 'center',
+    alignItems: 'center',
     width: 150,
     //borderWidth: 1,
   },
