@@ -97,7 +97,8 @@ const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst,
           navigation.navigate("ProfileSettings", { setProfileVisible });
         }}
       >
-        <Ionicons name="create" size={35} color='#616061' />
+        <Ionicons name="chatbox-ellipses" size={35} color='#616061' />
+        <Ionicons name="call" size={35} color='#616061' />
       </Pressable>
     </SafeAreaView >
   );
@@ -194,8 +195,8 @@ const styles = StyleSheet.create({
   },
   buttons: {
     flex: 1,
-    //flexDirection: 'row',
-    //justifyContent: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
     width: 150,
     //borderWidth: 1,

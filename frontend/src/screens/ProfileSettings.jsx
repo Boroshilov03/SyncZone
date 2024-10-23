@@ -7,17 +7,16 @@ import * as Font from 'expo-font';
 import Constants from 'expo-constants';
 import { LinearGradient } from "expo-linear-gradient";
 import GradientText from "react-native-gradient-texts";
+import OwnedBannersModal from '../components/OwnedBannersModal';
 
-
-const ProfileSettings = ({ navigation, route }) => {
-    const { setProfileVisible } = route.params;
+const ProfileSettings = ({ navigation }) => {
     const [visible, setVisible] = useState(false);
     const [settingVisible, setSettingVisible] = useState(false);
-
+    const [isModalVisible, setModalVisible] = useState(false);
     const [isEnabled, setIsEnabled] = useState(false);
-    const toggleSwitch = () => setIsEnabled(previousState => !previousState);
-
     const [fontsLoaded, setFontsLoaded] = useState(false);
+    const [ownedBannersVisible, setOwnedBannersVisible] = useState(false); // State for OwnedBannersModal
+
     useEffect(() => {
         const loadFonts = async () => {
             await Font.loadAsync({
@@ -25,13 +24,14 @@ const ProfileSettings = ({ navigation, route }) => {
                 'Inter_18pt-Medium': require('./fonts/Inter_18pt-Medium.ttf'),
                 'Inter_18pt-MediumItalic': require('./fonts/Inter_18pt-MediumItalic.ttf'),
                 'Poppins-Regular': require('./fonts/Poppins-Regular.ttf'),
-
             });
             setFontsLoaded(true);
         };
 
         loadFonts();
     }, []);
+
+    const toggleSwitch = () => setIsEnabled(previousState => !previousState);
 
     if (!fontsLoaded) {
         return null; // You can return a loading spinner or similar
@@ -76,230 +76,68 @@ const ProfileSettings = ({ navigation, route }) => {
                 </Modal>
 
                 <View style={styles.fields}>
-                    <View style={styles.verticallySpaced}>
-                        <Input
-                            label="Username"
-                            labelStyle={{
-                                position: "absolute",
-                                top: -25,
-                                left: 25,
-                                color: "#616061",
-                            }}
-                            leftIcon={{
-                                type: "font-awesome",
-                                name: "lock",
-                                color: "#616061",
-                                size: 20,
-                            }}
-
-                            autoCapitalize="none"
-                            inputContainerStyle={{
-                                borderRadius: 30,
-                                borderWidth: 3,
-                                borderColor: "#8e9091",
-                                width: 270,
-                                paddingLeft: 15,
-                                height: 40,
-                            }}
-                        />
-                    </View>
-                    <View style={styles.verticallySpaced}>
-                        <Input
-                            label="Email"
-                            labelStyle={{
-                                position: "absolute",
-                                top: -25,
-                                left: 25,
-                                color: "#616061",
-                            }}
-                            leftIcon={{
-                                type: "font-awesome",
-                                name: "lock",
-                                color: "#616061",
-                                size: 20,
-                            }}
-
-                            autoCapitalize="none"
-                            inputContainerStyle={{
-                                borderRadius: 30,
-                                borderWidth: 3,
-                                borderColor: "#8e9091",
-                                width: 270,
-                                paddingLeft: 15,
-                                height: 40,
-                            }}
-                        />
-                    </View><View style={styles.verticallySpaced}>
-                        <Input
-                            label="Password"
-                            labelStyle={{
-                                position: "absolute",
-                                top: -25,
-                                left: 25,
-                                color: "#616061",
-                            }}
-                            leftIcon={{
-                                type: "font-awesome",
-                                name: "lock",
-                                color: "#616061",
-                                size: 20,
-                            }}
-
-                            autoCapitalize="none"
-                            inputContainerStyle={{
-                                borderRadius: 30,
-                                borderWidth: 3,
-                                borderColor: "#8e9091",
-                                width: 270,
-                                paddingLeft: 15,
-                                height: 40,
-                            }}
-                        />
-                    </View><View style={styles.verticallySpaced}>
-                        <Input
-                            label="First Name"
-                            labelStyle={{
-                                position: "absolute",
-                                top: -25,
-                                left: 25,
-                                color: "#616061",
-                            }}
-                            leftIcon={{
-                                type: "font-awesome",
-                                name: "lock",
-                                color: "#616061",
-                                size: 20,
-                            }}
-
-                            autoCapitalize="none"
-                            inputContainerStyle={{
-                                borderRadius: 30,
-                                borderWidth: 3,
-                                borderColor: "#8e9091",
-                                width: 270,
-                                paddingLeft: 15,
-                                height: 40,
-                            }}
-                        />
-                    </View><View style={styles.verticallySpaced}>
-                        <Input
-                            label="Last Name"
-                            labelStyle={{
-                                position: "absolute",
-                                top: -25,
-                                left: 25,
-                                color: "#616061",
-                            }}
-                            leftIcon={{
-                                type: "font-awesome",
-                                name: "lock",
-                                color: "#616061",
-                                size: 20,
-                            }}
-
-                            autoCapitalize="none"
-                            inputContainerStyle={{
-                                borderRadius: 30,
-                                borderWidth: 3,
-                                borderColor: "#8e9091",
-                                width: 270,
-                                paddingLeft: 15,
-                                height: 40,
-                            }}
-                        />
-                    </View><View style={styles.verticallySpaced}>
-                        <Input
-                            label="Location"
-                            labelStyle={{
-                                position: "absolute",
-                                top: -25,
-                                left: 25,
-                                color: "#616061",
-                            }}
-                            leftIcon={{
-                                type: "font-awesome",
-                                name: "lock",
-                                color: "#616061",
-                                size: 20,
-                            }}
-
-                            autoCapitalize="none"
-                            inputContainerStyle={{
-                                borderRadius: 30,
-                                borderWidth: 3,
-                                borderColor: "#8e9091",
-                                width: 270,
-                                paddingLeft: 15,
-                                height: 40,
-                            }}
-                        />
-                    </View><View style={styles.verticallySpaced}>
-                        <Input
-                            label="Timezone"
-                            labelStyle={{
-                                position: "absolute",
-                                top: -25,
-                                left: 25,
-                                color: "#616061",
-                            }}
-                            leftIcon={{
-                                type: "font-awesome",
-                                name: "lock",
-                                color: "#616061",
-                                size: 20,
-                            }}
-
-                            autoCapitalize="none"
-                            inputContainerStyle={{
-                                borderRadius: 30,
-                                borderWidth: 3,
-                                borderColor: "#8e9091",
-                                width: 270,
-                                paddingLeft: 15,
-                                height: 40,
-                            }}
-                        />
-                    </View>
+                    {['Username', 'Email', 'Password', 'First Name', 'Last Name', 'Location', 'Timezone'].map((label, index) => (
+                        <View key={index} style={styles.verticallySpaced}>
+                            <Input
+                                label={label}
+                                labelStyle={{
+                                    position: "absolute",
+                                    top: -25,
+                                    left: 25,
+                                    color: "#616061",
+                                }}
+                                leftIcon={{
+                                    type: "font-awesome",
+                                    name: "lock",
+                                    color: "#616061",
+                                    size: 20,
+                                }}
+                                autoCapitalize="none"
+                                inputContainerStyle={{
+                                    borderRadius: 30,
+                                    borderWidth: 3,
+                                    borderColor: "#8e9091",
+                                    width: 270,
+                                    paddingLeft: 15,
+                                    height: 40,
+                                }}
+                            />
+                        </View>
+                    ))}
                 </View>
                 <View style={styles.buttonbox}>
                     <LinearGradient
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
-                        // style={styles.parent}
                         colors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
                         style={styles.gradient}
                     >
                         <TouchableOpacity
                             style={styles.button2}
                             borderRadius={20}
-                            onPress={() => setSettingVisible(true)}
+                            onPress={() => setOwnedBannersVisible(true)} // Show OwnedBannersModal
                         >
-                            <Text style={styles.buttontext} fontFamily={"Karla-Medium"}>
-                                bryan click this
+                            <Text style={[styles.buttonText, { color: 'black' }]}>
+                                View Owned Banners
                             </Text>
                         </TouchableOpacity>
                     </LinearGradient>
+
                     <Modal
                         visible={settingVisible}
                         animationType="slide"
                         transparent={true}
                     >
                         <View style={styles.modalContainer}>
-                            <Pressable style={styles.modalContent} >
-                                <View style={styles.modalText}>
-                                    <Text style={styles.mText} onPress={() => setSettingVisible(false)}>Make your banner modal here for now</Text>
-                                </View>
+                            <Pressable style={styles.modalContent}>
+
                                 <View style={styles.right}>
                                     <Text style={styles.rText} onPress={() => setSettingVisible(false)}>Cancel</Text>
                                 </View>
-
                             </Pressable>
-
                         </View>
                     </Modal>
                 </View>
-
-
 
                 <View style={styles.box}>
                     <GradientText
@@ -309,20 +147,19 @@ const ProfileSettings = ({ navigation, route }) => {
                         isGradientStroke
                         gradientColors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
                         fontFamily={"Karla-Medium"}
-                    //gradientColors={["#D49AC0", "#6FD2E2"]}
-                    // fontFamily={"Gill Sans"}
                     />
                 </View>
                 <TouchableOpacity style={styles.backButton} onPress={() => {
-                    setProfileVisible(true);
                     navigation.navigate("MainTabs");
-
-                }}
-                >
+                }}>
                     <Ionicons name="arrow-back" size={35} color='grey' style={styles.backButtonText} />
-                    {/* <Text style={styles.backButtonText}>Temp back</Text> */}
                 </TouchableOpacity>
 
+                {/* Owned Banners Modal */}
+                <OwnedBannersModal
+                    visible={ownedBannersVisible}
+                    onClose={() => setOwnedBannersVisible(false)}
+                />
             </ScrollView>
         </SafeAreaView>
     );
@@ -501,7 +338,7 @@ const styles = StyleSheet.create({
 
     buttonbox: {
         flex: 0,
-        padding: 5,
+        padding: 0,
         //justifyContent: "center",
         alignItems: "center",
 
@@ -517,9 +354,9 @@ const styles = StyleSheet.create({
     button2: {
         alignItems: "center",
         justifyContent: "center",
-        padding: 15,
+        padding: 10,
         borderRadius: 50,
-        width: 190,
+        width: 250,
     },
     buttontext: {
         fontWeight: "bold",

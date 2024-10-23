@@ -409,16 +409,15 @@ const ContactScreen = ({ navigation, route }) => {
               style={styles.chatButton}
               onPress={() => createChat(item.profiles.id)}
             >
-              <FontAwesome name="comment" size={20} color="#fff" />
-              <Text style={styles.buttonText}>Chat</Text>
+              <FontAwesome name="comment" size={20} style={styles.chatIcon} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.callButton}
               onPress={() => createCall(item.profiles.id)}
             >
-              <FontAwesome name="phone" size={20} color="#fff" />
-              <Text style={styles.buttonText}>Call</Text>
+              <FontAwesome name="phone" size={20} style={styles.callIcon} color="#fff" />
             </TouchableOpacity>
+
           </View>
         </View>
       </View>
@@ -499,7 +498,7 @@ const ContactScreen = ({ navigation, route }) => {
                   style={styles.groupButtonImage}
                 />
                 {/* Text */}
-                <Text style={styles.buttonText}>New Group</Text>
+                <Text style={styles.buttonText}>Create Group</Text>
               </View>
             </TouchableOpacity>
           </LinearGradient>
@@ -665,7 +664,7 @@ const styles = StyleSheet.create({
   chatButton: {
     backgroundColor: "rgba(195, 217, 246, 0.85)", // Soft pastel blue (same as the original)
     borderRadius: 25, // Circular shape
-    padding: 10,
+    // padding: 10,
     elevation: 10, // Depth effect
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
@@ -676,12 +675,13 @@ const styles = StyleSheet.create({
     marginLeft: 3,
     width: 35, // Reduced button width
     height: 35, // Reduced button height
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   callButton: {
     backgroundColor: "rgba(158, 228, 173, 0.85)", // Pastel green (soft and pastel)
     borderRadius: 25, // Circular shape
-    padding: 10,
     elevation: 10, // Same shadow as chatButton
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
@@ -692,22 +692,21 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     width: 35, // Reduced button width
     height: 35, // Reduced button height
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   chatIcon: {
-    width: 20, // Fixed size of icon for consistency
-    height: 20, // Fixed size of icon for consistency
-    top: "45%", // Center vertically
-    left: "50%", // Center horizontally
-    transform: [{ translateX: -10 }, { translateY: -10 }], // Adjust to truly center it
+    width: 20,
+    height: 20,
   },
 
   callIcon: {
     width: 20, // Fixed size of icon for consistency
     height: 20, // Fixed size of icon for consistency
-    top: "50%", // Center vertically
-    right: 1,
-    transform: [{ translateY: -9 }], // Adjust to center it vertically
+    // top: "50%", // Center vertically
+    left: 2,
+    // transform: [{ translateY: -9 }], // Adjust to center it vertically
   },
 
   addButtonImage: {

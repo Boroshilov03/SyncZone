@@ -380,19 +380,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // modalContainer: {
-  //   flex: 1,
-  //   justifyContent: "center",
-  //   alignItems: "center",
-  //   backgroundColor: "rgba(0, 0, 0, 0.5)",
-  // },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
   modalContent: {
-    width: 300,
-    height: 500, // Changed to auto to fit content dynamically
-    padding: 20,
-    paddingTop: 40, // Added top padding to create space for the close button
+    width: '85%',
+    height: '70%',
+    padding: 40,
+    paddingTop: 40,
     backgroundColor: "#fff",
-    borderRadius: 10,
+    borderRadius: 40,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -432,8 +432,6 @@ const styles = StyleSheet.create({
     padding: 12,
     marginVertical: 4,
     backgroundColor: "#D1EBEF",
-    // borderWidth: 1,
-    // borderColor: "#000",
     borderRadius: 25,
     alignItems: "center",
     shadowColor: "#000",
@@ -445,7 +443,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     width: "95%", // Set width to 100% to match the container
-    marginHorizontal: 12,
+    alignSelf: 'center'
   },
   cardBody: {
     flex: 1,

@@ -19,6 +19,8 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
   const [selected, setSelected] = useState("");
   const [agendaItems, setAgendaItems] = useState([]);
   const [markedDates, setMarkedDates] = useState({});
+  const [allEvents, setAllEvents] = useState([]);
+
   const { user } = useStore();
   const currentDate = new Date().toISOString().split("T")[0];
   const theme = useRef({
@@ -40,9 +42,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
         return;
       }
 
-      const eventIds = eventData
-        ? eventData.map((event) => event.event_id)
-        : [];
+      const eventIds = eventData ? eventData.map((event) => event.event_id) : [];
       if (eventIds.length === 0) {
         console.warn("No event IDs found for the user.");
         setAgendaItems([]); // Clear agenda items if no event IDs
@@ -65,8 +65,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
         return;
       }
 
-      console.log(data);
-
+      setAllEvents(data);
       // Group events by date
       const groupedAgendaItems = data.reduce((acc, event) => {
         const eventDate = event.date;
@@ -86,6 +85,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
           }),
           mood: event.mood,
           description: event.description,
+          id: event.id,
         };
 
         // If the date doesn't exist in the accumulator, create it
@@ -124,7 +124,6 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
       });
 
       setMarkedDates(markedDatesObj);
-      console.log("Marked Dates:", markedDatesObj);
     } catch (error) {
       console.error("Error during data fetching:", error);
     }
@@ -132,18 +131,18 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
 
   const getMoodColor = (mood) => {
     switch (mood) {
-      case "yellow":
-        return "#FFFDE7";
-      case "green":
-        return "#DCEDC8";
-      case "pink":
-        return "#FDE0E1";
-      case "purple":
-        return "#F3E5F5";
       case "blue":
         return "#E3F2FD";
+      case "purple":
+        return "#F3E5F5";
+      case "pink":
+        return "#FDE0E1";
+      case "green":
+        return "#DCEDC8";
+      case "yellow":
+        return "#FFFDE7";
       default:
-        return "#FFFFFF";
+        return "#E3F2FD";
     }
   };
 
@@ -163,7 +162,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
             { backgroundColor: getMoodColor(item.mood) },
           ]}
         >
-          <View style={{display: 'flex', flexDirection: 'row'}}>
+          <View style={{ display: "flex", flexDirection: "row" }}>
             <Text style={styles.itemTitle}>{item.title}</Text>
             <View style={styles.timeContainer}>
               <Text style={styles.itemTime}>
@@ -207,7 +206,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
           }}
         />
         <AgendaList
-          sections={agendaItems}
+          sections={agendaItems} // Use agendaItems here
           renderItem={renderAgendaItem}
           sectionStyle={styles.section}
           contentContainerStyle={{ paddingBottom: 50 }} // Added bottom padding here
