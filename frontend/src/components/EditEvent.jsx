@@ -23,7 +23,6 @@ const getMoodColor = (mood) => {
 };
 
 const EditEvent = ({ event, onClose }) => {
-  console.log(event)
     const { user } = useStore();
     const [titleValue, settitleValue] = useState(event.title); // Title
     const [date, setDate] = useState(new Date()); // Date
