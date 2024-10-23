@@ -415,16 +415,16 @@ const ChatDetailScreen = () => {
               setNewMessage(text);
               handleTyping();
             }}
-          />
+          />  
 
           <TouchableOpacity onPress={handleSendMessage}>
             <LinearGradient
-              colors={["#A0D7E5", "#A0D7E5"]}
+              colors={["#A0D7E5", "#D1EBEF"]}
               style={styles.sendButtonContainer}
             >
               <Image
-                style={styles.sendButton}
-                source={require("../../assets/icons/sendIcon.png")}
+                style={[styles.sendButton, { tintColor: 'white', transform: [{ rotate: '-45deg' }], width: 20, height: 20 }]}
+                source={require("../../assets/icons/send_icon.png")}
               />
             </LinearGradient>
           </TouchableOpacity>
@@ -447,24 +447,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 15,
-    backgroundColor: "#DEDEF8",
+    backgroundColor: "rgba(209, 235, 239, 0.7)", // Set to a glassy transparent color
     borderRadius: 10,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "rgba(221, 221, 221, 0.5)", // Slightly transparent border for a softer look
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
     justifyContent: "space-between",
-  },
+  },  
   backButton: {
     padding: 10,
   },
   backIcon: {
-    width: 24,
-    height: 24,
+    width: 30,
+    height: 30,
+    marginRight: 5,
   },
   centerContainer: {
     flexDirection: "row",
@@ -475,19 +476,19 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 50,
-    borderColor: "#007BFF",
     marginBottom: 5,
   },
   title: {
     fontSize: 24,
     fontWeight: "400",
     color: "#333",
+    marginLeft: 10,
   },
   callIconContainer: {
     padding: 10,
   },
   callIcon: {
-    width: 25,
+    width: 27,
     height: 25,
   },
   typingIndicator: {
@@ -508,13 +509,19 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 8,
     maxWidth: "80%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
+    marginBottom: 20,
   },
   myMessageContainer: {
     alignSelf: "flex-end",
     paddingTop: 10,
     paddingLeft: 20,
     fontWeight: "semibold",
-    backgroundColor: "white",
+    backgroundColor: "#D1EBEF",
   },
   otherMessageContainer: {
     alignSelf: "flex-start",
@@ -542,6 +549,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#999",
     textAlign: "right",
+    marginVertical: 5,
   },
   inputContainer: {
     flexDirection: "row",
@@ -551,6 +559,12 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     borderWidth: 1,
     borderColor: "#ddd",
+    margin: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
   },
   input: {
     flex: 1,
@@ -559,10 +573,15 @@ const styles = StyleSheet.create({
   },
   sendButtonContainer: {
     borderRadius: "50%",
+    padding: 8,
+    alignItems: 'center', // Center horizontally
+    justifyContent: 'center', // Center vertically
   },
   sendButton: {
     width: 40,
     height: 40,
+    alignItems: 'center', // Center horizontally
+    justifyContent: 'center', // Center vertically 
   },
   errorText: {
     color: "red",
@@ -592,9 +611,15 @@ const styles = StyleSheet.create({
   otherEmotionContainer: {
   },
   emotionText: {
-    fontSize: 10,
-    fontWeight: "200",
+    fontSize: 15,
+    fontWeight: "bold", // Change to bold for better visibility
+    color: "#FFFFFF", // Change text color to white for high contrast
+    textShadowColor: "rgba(0, 0, 0, 0.5)", // Softer gray shadow (semi-transparent black)
+    textShadowOffset: { width: 1, height: 1 }, // Slight offset for depth
+    textShadowRadius: 2, // Increase radius for a softer shadow effect
   },
+  
+  
 });
 
 export default ChatDetailScreen;
