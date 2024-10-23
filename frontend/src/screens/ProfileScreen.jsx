@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    width: 150,
+    width: '100%',
     //borderWidth: 1,
   },
   temp: {
