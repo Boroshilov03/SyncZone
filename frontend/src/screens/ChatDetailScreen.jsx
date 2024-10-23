@@ -415,7 +415,7 @@ const ChatDetailScreen = () => {
               setNewMessage(text);
               handleTyping();
             }}
-          />  
+          />
 
           <TouchableOpacity onPress={handleSendMessage}>
             <LinearGradient
@@ -423,7 +423,15 @@ const ChatDetailScreen = () => {
               style={styles.sendButtonContainer}
             >
               <Image
-                style={[styles.sendButton, { tintColor: 'white', transform: [{ rotate: '-45deg' }], width: 20, height: 20 }]}
+                style={[
+                  styles.sendButton,
+                  {
+                    tintColor: "white",
+                    transform: [{ rotate: "-45deg" }],
+                    width: 20,
+                    height: 20,
+                  },
+                ]}
                 source={require("../../assets/icons/send_icon.png")}
               />
             </LinearGradient>
@@ -458,7 +466,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     justifyContent: "space-between",
-  },  
+  },
   backButton: {
     padding: 10,
   },
@@ -499,7 +507,6 @@ const styles = StyleSheet.create({
   },
   messageWrapper: {
     marginVertical: 5,
-    marginLeft: 10,
   },
   messageList: {
     marginTop: 20,
@@ -521,7 +528,8 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingLeft: 20,
     fontWeight: "semibold",
-    backgroundColor: "#D1EBEF",
+    borderBottomWidth: 1,
+    borderBlockColor: "#F6D6EE",
   },
   otherMessageContainer: {
     alignSelf: "flex-start",
@@ -530,17 +538,17 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     paddingLeft: 10,
     fontWeight: "semibold",
-    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBlockColor: "#D1EBEF",
   },
   messageText: {
     fontSize: 16,
-    fontWeight: "300"
-
+    fontWeight: "300",
   },
   myMessageText: {
     textAlign: "left", // Aligns the text to the right
     fontSize: 16,
-    fontWeight: "300"
+    fontWeight: "300",
   },
   otherMessageText: {
     color: "#333",
@@ -574,14 +582,14 @@ const styles = StyleSheet.create({
   sendButtonContainer: {
     borderRadius: "50%",
     padding: 8,
-    alignItems: 'center', // Center horizontally
-    justifyContent: 'center', // Center vertically
+    alignItems: "center", // Center horizontally
+    justifyContent: "center", // Center vertically
   },
   sendButton: {
     width: 40,
     height: 40,
-    alignItems: 'center', // Center horizontally
-    justifyContent: 'center', // Center vertically 
+    alignItems: "center", // Center horizontally
+    justifyContent: "center", // Center vertically
   },
   errorText: {
     color: "red",
@@ -599,27 +607,31 @@ const styles = StyleSheet.create({
     left: -10,
   },
   myEmotionContainer: {
-    position: "absolute",  // Allows it to be positioned absolutely within the parent
+    position: "absolute", // Allows it to be positioned absolutely within the parent
     padding: 5,
-    borderTopLeftRadius: 12,  // Round the top left corner
+    borderTopLeftRadius: 0, // Round the top left corner
     borderBottomLeftRadius: 12, // Round the bottom left corner
-    borderTopRightRadius: 0,    // No rounding on the top right corner
+    borderTopRightRadius: 12, // No rounding on the top right corner
     borderBottomRightRadius: 12, // Round the bottom right corner
-    top: -15,  // Adjust the vertical position as needed
+    top: -15, // Adjust the vertical position as needed
     right: -10, // Move it to the right side, adjust as needed
   },
   otherEmotionContainer: {
+    position: "absolute", // Allows it to be positioned absolutely within the parent
+    padding: 5,
+    borderTopLeftRadius: 0, // Round the top left corner
+    borderTopRightRadius: 0, // No rounding on the top right corner
+    top: -15, // Adjust the vertical position as needed
+    left: 0, // Move it to the right side, adjust as needed
   },
   emotionText: {
-    fontSize: 15,
-    fontWeight: "bold", // Change to bold for better visibility
+    fontSize: 10,
+    fontWeight: "semibold", // Change to bold for better visibility
     color: "#FFFFFF", // Change text color to white for high contrast
     textShadowColor: "rgba(0, 0, 0, 0.5)", // Softer gray shadow (semi-transparent black)
     textShadowOffset: { width: 1, height: 1 }, // Slight offset for depth
     textShadowRadius: 2, // Increase radius for a softer shadow effect
   },
-  
-  
 });
 
 export default ChatDetailScreen;
