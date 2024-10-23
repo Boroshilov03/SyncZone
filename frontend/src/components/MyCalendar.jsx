@@ -266,24 +266,28 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   itemTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "600", // Changed from 'semibold' to '600' for compatibility
   },
   timeContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center", 
   },
   itemTime: {
     fontSize: 14,
     color: "gray",
+    marginLeft: 5,
   },
   itemDescription: {
     fontSize: 14,
     color: "#333",
-    marginVertical: 5,
+    marginTop: 5,
   },
   pencilIconContainer: {
-    alignSelf: "flex-end",
+    position: "absolute", // Change to absolute positioning
+    top: 10, // Adjust as necessary
+    right: 10, // Adjust as necessary
   },
   pencilIcon: {
     width: 20,

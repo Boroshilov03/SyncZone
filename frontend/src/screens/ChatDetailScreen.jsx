@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
   otherEmotionContainer: {
   },
   emotionText: {
-    fontSize: 15,
+    fontSize: 10,
     fontWeight: "bold", // Change to bold for better visibility
     color: "#FFFFFF", // Change text color to white for high contrast
     textShadowColor: "rgba(0, 0, 0, 0.5)", // Softer gray shadow (semi-transparent black)
