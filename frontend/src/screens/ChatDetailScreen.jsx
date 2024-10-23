@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
   },
   emotionText: {
     fontSize: 10,
-    fontWeight: "semibold", // Change to bold for better visibility
+    fontWeight: "bold", // Change to bold for better visibility
     color: "#FFFFFF", // Change text color to white for high contrast
     textShadowColor: "rgba(0, 0, 0, 0.5)", // Softer gray shadow (semi-transparent black)
     textShadowOffset: { width: 1, height: 1 }, // Slight offset for depth
