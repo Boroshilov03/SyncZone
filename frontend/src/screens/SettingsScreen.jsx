@@ -18,6 +18,7 @@ const profilePic = require("../../assets/icons/pfp_icon.png");
 import { useRoute } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import Profile from "./ProfileScreen";
+import Constants from "expo-constants";
 
 export default function Example({ navigation }) {
   const { setUser, setAccessToken, setRefreshToken, user } = useStore();
@@ -50,7 +51,8 @@ export default function Example({ navigation }) {
     }
   };
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f8f8" }}>
+    // style={[styles.container, { marginTop: Constants.statusBarHeight }]}
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f8f8", marginTop: Constants.statusBarHeight }}>
       <View style={styles.header}>
         <View style={styles.headerAction}>
           <TouchableOpacity onPress={() => navigation.navigate("MainTabs")}>
