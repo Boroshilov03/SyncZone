@@ -32,11 +32,11 @@ export default function Example({ navigation }) {
   });
 
   const contactInfo = {
-    contactID: user.user_metadata?.id,
+    contactID: user?.user_metadata?.id,
     contactPFP: profilephoto,
-    contactFirst: user.user_metadata?.first_name,
-    contactLast: user.user_metadata?.last_name,
-    contactUsername: user.user_metadata?.username,
+    contactFirst: user?.user_metadata?.first_name,
+    contactLast: user?.user_metadata?.last_name,
+    contactUsername: user?.user_metadata?.username,
   };
 
   const handleLogout = async () => {
@@ -52,7 +52,13 @@ export default function Example({ navigation }) {
   };
   return (
     // style={[styles.container, { marginTop: Constants.statusBarHeight }]}
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f8f8", marginTop: Constants.statusBarHeight }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: "#f8f8f8",
+        marginTop: Constants.statusBarHeight,
+      }}
+    >
       <View style={styles.header}>
         <View style={styles.headerAction}>
           <TouchableOpacity onPress={() => navigation.navigate("MainTabs")}>
