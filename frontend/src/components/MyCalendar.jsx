@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   agendaItem: {
-    padding: 10,
+    padding: 5,
     borderRadius: 8,
     shadowColor: "#000",
     shadowOpacity: 0.3,
