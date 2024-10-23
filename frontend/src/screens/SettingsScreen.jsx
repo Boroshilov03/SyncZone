@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Switch,
   Image,
+  Modal,
 } from "react-native";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import { supabase } from "../lib/supabase";
@@ -17,6 +18,8 @@ import { useRoute } from "@react-navigation/native";
 
 export default function Example({ navigation }) {
   const { setUser, setAccessToken, setRefreshToken, user } = useStore();
+  const [profileVisible, setProfileVisible] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
   const route = useRoute();
   const { profilephoto } = route.params; // Make sure this param is passed correctly
 
@@ -24,6 +27,15 @@ export default function Example({ navigation }) {
     emailNotifications: true,
     pushNotifications: false,
   });
+
+  const contactInfo = {
+
+    contactID: profiles.id,
+    contactPFP: profiles.avatar_url,
+    contactFirst: user.user_metadata?.first_name,
+    contactLast: user.user_metadata?.last_name,
+    contactUsername: profiles.username,
+  };
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut(); // Sign out from Supabase
@@ -61,10 +73,34 @@ export default function Example({ navigation }) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
+
         {user ? (
           <View style={[styles.section, { paddingTop: 4 }]}>
-            <Text style={styles.sectionTitle}>Account</Text>
-
+            <Text style={styles.sectionTitle} onPress={() => {
+              setProfileVisible(true)
+              setSelectedContact(contactInfo);
+            }}>
+              Account
+            </Text>
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={profileVisible}
+              onRequestClose={() => setProfileVisible(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Pressable onPress={() => setProfileVisible(false)}>
+                    <Ionicons name="close" size={40} color='#616061' style={styles.close} />
+                  </Pressable>
+                  <Profile
+                    {...selectedContact}
+                    setProfileVisible={setProfileVisible}
+                    navigation={navigation}
+                  />
+                </View>
+              </View>
+            </Modal>
             <View style={styles.sectionBody}>
               <TouchableOpacity
                 onPress={() => {
@@ -104,6 +140,7 @@ export default function Example({ navigation }) {
             <Text>No user logged in</Text>
           </View>
         )}
+
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>

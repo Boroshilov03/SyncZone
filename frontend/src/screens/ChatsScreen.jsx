@@ -374,12 +374,18 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#000", // Ensure text color is visible
   },
-  modalContainer: {
+  modalOverlay: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+  // modalContainer: {
+  //   flex: 1,
+  //   justifyContent: "center",
+  //   alignItems: "center",
+  //   backgroundColor: "rgba(0, 0, 0, 0.5)",
+  // },
   modalContent: {
     width: 300,
     height: 500, // Changed to auto to fit content dynamically

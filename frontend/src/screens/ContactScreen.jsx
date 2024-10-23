@@ -354,7 +354,6 @@ const ContactScreen = ({ navigation, route }) => {
     console.log("Create Group Chat Pressed");
   };
 
-  
   const renderContact = ({ item }) => {
     const contactInfo = {
       contactID: item.profiles.id,
@@ -383,7 +382,7 @@ const ContactScreen = ({ navigation, route }) => {
               <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                   <Pressable onPress={() => setProfileVisible(false)}>
-                    <Ionicons name="close" size={35} color='#616061' style={styles.close} />
+                    <Ionicons name="close" size={40} color='#616061' style={styles.close} />
                   </Pressable>
                   <Profile
                     {...selectedContact}
@@ -715,6 +714,12 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -722,12 +727,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    width: 300,
-    height: 500,
-    padding: 20,
+    width: '85%',
+    height: '70%',
+    padding: 40,
     paddingTop: 40,
     backgroundColor: "#fff",
-    borderRadius: 10,
+    borderRadius: 40,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
