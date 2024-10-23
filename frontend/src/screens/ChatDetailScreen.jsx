@@ -454,10 +454,10 @@ const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     padding: 15,
     backgroundColor: "rgba(209, 235, 239, 0.7)", // Set to a glassy transparent color
     borderRadius: 10,
-    marginBottom: 20,
     borderWidth: 1,
     borderColor: "rgba(221, 221, 221, 0.5)", // Slightly transparent border for a softer look
     shadowColor: "#000",
@@ -465,20 +465,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    justifyContent: "space-between",
   },
   backButton: {
-    padding: 10,
+    flex: 1,
+    justifyContent: "flex-start",
   },
   backIcon: {
     width: 30,
     height: 30,
-    marginRight: 5,
   },
   centerContainer: {
     flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
-    flex: 1, // Allow it to take available space for centering
+    flex: 2,
   },
   profileImage: {
     width: 48,
@@ -493,7 +493,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   callIconContainer: {
-    padding: 10,
+    flex: 1,
+    alignItems: "flex-end",
   },
   callIcon: {
     width: 27,

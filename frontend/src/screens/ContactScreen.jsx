@@ -15,7 +15,7 @@ import {
   SectionList,
   ScrollView,
   PanResponder,
-  Button
+  Button,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons"; // For chat and call icons
 import FeatherIcon from "react-native-vector-icons/Feather";
@@ -25,8 +25,8 @@ import useStore from "../store/store";
 import { supabase } from "../lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Profile from "./ProfileScreen";
-import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 
 // Fetch mutual contacts from Supabase
 const fetchMutualContacts = async ({ queryKey }) => {
@@ -350,7 +350,6 @@ const ContactScreen = ({ navigation, route }) => {
 
   // Function to handle group chat creation
   const createGroupChat = () => {
-    // Implement your logic here, such as navigating to a create group screen
     console.log("Create Group Chat Pressed");
   };
 
@@ -369,7 +368,7 @@ const ContactScreen = ({ navigation, route }) => {
           <TouchableOpacity
             style={styles.touch}
             onPress={() => {
-              setProfileVisible(true)
+              setProfileVisible(true);
               setSelectedContact(contactInfo);
             }}
           >
@@ -382,7 +381,12 @@ const ContactScreen = ({ navigation, route }) => {
               <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                   <Pressable onPress={() => setProfileVisible(false)}>
-                    <Ionicons name="close" size={40} color='#616061' style={styles.close} />
+                    <Ionicons
+                      name="close"
+                      size={40}
+                      color="#616061"
+                      style={styles.close}
+                    />
                   </Pressable>
                   <Profile
                     {...selectedContact}
@@ -395,29 +399,39 @@ const ContactScreen = ({ navigation, route }) => {
             <Image
               source={{ uri: item.profiles.avatar_url }} // Use avatar_url to load the image
               style={styles.profileImage}
-
             />
           </TouchableOpacity>
           <View style={styles.wrapperCol}>
             <Text style={styles.contactText}>
               {item.profiles.first_name} {item.profiles.last_name}
             </Text>
-            <Text style={styles.contactUsername}>@{item.profiles.username}</Text>
+            <Text style={styles.contactUsername}>
+              @{item.profiles.username}
+            </Text>
           </View>
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.chatButton}
               onPress={() => createChat(item.profiles.id)}
             >
-              <FontAwesome name="comment" size={20} style={styles.chatIcon} color="#fff" />
+              <FontAwesome
+                name="comment"
+                size={20}
+                style={styles.chatIcon}
+                color="#fff"
+              />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.callButton}
               onPress={() => createCall(item.profiles.id)}
             >
-              <FontAwesome name="phone" size={20} style={styles.callIcon} color="#fff" />
+              <FontAwesome
+                name="phone"
+                size={20}
+                style={styles.callIcon}
+                color="#fff"
+              />
             </TouchableOpacity>
-
           </View>
         </View>
       </View>
@@ -488,16 +502,14 @@ const ContactScreen = ({ navigation, route }) => {
               style={styles.groupButton}
               onPress={() => {
                 // Creating a group chat
-                createGroupChat(item.profiles.id);
+                createGroupChat();
               }}
             >
               <View style={styles.buttonContent}>
-                {/* Icon */}
                 <Image
                   source={require("../../assets/icons/group_chat.png")}
                   style={styles.groupButtonImage}
                 />
-                {/* Text */}
                 <Text style={styles.buttonText}>Create Group</Text>
               </View>
             </TouchableOpacity>
@@ -550,12 +562,12 @@ const ContactScreen = ({ navigation, route }) => {
               onClose={() => setModalVisible(false)}
               contacts={contacts}
             />
-            <Pressable
+            <TouchableOpacity
               onPress={() => setModalVisible(false)}
               style={styles.closeButton}
             >
               <Text style={styles.closeButtonText}>Cancel</Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -675,8 +687,8 @@ const styles = StyleSheet.create({
     marginLeft: 3,
     width: 35, // Reduced button width
     height: 35, // Reduced button height
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   callButton: {
@@ -692,8 +704,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     width: 35, // Reduced button width
     height: 35, // Reduced button height
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   chatIcon: {
@@ -715,9 +727,9 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContainer: {
     flex: 1,
@@ -726,8 +738,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    width: '85%',
-    height: '70%',
+    width: "85%",
+    height: "70%",
     padding: 40,
     paddingTop: 40,
     backgroundColor: "#fff",

@@ -91,57 +91,72 @@ const AddContact = ({ toggleModal }) => {
   };
 
   // Function to add a contact
-  // Function to add a contact
-  const handleAdd = async (contactID) => {
-    if (!user) {
-      console.error("User is not logged in.");
-      return; // Exit if the user is not logged in
+// Function to add a contact
+const handleAdd = async (contactID) => {
+  if (!user) {
+    console.error("User is not logged in.");
+    return; // Exit if the user is not logged in
+  }
+
+  console.log("Adding user with ID:", contactID);
+  console.log("My ID:", user.id);
+
+  // Optimistically disable the button by marking the contact as added
+  setProfiles((prevProfiles) =>
+    prevProfiles.map((profile) =>
+      profile.id === contactID ? { ...profile, added: true } : profile
+    )
+  );
+
+  try {
+    const { data, error } = await supabase
+      .from("contacts")
+      .insert({ user_id: user.id, contact_id: contactID })
+      .select();
+
+    if (error) {
+      console.error("Error adding contact:", error.message);
+      setError("Failed to add contact. Please try again.");
+
+      // If the add fails, revert the optimistic update
+      setProfiles((prevProfiles) =>
+        prevProfiles.map((profile) =>
+          profile.id === contactID ? { ...profile, added: false } : profile
+        )
+      );
+    } else {
+      console.log("Contact added successfully:", data);
+      setContacts([...contacts, { contact_id: contactID }]); // Update contacts state
     }
+  } catch (err) {
+    console.error("Unexpected error while adding contact:", err);
+    setError("An error occurred. Please try again.");
 
-    console.log("Adding user with ID:", contactID);
-    console.log("My ID:", user.id);
+    // Revert optimistic update in case of unexpected errors
+    setProfiles((prevProfiles) =>
+      prevProfiles.map((profile) =>
+        profile.id === contactID ? { ...profile, added: false } : profile
+      )
+    );
+  }
+};
 
-    try {
-      const { data, error } = await supabase
-        .from("contacts")
-        .insert({ user_id: user.id, contact_id: contactID })
-        .select();
 
-      if (error) {
-        console.error("Error adding contact:", error.message);
-        setError("Failed to add contact. Please try again.");
-      } else {
-        console.log("Contact added successfully:", data);
-        setContacts([...contacts, { contact_id: contactID }]); // Update contacts state
-
-        // Update the profiles state to mark the contact as added
-        setProfiles((prevProfiles) =>
-          prevProfiles.map((profile) =>
-            profile.id === contactID ? { ...profile, added: true } : profile
-          )
-        );
-      }
-    } catch (err) {
-      console.error("Unexpected error while adding contact:", err);
-      setError("An error occurred. Please try again.");
-    }
-  };
-
-  // Render each profile in the FlatList
-  const renderProfile = ({ item }) => (
-    <View style={styles.profileCard}>
-      <View style={styles.profileDetails}>
-        <Text style={styles.profileName}>
-          {item.first_name} {item.last_name}
-        </Text>
-        <Text style={styles.profileUsername}>{item.username}</Text>
-      </View>
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => handleAdd(item.id)} // Pass only the contact ID
-        activeOpacity={0.7} // Feedback on press
-        disabled={item.added} // Disable the button if the contact is already added
-      >
+// Render each profile in the FlatList
+const renderProfile = ({ item }) => (
+  <View style={styles.profileCard}>
+    <View style={styles.profileDetails}>
+      <Text style={styles.profileName}>
+        {item.first_name} {item.last_name}
+      </Text>
+      <Text style={styles.profileUsername}>{item.username}</Text>
+    </View>
+    <TouchableOpacity
+      style={styles.addButton}
+      onPress={() => handleAdd(item.id)} // Pass only the contact ID
+      activeOpacity={0.7} // Feedback on press
+      disabled={item.added} // Disable the button if the contact is already added
+    >
       <Image
         source={
           item.added
@@ -154,9 +169,10 @@ const AddContact = ({ toggleModal }) => {
             : { width: 18, height: 18 } // Size for plus icon
         }
       />
-      </TouchableOpacity>
-    </View>
-  );
+    </TouchableOpacity>
+  </View>
+);
+
 
   return (
     <SafeAreaView style={styles.container}>
