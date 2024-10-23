@@ -41,11 +41,7 @@ const AddEvent = ({ onClose }) => {
   const [showStartTimePicker, setShowStartTimePicker] = useState(false); // State to show start time picker
   const [showEndTimePicker, setShowEndTimePicker] = useState(false); // State to show end time picker
   const [description, setDescription] = useState(""); // Description
-  const [participants, setparticipants] = useState([
-    "459abcb2-481d-4a3c-9f9b-2b018fe7e829",
-    "0c9d97dd-b1b8-43b7-bc30-f089d60c9c47",
-    "26ab9d92-a7c0-4a6b-a469-8dfc75d4860e",
-  ]); // Selected participants
+  const [participants, setparticipants] = useState([user.id]); // Selected participants
   const [newMember, setNewMember] = useState(""); // Input for new member
   const [mood, setMood] = useState(null); // Selected mood
 
