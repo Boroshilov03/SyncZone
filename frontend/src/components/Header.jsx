@@ -84,8 +84,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 5,
-    marginTop: 20,
+    padding: 20,
+    marginTop: 30,
     position: 'relative', // Make sure the header has a relative position
   },
   titleContainer: {

@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import MyCalendar from "../components/MyCalendar";
 import AddEvent from "../components/AddEvent";
 import EditEvent from "../components/EditEvent";
-import ListEvent from "../components/ListEvent";
 import Header from "../components/Header";
 import DeleteEvent from "../components/DeleteEvent";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";

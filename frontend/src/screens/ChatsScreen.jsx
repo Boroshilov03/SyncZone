@@ -426,8 +426,6 @@ const styles = StyleSheet.create({
     padding: 12,
     marginVertical: 4,
     backgroundColor: "#D1EBEF",
-    // borderWidth: 1,
-    // borderColor: "#000",
     borderRadius: 25,
     alignItems: "center",
     shadowColor: "#000",
@@ -439,7 +437,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     width: "95%", // Set width to 100% to match the container
-    marginHorizontal: 12,
+    alignSelf: 'center'
   },
   cardBody: {
     flex: 1,
