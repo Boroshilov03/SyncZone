@@ -76,8 +76,6 @@ const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst,
           </View>
           {contactPFP ? (
             <Image source={{ uri: contactPFP }} style={styles.profileImage} />
-
-
           ) : (
             //<View style={styles.placeholderImage} />
             <Image source={require('../images/girl.png')} style={styles.placeholderImage} />
@@ -99,7 +97,8 @@ const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst,
           navigation.navigate("ProfileSettings", { setProfileVisible });
         }}
       >
-        <Ionicons name="create" size={35} color='#616061' />
+        <Ionicons name="chatbox-ellipses" size={35} color='#616061' />
+        <Ionicons name="call" size={35} color='#616061' />
       </Pressable>
     </SafeAreaView >
   );
@@ -118,32 +117,21 @@ const styles = StyleSheet.create({
   },
   topbox: {
     flex: .2,
-    borderWidth: 3,
+    //borderWidth: 3,
     alignItems: 'flex-end',
 
     margin: 20,
   },
-  // backButton: {
-  //   position: 'absolute',
-  //   top: 40,
-  //   left: 20,
-  //   padding: 10,
-  //   backgroundColor: '#007bff', // Blue color for the button
-  //   borderRadius: 5,
-  // },
-  // backButtonText: {
-  //   color: '#fff',
-  //   fontSize: 16,
-  // },
   trash: {
     position: 'absolute',
-    top: 40,
-    right: 20,
+    top: -30,
+    right: 10,
   },
   weather: {
-    flex: .3,
+    flex: 1,
+    padding: 10,
+    zIndex: 1,
     //flexWrap: 'wrap',
-
     //borderWidth: 3
   },
   weatherText: {
@@ -156,6 +144,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     alignItems: 'center',
     //borderWidth: 1,
+    zIndex: 0,
   },
   profileContainer: {
     flex: 3,
@@ -206,8 +195,8 @@ const styles = StyleSheet.create({
   },
   buttons: {
     flex: 1,
-    //flexDirection: 'row',
-    //justifyContent: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
     width: 150,
     //borderWidth: 1,

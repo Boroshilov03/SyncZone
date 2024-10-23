@@ -8,15 +8,20 @@ import {
   TouchableOpacity,
   Switch,
   Image,
+  Modal,
+  Pressable
 } from "react-native";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
 const profilePic = require("../../assets/icons/pfp_icon.png");
 import { useRoute } from "@react-navigation/native";
+import { Ionicons } from '@expo/vector-icons';
+import Profile from "./ProfileScreen";
 
 export default function Example({ navigation }) {
   const { setUser, setAccessToken, setRefreshToken, user } = useStore();
+
   const route = useRoute();
   const { profilephoto } = route.params; // Make sure this param is passed correctly
 
@@ -24,6 +29,15 @@ export default function Example({ navigation }) {
     emailNotifications: true,
     pushNotifications: false,
   });
+
+  const contactInfo = {
+
+    //contactID: profiles.id,
+    //contactPFP: profiles.avatar_url,
+    contactFirst: user.user_metadata?.first_name,
+    contactLast: user.user_metadata?.last_name,
+    contactUsername: user.user_metadata?.username,
+  };
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut(); // Sign out from Supabase
@@ -44,7 +58,6 @@ export default function Example({ navigation }) {
             <FeatherIcon color="#000" name="arrow-left" size={24} />
           </TouchableOpacity>
         </View>
-
         <Text numberOfLines={1} style={styles.headerTitle}>
           Settings
         </Text>
@@ -61,15 +74,19 @@ export default function Example({ navigation }) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
+
         {user ? (
-          <View style={[styles.section, { paddingTop: 4 }]}>
-            <Text style={styles.sectionTitle}>Account</Text>
+          <Pressable style={[styles.section, { paddingTop: 4 }]}>
+            <Text style={styles.sectionTitle} >Account</Text>
 
             <View style={styles.sectionBody}>
+
               <TouchableOpacity
                 onPress={() => {
+                  navigation.navigate("ProfileSettings");
                   /* handle onPress */
                 }}
+
                 style={styles.profile}
               >
                 <Image
@@ -96,14 +113,16 @@ export default function Example({ navigation }) {
 
                 <FeatherIcon color="#bcbcbc" name="chevron-right" size={22} />
               </TouchableOpacity>
+              {/* </Pressable> */}
             </View>
-          </View>
+          </Pressable>
         ) : (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Account</Text>
             <Text>No user logged in</Text>
           </View>
         )}
+
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>
@@ -400,5 +419,51 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "600",
     color: "#dc2626",
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: '85%',
+    height: '70%',
+    padding: 40,
+    paddingTop: 40,
+    backgroundColor: "#fff",
+    borderRadius: 40,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  closeButton: {
+    backgroundColor: "#FFABAB", // Cancel button color
+    borderRadius: 25,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+    marginRight: 15,
+    width: "30%",
+    alignSelf: "center",
+  },
+  closeButtonText: {
+    fontSize: 20,
+    color: "#333",
   },
 });

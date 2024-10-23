@@ -9,8 +9,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import GradientText from "react-native-gradient-texts";
 import OwnedBannersModal from '../components/OwnedBannersModal';
 
-const ProfileSettings = ({ navigation, route }) => {
-    const { setProfileVisible } = route.params;
+const ProfileSettings = ({ navigation }) => {
     const [visible, setVisible] = useState(false);
     const [settingVisible, setSettingVisible] = useState(false);
     const [isModalVisible, setModalVisible] = useState(false);
@@ -131,7 +130,7 @@ const ProfileSettings = ({ navigation, route }) => {
                     >
                         <View style={styles.modalContainer}>
                             <Pressable style={styles.modalContent}>
-                                
+
                                 <View style={styles.right}>
                                     <Text style={styles.rText} onPress={() => setSettingVisible(false)}>Cancel</Text>
                                 </View>
@@ -151,7 +150,6 @@ const ProfileSettings = ({ navigation, route }) => {
                     />
                 </View>
                 <TouchableOpacity style={styles.backButton} onPress={() => {
-                    setProfileVisible(true);
                     navigation.navigate("MainTabs");
                 }}>
                     <Ionicons name="arrow-back" size={35} color='grey' style={styles.backButtonText} />

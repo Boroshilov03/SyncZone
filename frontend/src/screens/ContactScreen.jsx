@@ -354,7 +354,6 @@ const ContactScreen = ({ navigation, route }) => {
     console.log("Create Group Chat Pressed");
   };
 
-  
   const renderContact = ({ item }) => {
     const contactInfo = {
       contactID: item.profiles.id,
@@ -383,7 +382,7 @@ const ContactScreen = ({ navigation, route }) => {
               <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                   <Pressable onPress={() => setProfileVisible(false)}>
-                    <Ionicons name="close" size={35} color='#616061' style={styles.close} />
+                    <Ionicons name="close" size={40} color='#616061' style={styles.close} />
                   </Pressable>
                   <Profile
                     {...selectedContact}
@@ -406,18 +405,18 @@ const ContactScreen = ({ navigation, route }) => {
             <Text style={styles.contactUsername}>@{item.profiles.username}</Text>
           </View>
           <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.chatButton}
-            onPress={() => createChat(item.profiles.id)}
-          >
-            <FontAwesome name="comment" size={20} style={styles.chatIcon} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.callButton}
-            onPress={() => createCall(item.profiles.id)}
-          >
-            <FontAwesome name="phone" size={20} style={styles.callIcon} color="#fff" />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.chatButton}
+              onPress={() => createChat(item.profiles.id)}
+            >
+              <FontAwesome name="comment" size={20} style={styles.chatIcon} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.callButton}
+              onPress={() => createCall(item.profiles.id)}
+            >
+              <FontAwesome name="phone" size={20} style={styles.callIcon} color="#fff" />
+            </TouchableOpacity>
 
           </View>
         </View>
@@ -676,8 +675,8 @@ const styles = StyleSheet.create({
     marginLeft: 3,
     width: 35, // Reduced button width
     height: 35, // Reduced button height
-    justifyContent: 'center', 
-    alignItems: 'center', 
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   callButton: {
@@ -693,13 +692,13 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     width: 35, // Reduced button width
     height: 35, // Reduced button height
-    justifyContent: 'center', 
-    alignItems: 'center', 
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   chatIcon: {
     width: 20,
-    height: 20, 
+    height: 20,
   },
 
   callIcon: {
@@ -714,6 +713,12 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -721,12 +726,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    width: 300,
-    height: 500,
-    padding: 20,
+    width: '85%',
+    height: '70%',
+    padding: 40,
     paddingTop: 40,
     backgroundColor: "#fff",
-    borderRadius: 10,
+    borderRadius: 40,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
