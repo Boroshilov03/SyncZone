@@ -132,18 +132,18 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
 
   const getMoodColor = (mood) => {
     switch (mood) {
-      case "yellow":
-        return "#FFFDE7";
-      case "green":
-        return "#DCEDC8";
-      case "pink":
-        return "#FDE0E1";
-      case "purple":
-        return "#F3E5F5";
       case "blue":
         return "#E3F2FD";
+      case "purple":
+        return "#F3E5F5";
+      case "pink":
+        return "#FDE0E1";
+      case "green":
+        return "#DCEDC8";
+      case "yellow":
+        return "#FFFDE7";
       default:
-        return "#FFFFFF";
+        return "#E3F2FD";
     }
   };
 
