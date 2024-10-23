@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase';
 import useStore from '../store/store';
 
 
-
 const ListEvent = ({ toggleEditEventModal }) => {
   const [allEvents, setAllEvents] = useState([]);
   const { user } = useStore();
