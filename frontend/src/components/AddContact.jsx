@@ -9,10 +9,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   SafeAreaView,
+  Image,
+  Animated,
 } from "react-native";
 import { debounce } from "lodash";
 import useStore from "../store/store";
 import { Feather as FeatherIcon } from "@expo/vector-icons"; 
+
 
 const AddContact = ({ toggleModal }) => {
   const [searchQuery, setSearchQuery] = useState(""); // Store search query
@@ -88,6 +91,7 @@ const AddContact = ({ toggleModal }) => {
   };
 
   // Function to add a contact
+  // Function to add a contact
   const handleAdd = async (contactID) => {
     if (!user) {
       console.error("User is not logged in.");
@@ -109,6 +113,13 @@ const AddContact = ({ toggleModal }) => {
       } else {
         console.log("Contact added successfully:", data);
         setContacts([...contacts, { contact_id: contactID }]); // Update contacts state
+
+        // Update the profiles state to mark the contact as added
+        setProfiles((prevProfiles) =>
+          prevProfiles.map((profile) =>
+            profile.id === contactID ? { ...profile, added: true } : profile
+          )
+        );
       }
     } catch (err) {
       console.error("Unexpected error while adding contact:", err);
@@ -127,10 +138,22 @@ const AddContact = ({ toggleModal }) => {
       </View>
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => handleAdd(item.id)}
+        onPress={() => handleAdd(item.id)} // Pass only the contact ID
         activeOpacity={0.7} // Feedback on press
+        disabled={item.added} // Disable the button if the contact is already added
       >
-        <Text style={styles.addButtonText}>Add</Text>
+      <Image
+        source={
+          item.added
+            ? require("../../assets/icons/check_green.png") // Path to check icon
+            : require("../../assets/icons/plus_icon.png") // Path to plus icon
+        }
+        style={
+          item.added
+            ? { width: 18, height: 18, tintColor: 'green' } // Size and color for check icon
+            : { width: 18, height: 18 } // Size for plus icon
+        }
+      />
       </TouchableOpacity>
     </View>
   );
@@ -227,7 +250,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     backgroundColor: "#D1EBEF",
-
   },
   profileDetails: {
     flex: 1,
@@ -243,10 +265,9 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   addButton: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 5,
+    paddingVertical: 5,
+    paddingHorizontal: 5,
+    justifyContent: 'center',
   },
   addButtonText: {
     color: "#fff",

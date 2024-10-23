@@ -623,9 +623,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", // Align content horizontally
     // alignItems: "center", // Center the profile image and text
     alignItems: "left", // Center the profile image and text
-    justifyContent: "space-between", // Space between profile and contact details
-    // borderWidth: 1,
-    // borderColor: "#000",
+    justifyContent: "space-between", 
     borderRadius: 25,
     shadowOffset: {
       width: 0,
@@ -747,6 +745,7 @@ const styles = StyleSheet.create({
     marginRight: 15,
     width: '30%',
     alignSelf: 'center',
+    marginTop: 5,
   },  
   closeButtonText: {
     fontSize: 20,
