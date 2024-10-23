@@ -8,6 +8,7 @@ import {
   FlatList,
   Image,
   Button,
+  Platform,
 } from "react-native";
 import { supabase } from "../lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -156,15 +157,13 @@ const AddEvent = ({ onClose }) => {
             style={styles.dateIcon} // Add styling for the icon
           />
         </TouchableOpacity>
-        {showPicker && (
-          <DateTimePicker
-            testID="dateTimePicker"
-            value={date}
-            mode="date"
-            display="calendar" // Opens directly in calendar view
-            onChange={onDateChange}
-          />
-        )}
+        <DateTimePicker
+          testID="dateTimePicker"
+          value={date}
+          mode="date"
+          display="calendar" // Opens directly in calendar view
+          onChange={onDateChange} // Handles date changes
+        />
       </View>
 
       {/* Start Time */}

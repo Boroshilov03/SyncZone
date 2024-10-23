@@ -14,13 +14,47 @@ import {
 } from "react-native";
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+// Fetch event data function
+const fetchingData = async (userId) => {
+  try {
+    const { data: eventData, error: eventError } = await supabase
+      .from("event_participants")
+      .select("event_id")
+      .eq("user_id", userId);
+
+    if (eventError) throw new Error(eventError.message);
+
+    const eventIds = eventData ? eventData.map((event) => event.event_id) : [];
+    if (eventIds.length === 0) {
+      console.warn("No event IDs found for the user.");
+      return [];
+    }
+
+    const { data, error } = await supabase
+      .from("event")
+      .select("*")
+      .in("id", eventIds);
+
+    if (error) throw new Error(error.message);
+    if (!data || data.length === 0) {
+      console.warn("No event data found for the specified event IDs.");
+      return [];
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error during data fetching:", error);
+    return [];
+  }
+};
 
 const MyExpandableCalendar = ({ toggleEditEventModal }) => {
   const [selected, setSelected] = useState("");
   const [agendaItems, setAgendaItems] = useState([]);
   const [markedDates, setMarkedDates] = useState({});
-  const [allEvents, setAllEvents] = useState([]);
-
+  const queryClient = useQueryClient();
   const { user } = useStore();
   const currentDate = new Date().toISOString().split("T")[0];
   const theme = useRef({
@@ -29,45 +63,21 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
     dotColor: "pink",
   });
 
-  // Fetch event data
-  const fetchingData = async () => {
-    try {
-      const { data: eventData, error: eventError } = await supabase
-        .from("event_participants")
-        .select("event_id")
-        .eq("user_id", user.id);
+  const {
+    data: events = [],
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ["recentEvents", user.id],
+    queryFn: () => fetchingData(user.id),
+    enabled: !!user.id,
+    refetchOnWindowFocus: true,
+  });
 
-      if (eventError) {
-        console.error("Error fetching event IDs:", eventError);
-        return;
-      }
-
-      const eventIds = eventData ? eventData.map((event) => event.event_id) : [];
-      if (eventIds.length === 0) {
-        console.warn("No event IDs found for the user.");
-        setAgendaItems([]); // Clear agenda items if no event IDs
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("event")
-        .select("*")
-        .in("id", eventIds);
-
-      if (error) {
-        console.error("Error fetching event data:", error);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        console.warn("No event data found for the specified event IDs.");
-        setAgendaItems([]); // Clear agenda items if no event data
-        return;
-      }
-
-      setAllEvents(data);
+  useEffect(() => {
+    if (events.length) {
       // Group events by date
-      const groupedAgendaItems = data.reduce((acc, event) => {
+      const groupedAgendaItems = events.reduce((acc, event) => {
         const eventDate = event.date;
         const eventItem = {
           title: event.title,
@@ -102,7 +112,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
         return acc;
       }, {});
 
-      // Convert the object back into an array
+      // Convert the object back into an array and sort
       const sortedAgendaItems = Object.values(groupedAgendaItems).sort(
         (a, b) => new Date(a.title) - new Date(b.title)
       );
@@ -124,10 +134,36 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
       });
 
       setMarkedDates(markedDatesObj);
-    } catch (error) {
-      console.error("Error during data fetching:", error);
     }
-  };
+  }, [events]);
+
+  useEffect(() => {
+    if (!user.id) return;
+
+    const channel = supabase
+      .channel("event-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "event" },
+        (payload) => {
+          console.log("New change in events table:", payload);
+          queryClient.invalidateQueries(["recentEvents", user.id]);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "event_participants" },
+        (payload) => {
+          console.log("New change in event_participants table:", payload);
+          queryClient.invalidateQueries(["recentEvents", user.id]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [user.id, queryClient]);
 
   const getMoodColor = (mood) => {
     switch (mood) {
@@ -145,10 +181,6 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
         return "#E3F2FD";
     }
   };
-
-  useEffect(() => {
-    fetchingData();
-  }, [user.id]);
 
   const renderAgendaItem = useCallback(({ item }) => {
     if (!item) {
@@ -206,7 +238,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
           }}
         />
         <AgendaList
-          sections={agendaItems} // Use agendaItems here
+          sections={agendaItems}
           renderItem={renderAgendaItem}
           sectionStyle={styles.section}
           contentContainerStyle={{ paddingBottom: 50 }} // Added bottom padding here
@@ -235,7 +267,7 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     fontSize: 16,
-    fontWeight: "semibold",
+    fontWeight: "600", // Changed from 'semibold' to '600' for compatibility
   },
   timeContainer: {
     flexDirection: "row",
@@ -248,24 +280,14 @@ const styles = StyleSheet.create({
   itemDescription: {
     fontSize: 14,
     color: "#333",
-    marginVertical: 4,
+    marginVertical: 5,
   },
   pencilIconContainer: {
-    position: "absolute",
-    right: 10,
-    top: 10,
+    alignSelf: "flex-end",
   },
   pencilIcon: {
     width: 20,
     height: 20,
-  },
-  section: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingVertical: 10,
-    fontSize: 18,
   },
 });
 

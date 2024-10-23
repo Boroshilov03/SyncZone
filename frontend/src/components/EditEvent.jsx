@@ -32,7 +32,7 @@ const EditEvent = ({ event, onClose }) => {
     const [showStartTimePicker, setShowStartTimePicker] = useState(false); // State to show start time picker
     const [showEndTimePicker, setShowEndTimePicker] = useState(false); // State to show end time picker
     const [description, setDescription] = useState(event.description); // Description
-    const [participants, setparticipants] = useState([user.id]); // Selected participants
+    const [participants, setparticipants] = useState([]); // Selected participants
     const [newMember, setNewMember] = useState(''); // Input for new member
     const [mood, setMood] = useState(event.mood); // Selected mood
     const [deletePopupVisible, setDeletePopupVisible] = useState(false); // Controls visibility of DeleteEvent
@@ -124,7 +124,7 @@ const EditEvent = ({ event, onClose }) => {
       >
           <Image 
             source={require('../../assets/icons/trash_icon.png')} 
-            style={[styles.trashIcon, { width: 20, height: 20 }]} 
+            style={[styles.trashIcon, { width: 16, height: 16 }]} 
           />
       </TouchableOpacity>
 
@@ -324,8 +324,7 @@ const styles = StyleSheet.create({
     position: 'absolute',  
     right: 10, 
     top: '50%',  
-    transform: [{ translateY: -16 }], 
-    alignSelf: 'center',
+    transform: [{ translateY: -13 }], 
   },
   title: {
     fontSize: 24,
@@ -333,6 +332,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
     flex: 1,
+  },
+  trashIcon: {
+    width: 16,  
+    height: 16,
   },
   input: {
     height: 40,
