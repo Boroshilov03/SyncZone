@@ -8,6 +8,10 @@ import {
   FlatList,
   Image,
   ScrollView,
+  Modal,
+  Pressable,
+  PanResponder,
+  Button,
 } from "react-native";
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase";
@@ -15,9 +19,15 @@ import useStore from "../store/store";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import Header from "../components/Header";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useFocusEffect } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
+import Profile from "./ProfileScreen";
 
 const ChatsScreen = ({ navigation }) => {
   const [input, setInput] = useState("");
+  const [profileVisible, setProfileVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
   const { user } = useStore();
   const queryClient = useQueryClient();
 
@@ -138,6 +148,13 @@ const ChatsScreen = ({ navigation }) => {
 
       if (!profile) return null;
 
+      const contactInfo = {
+        contactID: participant.profiles.id,
+        contactPFP: participant.profiles.avatar_url,
+        contactFirst: participant.profiles.first_name,
+        contactLast: participant.profiles.last_name,
+        contactUsername: participant.profiles.username,
+      };
       // Determine if it's the last item by comparing index with chats.length - 1
       const isLastItem = index === filteredChats.length - 1;
 
@@ -158,16 +175,35 @@ const ChatsScreen = ({ navigation }) => {
             ]}
           >
             <TouchableOpacity
-              onPress={() =>
-                navigation.navigate("Profile", {
-                  contactID: profile.id,
-                  contactPFP: profile.avatar_url,
-                  contactFirst: profile.first_name,
-                  contactLast: profile.last_name,
-                  contactUsername: profile.username,
-                })
-              }
+              onPress={() => {
+                setProfileVisible(true);
+                setSelectedContact(contactInfo);
+              }}
             >
+              <Modal
+                animationType="fade"
+                transparent={true}
+                visible={profileVisible}
+                onRequestClose={() => setProfileVisible(false)}
+              >
+                <View style={styles.modalOverlay}>
+                  <View style={styles.modalContent}>
+                    <Pressable onPress={() => setProfileVisible(false)}>
+                      <Ionicons
+                        name="close"
+                        size={35}
+                        color="#616061"
+                        style={styles.close}
+                      />
+                    </Pressable>
+                    <Profile
+                      {...selectedContact}
+                      setProfileVisible={setProfileVisible}
+                      navigation={navigation}
+                    />
+                  </View>
+                </View>
+              </Modal>
               {profile.avatar_url ? (
                 <Image
                   alt="Avatar"
@@ -213,75 +249,72 @@ const ChatsScreen = ({ navigation }) => {
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <Header event="message" navigation={navigation} title="Chats" />
-        <View style={styles.container}>
-          <View style={styles.searchWrapper}>
-            <View style={styles.search}>
-              <View style={styles.searchIcon}>
-                <FeatherIcon color="#848484" name="search" size={17} />
-              </View>
-              <TextInput
-                autoCapitalize="none"
-                autoCorrect={false}
-                clearButtonMode="while-editing"
-                onChangeText={(val) => setInput(val)}
-                placeholder="Search.."
-                placeholderTextColor="#848484"
-                returnKeyType="done"
-                style={styles.searchControl}
-                value={input}
-              />
+      <View style={styles.container}>
+        <View style={styles.searchWrapper}>
+          <View style={styles.search}>
+            <View style={styles.searchIcon}>
+              <FeatherIcon color="#848484" name="search" size={17} />
             </View>
-          </View>
-
-          <View style={styles.favoritesContainer}>
-            <Text
-              style={{
-                fontSize: 24,
-                fontWeight: "semibold",
-                marginBottom: 10,
-                fontWeight: "300",
-              }}
-            >
-              Favorites
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <TouchableOpacity>
-                <Image
-                  source={require("../../assets/icons/add_favorite.png")}
-                  style={styles.favoriteImg}
-                />
-              </TouchableOpacity>
-              {favoriteUsers.map((user) => (
-                <TouchableOpacity key={user.id}>
-                  {user.avatar_url ? (
-                    <Image
-                      source={user.avatar_url}
-                      style={styles.favoriteImg}
-                    />
-                  ) : (
-                    <View style={[styles.favoriteImg, styles.cardAvatar]}>
-                      <Text style={styles.cardAvatarText}>
-                        {user.username[0]}
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-
-          {filteredChats.length ? (
-            <FlatList
-              data={filteredChats}
-              keyExtractor={(item) => item.id}
-              renderItem={renderChatItem}
-              contentContainerStyle={styles.searchContent}
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              clearButtonMode="while-editing"
+              onChangeText={(val) => setInput(val)}
+              placeholder="Search.."
+              placeholderTextColor="#848484"
+              returnKeyType="done"
+              style={styles.searchControl}
+              value={input}
             />
-          ) : (
-            <Text style={styles.searchEmpty}>No conversations</Text>
-          )}
+          </View>
         </View>
+
+        <View style={styles.favoritesContainer}>
+          <Text
+            style={{
+              fontSize: 24,
+              fontWeight: "semibold",
+              marginBottom: 10,
+              fontWeight: "300",
+            }}
+          >
+            Favorites
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <TouchableOpacity>
+              <Image
+                source={require("../../assets/icons/add_favorite.png")}
+                style={styles.favoriteImg}
+              />
+            </TouchableOpacity>
+            {favoriteUsers.map((user) => (
+              <TouchableOpacity key={user.id}>
+                {user.avatar_url ? (
+                  <Image source={user.avatar_url} style={styles.favoriteImg} />
+                ) : (
+                  <View style={[styles.favoriteImg, styles.cardAvatar]}>
+                    <Text style={styles.cardAvatarText}>
+                      {user.username[0]}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {filteredChats.length ? (
+          <FlatList
+            data={filteredChats}
+            keyExtractor={(item) => item.id}
+            renderItem={renderChatItem}
+            contentContainerStyle={styles.searchContent}
+          />
+        ) : (
+          <Text style={styles.searchEmpty}>No conversations</Text>
+        )}
       </View>
+    </View>
   );
 };
 
@@ -341,11 +374,37 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#000", // Ensure text color is visible
   },
-
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: 300,
+    height: 500, // Changed to auto to fit content dynamically
+    padding: 20,
+    paddingTop: 40, // Added top padding to create space for the close button
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
   favoritesContainer: {
     width: "100%", // Ensure this takes the full width
     marginBottom: 10,
-    paddingLeft:12,
+    paddingLeft: 12,
+  },
+  wrapperRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  wrapperCol: {
+    flex: 1,
   },
   // You can also adjust the searchWrapper style if needed
   searchWrapper: {
@@ -353,21 +412,22 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderColor: "#efefef",
     width: "100%", // Make searchWrapper take full width
-
   },
   searchContent: {
     width: "100%", // Ensure it matches the other components
-    
   },
   searchEmpty: {
     textAlign: "center",
     color: "#9ca3af",
   },
+
   card: {
     flexDirection: "row",
     padding: 12,
     marginVertical: 4,
     backgroundColor: "#D1EBEF",
+    // borderWidth: 1,
+    // borderColor: "#000",
     borderRadius: 25,
     alignItems: "center",
     shadowColor: "#000",
@@ -376,13 +436,13 @@ const styles = StyleSheet.create({
       height: 2,
     },
     shadowOpacity: 0.3,
-    shadowRadius: 3,
+    shadowRadius: 4,
     elevation: 5,
-    width: "95%", 
-    alignSelf: "center", 
+    width: "95%", // Set width to 100% to match the container
+    marginHorizontal: 12,
   },
   cardBody: {
-    flex: 1,  
+    flex: 1,
   },
   cardHeader: {
     flexDirection: "row",

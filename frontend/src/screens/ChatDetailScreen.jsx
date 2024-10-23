@@ -7,8 +7,8 @@ import {
   FlatList,
   ActivityIndicator,
   TextInput,
-  Button,
   Image,
+  Button,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -17,7 +17,7 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
 import { initializeWebSocket, saveMessageToSupabase } from "../../emotion/api";
-import { saveEmotionAnalysis } from "../../emotion/emotionAnalysis";
+import { processMessageWithEmotion } from "../../emotion/emotionAnalysisService";
 const noProfilePic = require("../../assets/icons/pfp_icon.png");
 
 const ChatDetailScreen = () => {
@@ -31,18 +31,25 @@ const ChatDetailScreen = () => {
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const [typingUser, setTypingUser] = useState(null);
+  const [participants, setParticipants] = useState(null);
   const typingTimeoutRef = useRef(null);
   const wsRef = useRef(null);
+  const flatListRef = useRef(null);
 
-  // Utility function to encode a string to Base64
-  const encodeToBase64 = (str) => {
-    try {
-      return btoa(unescape(encodeURIComponent(str)));
-    } catch (e) {
-      console.error("Failed to encode text to Base64:", e);
-      return "";
-    }
-  };
+  useEffect(() => {
+    const fetchParticipants = async () => {
+      const { data, error } = await supabase
+        .from('chat_participants')
+        .select('user_id')
+        .eq('chat_id', chatId);
+
+      if (!error && data) {
+        setParticipants(data);
+      }
+    };
+
+    fetchParticipants();
+  }, [chatId]);
 
   useEffect(() => {
     const channel = supabase.channel(`chat-room-${chatId}`);
@@ -57,10 +64,33 @@ const ChatDetailScreen = () => {
           return [receivedMessage, ...prevMessages];
         });
       })
+      .on("broadcast", { event: "emotion-analysis" }, (payload) => {
+        const { messageId, emotion, senderId, receiverId } = payload.payload;
+        
+        // Update message with emotion data for both users
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.id === messageId
+              ? {
+                  ...msg,
+                  emotion: emotion,
+                  senderEmotion: senderId === user.id ? emotion : null,
+                  receiverEmotion: receiverId === user.id ? emotion : null,
+                }
+              : msg
+          )
+        );
+      })
+      .on("broadcast", { event: "typing" }, (payload) => {
+        const { userId, isTyping } = payload.payload;
+        if (userId !== user.id) {
+          setTypingUser(isTyping ? username : null);
+        }
+      })
       .subscribe();
 
     // Initialize WebSocket for emotion analysis
-    wsRef.current = initializeWebSocket(handleWebSocketMessage);
+    wsRef.current = initializeWebSocket();
 
     return () => {
       channel.unsubscribe();
@@ -69,23 +99,52 @@ const ChatDetailScreen = () => {
         wsRef.current.close();
       }
     };
-  }, [chatId]);
+  }, [chatId, username, user.id]);
 
   useEffect(() => {
     const fetchMessages = async () => {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("chat_id", chatId)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching messages:", error);
+      try {
+        const { data: messagesData, error: messagesError } = await supabase
+          .from("messages")
+          .select(`
+            *,
+            emotion_analysis!message_id(
+              sender_id,
+              emotion,
+              accuracy
+            )
+          `)
+          .eq("chat_id", chatId)
+          .order("created_at", { ascending: false });
+    
+        if (messagesError) throw messagesError;
+    
+        const processedMessages = messagesData.map(message => {
+          const emotionAnalyses = message.emotion_analysis || [];
+          
+          const senderEmotion = emotionAnalyses.find(e => e.sender_id === message.sender_id);
+          const receiverEmotion = emotionAnalyses.find(e => e.sender_id !== message.sender_id);
+    
+          return {
+            ...message,
+            senderEmotion: senderEmotion ? {
+              name: senderEmotion.emotion,
+              score: senderEmotion.accuracy
+            } : null,
+            receiverEmotion: receiverEmotion ? {
+              name: receiverEmotion.emotion,
+              score: receiverEmotion.accuracy
+            } : null
+          };
+        });
+    
+        setMessages(processedMessages);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching messages:", err);
         setError("Failed to load messages");
-      } else {
-        setMessages(data);
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchMessages();
@@ -107,129 +166,139 @@ const ChatDetailScreen = () => {
         event: "typing",
         payload: { userId: user.id, isTyping: false },
       });
-      setTypingUser(null);
     }, 2000);
   };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
-  
+
     const messageContent = newMessage.trim();
     setNewMessage("");
-  
-    // Save message to Supabase
-    const savedMessage = await saveMessageToSupabase(messageContent, user.id, chatId);
-  
-    if (savedMessage) {
-      // Update local state immediately
-      setMessages((prevMessages) => [savedMessage, ...prevMessages]);
-  
-      // Encode the message content to Base64
-      const base64MessageContent = encodeToBase64(messageContent);
-  
-      // Send message for emotion analysis with correct payload format for Hume API
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({
-          data: base64MessageContent,
-          models: {
-            language: {
-              granularity: "sentence",
-            },
-          },
-        }));
 
-        // Listen for emotion analysis response
-        wsRef.current.onmessage = async (event) => {
-          const emotionResponse = JSON.parse(event.data);
+    const result = await processMessageWithEmotion(
+      messageContent,
+      user.id,
+      chatId,
+      wsRef.current
+    );
 
-          if (emotionResponse.language && emotionResponse.language.predictions.length > 0) {
-            const emotions = emotionResponse.language.predictions[0].emotions;
-
-            // Log emotions received for debugging
-            console.log("Emotions received:", emotions);
-
-            // Save emotion analysis to Supabase
-            await saveEmotionAnalysis(savedMessage.id, emotions);
-
-            // Update local state with the top emotion
-            const topEmotion = emotions.reduce((prev, current) => (prev.score > current.score ? prev : current));
-            setMessages((prevMessages) =>
-              prevMessages.map((msg) =>
-                msg.id === savedMessage.id ? { ...msg, emotion: topEmotion } : msg
-              )
-            );
-          }
-        };
-      }
+    if (result) {
+      // Update local state with the new message and emotion
+      setMessages((prevMessages) => [
+        {
+          ...result.message,
+          senderEmotion: result.emotionAnalysis.emotion,
+          receiverEmotion: null // Will be updated when receiver processes it
+        },
+        ...prevMessages,
+      ]);
 
       // Broadcast new message to other users
       supabase.channel(`chat-room-${chatId}`).send({
         type: "broadcast",
         event: "new-message",
-        payload: savedMessage,
+        payload: {
+          ...result.message,
+          senderEmotion: result.emotionAnalysis.emotion
+        },
       });
-    }
-  };
-  
-  const handleWebSocketMessage = (event) => {
-    const response = JSON.parse(event.data);
-    console.log('Emotion analysis response:', response);
-  
-    if (response.error) {
-      console.error('Emotion analysis error:', response.error);
-      return;
-    }
-  
-    if (response.language && response.language.predictions.length > 0) {
-      const emotionScores = response.language.predictions[0].emotions;
-      const topEmotion = emotionScores.reduce((prev, current) => (prev.score > current.score) ? prev : current);
-  
-      // Update the message with emotion data
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.content === response.language.predictions[0].text && !msg.emotion
-            ? { ...msg, emotion: topEmotion }
-            : msg
-        )
-      );
-  
-      // Save emotion analysis to the database
-      const message = messages.find((msg) => msg.content === response.language.predictions[0].text);
-      if (message) {
-        saveEmotionAnalysis(message.id, [topEmotion]);
-      }
     }
   };
 
   const emotionColorMap = {
-    Joy: "#FFD700",
-    Sadness: "#4169E1",
-    Anger: "#FF4500",
-    Fear: "#8B008B",
-    Surprise: "#FF69B4",
-    Disgust: "#32CD32",
-    Love: "#FF1493",
-    Confusion: "#808080",
-    Neutral: "#A9A9A9",
-    Interest: "#FDA172",
-    Calmness: "#63C5DA",
-    Enthusiasm: "#8A3324",
-    Horror: "#8D021F",
-    Excitement: "#FFEF00",
-    'Surprise (negative)': "#4A3728",
+    // Positive Emotions - Bright Colors
+    Joy: "#FFD700",           
+    Love: "#FF69B4",         
+    Gratitude: "#98FB98",    
+    Pride: "#FFA500",        
+    Excitement: "#FFEF00",  
+    Enthusiasm: "#FF7F50",   
+    Triumph: "#FFB6C1",     
+    Ecstasy: "#FFC0CB",     
+    Contentment: "#87CEEB",  
+    Relief: "#98FF98",      
+    Satisfaction: "#DDA0DD", 
+    Romance: "#FFB6C1",   
+    Admiration: "#FFE4B5", 
+    Adoration: "#FFB6C1",   
+    "Aesthetic Appreciation": "#E6E6FA", 
+    Amusement: "#FFDAB9",   
+    Awe: "#E0FFFF",     
+    Calmness: "#B0E0E6",   
+    
+    // Neutral Emotions - Medium Intensity Colors
+    Interest: "#DEB887",     
+    Contemplation: "#B8860B", 
+    Concentration: "#BDB76B", 
+    Desire: "#CD853F",     
+    Realization: "#DAA520",   
+    "Surprise (positive)": "#FF69B4", 
+    Nostalgia: "#DDA0DD",   
+    Determination: "#CD853F", 
+    Craving: "#D2691E",   
+  
+    // Negative Emotions - Darker Colors
+    Sadness: "#4169E1",      
+    Anger: "#DC143C",         
+    Fear: "#8B008B",          
+    Disgust: "#006400",      
+    Horror: "#8B0000",       
+    "Surprise (negative)": "#4A3728", 
+    Anxiety: "#483D8B",       
+    Confusion: "#696969",     
+    Disappointment: "#708090", 
+    Distress: "#800000",      
+    Pain: "#A52A2A",         
+    Shame: "#4B0082",        
+    Guilt: "#2F4F4F",         
+    Contempt: "#556B2F",      
+    Disapproval: "#8B4513",  
+    Awkwardness: "#9932CC",  
+    Doubt: "#4682B4",         
+    Annoyance: "#CD5C5C",   
+    Boredom: "#778899",      
+    "Empathic Pain": "#8B4513", 
+    Embarrassment: "#DB7093", 
+    Envy: "#6B8E23",        
+    Tiredness: "#696969",   
+    
+    // Special Cases
+    Sympathy: "#DDA0DD",      
+    Entrancement: "#9370DB" 
+  };
+
+  const renderEmotionIndicator = (emotion, alignment) => {
+    if (!emotion) return null;
+
+    return (
+      <View
+        style={[
+          styles.emotionContainer,
+          alignment === 'right' ? styles.myEmotionContainer : styles.otherEmotionContainer,
+        ]}
+      >
+        <View
+          style={[
+            styles.emotionCircle,
+            { backgroundColor: emotionColorMap[emotion.name] || 'gray' },
+          ]}
+        />
+        <Text style={styles.emotionText}>
+          {emotion.name} ({Math.round(emotion.score * 100)}%)
+        </Text>
+      </View>
+    );
   };
 
   const renderMessage = ({ item }) => {
     const isMyMessage = item.sender_id === user.id;
-  
+    
     return (
       <View style={styles.messageWrapper}>
         <View
           style={[
             styles.messageContainer,
-            isMyMessage
-              ? styles.myMessageContainer
-              : styles.otherMessageContainer,
+            isMyMessage ? styles.myMessageContainer : styles.otherMessageContainer,
           ]}
         >
           <Text
@@ -245,7 +314,8 @@ const ChatDetailScreen = () => {
           </Text>
         </View>
   
-        {item.emotion && (
+        {/* Sender Emotion */}
+        {item.senderEmotion && (
           <View
             style={[
               styles.emotionContainer,
@@ -255,10 +325,32 @@ const ChatDetailScreen = () => {
             <View
               style={[
                 styles.emotionCircle,
-                { backgroundColor: emotionColorMap[item.emotion.name] || 'gray' },
+                { backgroundColor: emotionColorMap[item.senderEmotion.name] || 'gray' },
               ]}
             />
-            <Text style={styles.emotionText}>{item.emotion.name}</Text>
+            <Text style={styles.emotionText}>
+              {`${item.senderEmotion.name} (${Math.round(item.senderEmotion.score * 100)}%)`}
+            </Text>
+          </View>
+        )}
+  
+        {/* Receiver Emotion */}
+        {item.receiverEmotion && (
+          <View
+            style={[
+              styles.emotionContainer,
+              isMyMessage ? styles.myEmotionContainer : styles.otherEmotionContainer,
+            ]}
+          >
+            <View
+              style={[
+                styles.emotionCircle,
+                { backgroundColor: emotionColorMap[item.receiverEmotion.name] || 'gray' },
+              ]}
+            />
+            <Text style={styles.emotionText}>
+              {`Receiver: ${item.receiverEmotion.name} (${Math.round(item.receiverEmotion.score * 100)}%)`}
+            </Text>
           </View>
         )}
       </View>
@@ -296,6 +388,7 @@ const ChatDetailScreen = () => {
 
         {!loading && !error && (
           <FlatList
+            ref={flatListRef}
             data={messages}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderMessage}
@@ -314,7 +407,10 @@ const ChatDetailScreen = () => {
               handleTyping();
             }}
           />
-          <TouchableOpacity onPress={handleSendMessage}>
+          <TouchableOpacity 
+            style={styles.sendButtonContainer}
+            onPress={handleSendMessage}
+          >
             <Text style={styles.sendButton}>Send</Text>
           </TouchableOpacity>
         </View>
@@ -322,8 +418,6 @@ const ChatDetailScreen = () => {
     </KeyboardAvoidingView>
   );
 };
-
-export default ChatDetailScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -362,31 +456,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
   },
-  chatIdContainer: {
-    padding: 15,
-    borderRadius: 10,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 3,
-    marginBottom: 15,
-  },
-  chatIdText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#555",
-  },
-  chatIdValue: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-    marginTop: 5,
-  },
   backButton: {
     marginBottom: 15,
   },
@@ -424,7 +493,6 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 16,
-    color: "#fff",
   },
   myMessageText: {
     color: "#fff",
@@ -434,7 +502,7 @@ const styles = StyleSheet.create({
   },
   messageTimestamp: {
     fontSize: 10,
-    color: "#fff",
+    color: "#999",
     marginTop: 5,
     textAlign: "right",
   },
@@ -442,21 +510,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 15,
+    padding: 10,
+    backgroundColor: "#fff",
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: "#ddd",
   },
   input: {
     flex: 1,
-    borderColor: "#007BFF",
-    borderWidth: 1,
-    borderRadius: 5,
     padding: 10,
-    backgroundColor: "#fff",
-    marginRight: 10,
+    fontSize: 16,
+  },
+  sendButtonContainer: {
+    backgroundColor: "#007BFF",
+    borderRadius: 20,
+    padding: 10,
+    marginLeft: 10,
   },
   sendButton: {
-    backgroundColor: "#007BFF",
     color: "#fff",
-    padding: 10,
-    borderRadius: 5,
+    fontWeight: "600",
+    fontSize: 16,
   },
   errorText: {
     color: "red",
@@ -466,16 +540,18 @@ const styles = StyleSheet.create({
   emotionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 10, 
-  },  
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    marginTop: 4,
+  },
   myEmotionContainer: {
-    marginRight: 10,
     alignSelf: "flex-end",
+    marginRight: 10,
   },
   otherEmotionContainer: {
-    marginLeft: 10,
     alignSelf: "flex-start",
+    marginLeft: 10,
   },
   emotionCircle: {
     width: 12,
@@ -485,6 +561,8 @@ const styles = StyleSheet.create({
   },
   emotionText: {
     fontSize: 12,
-    color: 'black',
+    color: '#555',
   },
 });
+
+export default ChatDetailScreen;

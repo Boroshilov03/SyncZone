@@ -15,16 +15,18 @@ import {
   SectionList,
   ScrollView,
   PanResponder,
+  Button
 } from "react-native";
-import useStore from "../store/store";
-import { supabase } from "../lib/supabase";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FontAwesome } from "@expo/vector-icons"; // For chat and call icons
 import FeatherIcon from "react-native-vector-icons/Feather";
 import FavoriteIcon from "../components/FavoriteIcon";
 import { LinearGradient } from "expo-linear-gradient";
-// import { PanGestureHandler, GestureHandlerRootView } from "react-native-gesture-handler";
-
+import useStore from "../store/store";
+import { supabase } from "../lib/supabase";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import Profile from "./ProfileScreen";
+import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 // Fetch mutual contacts from Supabase
 const fetchMutualContacts = async ({ queryKey }) => {
@@ -32,16 +34,17 @@ const fetchMutualContacts = async ({ queryKey }) => {
   const { data, error } = await supabase
     .from("contacts")
     .select(
-      `profiles:contact_id (id, username, first_name, last_name, avatar_url)`)
+      `profiles:contact_id (id, username, first_name, last_name, avatar_url)`
+    )
     .or(`user_id.eq.${userId},contact_id.eq.${userId}`);
 
   if (error) throw new Error(error.message);
   return data;
 };
-
-
-const ContactScreen = ({ navigation }) => {
+const ContactScreen = ({ navigation, route }) => {
+  const [profileVisible, setProfileVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
   const { user } = useStore();
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");
@@ -49,9 +52,11 @@ const ContactScreen = ({ navigation }) => {
   const flatListRef = useRef(null); // Add this line at the top of the component
   const [alphabetWidth, setAlphabetWidth] = useState(0); // State to store alphabet item width
 
-
-
-  const { data: contacts, error, isLoading } = useQuery({
+  const {
+    data: contacts,
+    error,
+    isLoading,
+  } = useQuery({
     queryKey: ["contacts", user?.id],
     queryFn: fetchMutualContacts,
     enabled: !!user,
@@ -62,7 +67,7 @@ const ContactScreen = ({ navigation }) => {
     const sortedContacts = contacts.sort((a, b) =>
       a.profiles.first_name.localeCompare(b.profiles.first_name)
     );
-  
+
     return sortedContacts.reduce((acc, contact) => {
       const firstLetter = contact.profiles.first_name[0].toUpperCase();
       if (!acc[firstLetter]) {
@@ -72,14 +77,13 @@ const ContactScreen = ({ navigation }) => {
       return acc;
     }, {});
   };
-  
+
   // Then render the grouped data
   const groupedContacts = groupContactsByLetter(contacts || []);
   const groupedData = Object.keys(groupedContacts).map((letter) => ({
     letter,
     contacts: groupedContacts[letter],
   }));
-  
 
   // Function to render grouped contacts under each letter
   const RenderGroupedContacts = ({ item }) => (
@@ -94,14 +98,14 @@ const ContactScreen = ({ navigation }) => {
   // Function to scroll to the selected letter section
   const scrollToLetter = (letter) => {
     const index = groupedData.findIndex((item) => item.letter === letter);
-  
+
     if (index !== -1 && flatListRef.current) {
       // If the letter exists, scroll to its section
       flatListRef.current.scrollToIndex({ index });
     } else {
       // If the letter does not exist, find the closest letter
       const availableLetters = groupedData.map((item) => item.letter);
-      
+
       // Find the closest letter alphabetically
       let closestLetter = availableLetters.reduce((prev, curr) => {
         return Math.abs(curr.charCodeAt(0) - letter.charCodeAt(0)) <
@@ -109,16 +113,17 @@ const ContactScreen = ({ navigation }) => {
           ? curr
           : prev;
       });
-  
+
       // Find the index of the closest letter
-      const closestIndex = groupedData.findIndex((item) => item.letter === closestLetter);
+      const closestIndex = groupedData.findIndex(
+        (item) => item.letter === closestLetter
+      );
       if (closestIndex !== -1 && flatListRef.current) {
         // Scroll to the closest available section
         flatListRef.current.scrollToIndex({ index: closestIndex });
       }
     }
   };
-  
 
   useEffect(() => {
     const channel = supabase
@@ -162,78 +167,75 @@ const ContactScreen = ({ navigation }) => {
     setIsFavorite(!isFavorite);
     toggleFavorite(item.profiles.id); // Call the function to handle favorite toggling
   };
-  
-
-const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split(""); // Alphabet array
-
-const AlphabetList = ({ onLetterPress, onSwipeLetter }) => {
-  const [alphabetWidth, setAlphabetWidth] = useState(0); // State to store alphabet item width
-  const alphabetRef = useRef(); // Reference to track the position of the alphabet
 
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split(""); // Alphabet array
 
-  // Helper function to calculate which letter corresponds to the Y position
-  const getLetterFromPosition = (y) => {
-    const letterHeight = alphabetWidth / alphabet.length;
-    const index = Math.floor(y / letterHeight);
-    if (index >= 0 && index < alphabet.length) {
-      return alphabet[index];
-    }
-    return null;
+  const AlphabetList = ({ onLetterPress, onSwipeLetter }) => {
+    const [alphabetWidth, setAlphabetWidth] = useState(0); // State to store alphabet item width
+    const alphabetRef = useRef(); // Reference to track the position of the alphabet
+
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split(""); // Alphabet array
+
+    // Helper function to calculate which letter corresponds to the Y position
+    const getLetterFromPosition = (y) => {
+      const letterHeight = alphabetWidth / alphabet.length;
+      const index = Math.floor(y / letterHeight);
+      if (index >= 0 && index < alphabet.length) {
+        return alphabet[index];
+      }
+      return null;
+    };
+
+    const panResponder = PanResponder.create({
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt, gestureState) => {
+        const { y0 } = gestureState;
+        const letter = getLetterFromPosition(y0);
+        if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on touch start
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        const { moveY } = gestureState;
+        const letter = getLetterFromPosition(moveY);
+        if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on move
+      },
+      onPanResponderRelease: () => {
+        // Optional: Handle release event, e.g., resetting state if needed
+      },
+    });
+
+    // Measure the width of the alphabet letters dynamically
+    const onLayout = (event) => {
+      const { height } = event.nativeEvent.layout;
+      setAlphabetWidth(height); // Calculate the height of the alphabet column
+    };
+
+    return (
+      <View
+        style={styles.alphabetIndex}
+        onLayout={onLayout}
+        {...panResponder.panHandlers} // Attach pan gesture handlers
+      >
+        {alphabet.map((letter) => (
+          <TouchableOpacity
+            key={letter}
+            style={styles.alphabetLetter} // Ensure enough padding and clickable space
+            onPress={() => onLetterPress(letter)} // Handle tap
+            activeOpacity={0.7} // Provides visual feedback on press
+          >
+            <Text style={styles.alphabetText}>{letter}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
   };
 
-  const panResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: (evt, gestureState) => {
-      const { y0 } = gestureState;
-      const letter = getLetterFromPosition(y0);
-      if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on touch start
-    },
-    onPanResponderMove: (evt, gestureState) => {
-      const { moveY } = gestureState;
-      const letter = getLetterFromPosition(moveY);
-      if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on move
-    },
-    onPanResponderRelease: () => {
-      // Optional: Handle release event, e.g., resetting state if needed
-    },
-  });
-
-  // Measure the width of the alphabet letters dynamically
-  const onLayout = (event) => {
-    const { height } = event.nativeEvent.layout;
-    setAlphabetWidth(height); // Calculate the height of the alphabet column
+  const handleLetterPress = (letter) => {
+    scrollToLetter(letter); // Scroll on tap
   };
 
-  return (
-    <View
-      style={styles.alphabetIndex}
-      onLayout={onLayout}
-      {...panResponder.panHandlers} // Attach pan gesture handlers
-    >
-      {alphabet.map((letter) => (
-        <TouchableOpacity
-          key={letter}
-          style={styles.alphabetLetter} // Ensure enough padding and clickable space
-          onPress={() => onLetterPress(letter)} // Handle tap
-          activeOpacity={0.7} // Provides visual feedback on press
-        >
-          <Text style={styles.alphabetText}>{letter}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-};
-
-
-const handleLetterPress = (letter) => {
-  scrollToLetter(letter); // Scroll on tap
-};
-
-const handleSwipeLetter = (letter) => {
-  scrollToLetter(letter); // Scroll on swipe
-};
-
+  const handleSwipeLetter = (letter) => {
+    scrollToLetter(letter); // Scroll on swipe
+  };
 
   // Filter contacts based on search input (username, first name, last name)
   const filteredContacts = contacts.filter(
@@ -245,8 +247,6 @@ const handleSwipeLetter = (letter) => {
 
   // If no search input, show full contact list grouped by letter, otherwise show filtered contacts
   const dataToRender = input.length > 0 ? filteredContacts : groupedData;
-
-
 
   const createChat = async (contactID) => {
     // Check if a 1-on-1 chat already exists between the two users
@@ -354,66 +354,76 @@ const handleSwipeLetter = (letter) => {
     console.log("Create Group Chat Pressed");
   };
 
+  
+  const renderContact = ({ item }) => {
+    const contactInfo = {
+      contactID: item.profiles.id,
+      contactPFP: item.profiles.avatar_url,
+      contactFirst: item.profiles.first_name,
+      contactLast: item.profiles.last_name,
+      contactUsername: item.profiles.username,
+      //setModalVisible: setProfileVisible,
+    };
+    return (
+      <View style={styles.contactItem}>
+        <View style={styles.wrapperRow}>
+          <TouchableOpacity
+            style={styles.touch}
+            onPress={() => {
+              setProfileVisible(true)
+              setSelectedContact(contactInfo);
+            }}
+          >
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={profileVisible}
+              onRequestClose={() => setProfileVisible(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Pressable onPress={() => setProfileVisible(false)}>
+                    <Ionicons name="close" size={35} color='#616061' style={styles.close} />
+                  </Pressable>
+                  <Profile
+                    {...selectedContact}
+                    setProfileVisible={setProfileVisible}
+                    navigation={navigation}
+                  />
+                </View>
+              </View>
+            </Modal>
+            <Image
+              source={{ uri: item.profiles.avatar_url }} // Use avatar_url to load the image
+              style={styles.profileImage}
 
-  const renderContact = ({ item }) => (
-<View style={styles.contactItem}>
-  <View style={styles.wrapperRow}>
-    {/* Profile Image and Touchable to navigate to Profile */}
-    <TouchableOpacity
-      onPress={() =>
-        navigation.navigate("Profile", {
-          contactID: item.profiles.id,
-          contactPFP: item.profiles.avatar_url,
-          contactFirst: item.profiles.first_name,
-          contactLast: item.profiles.last_name,
-          contactUsername: item.profiles.username,
-        })
-      }
-    >
-      <Image
-        source={{ uri: item.profiles.avatar_url }} // Load the profile image using avatar_url
-        style={styles.profileImage}
-      />
-    </TouchableOpacity>
+            />
+          </TouchableOpacity>
+          <View style={styles.wrapperCol}>
+            <Text style={styles.contactText}>
+              {item.profiles.first_name} {item.profiles.last_name}
+            </Text>
+            <Text style={styles.contactUsername}>@{item.profiles.username}</Text>
+          </View>
+          <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.chatButton}
+            onPress={() => createChat(item.profiles.id)}
+          >
+            <FontAwesome name="comment" size={20} style={styles.chatIcon} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.callButton}
+            onPress={() => createCall(item.profiles.id)}
+          >
+            <FontAwesome name="phone" size={20} style={styles.callIcon} color="#fff" />
+          </TouchableOpacity>
 
-
-    {/* Contact's Name and Username */}
-    <View style={styles.wrapperCol}>
-      <Text style={styles.contactText}>
-        {item.profiles.first_name} {item.profiles.last_name}
-      </Text>
-      <Text style={styles.contactUsername}>@{item.profiles.username}</Text>
-      
-    </View>
-
-    {/* Chat and Call buttons */}
-    <View style={styles.buttonContainer}>
-      <Pressable
-      style={styles.favoriteButton}
-      onPress={() => toggleFavorite(item.profiles.id)} // Call the function to handle favorite toggling
-    >
-      <FavoriteIcon isFavorite={item.profiles.isFavorite} />
-    </Pressable>
-    <TouchableOpacity
-        style={styles.chatButton}
-        onPress={() => createChat(item.profiles.id)}
-      >
-        <FontAwesome name="comment" size={20} color="#fff" style={styles.chatIcon} />
-      </TouchableOpacity>
-
-      {/* Call Button */}
-      <TouchableOpacity
-        style={styles.callButton}
-        onPress={() => createCall(item.profiles.id)}
-      >
-        <FontAwesome name="phone" size={20} color="#fff" style={styles.callIcon} />
-      </TouchableOpacity>
-    </View>
-  </View>
-</View>
-);
-
-
+          </View>
+        </View>
+      </View>
+    );
+  };
   // Render grouped contacts
   const renderGroup = ({ item }) => (
     <View style={styles.groupContainer}>
@@ -431,10 +441,8 @@ const handleSwipeLetter = (letter) => {
     return <Text>Error: {error.message}</Text>;
   }
 
-
   return (
     <SafeAreaView style={styles.container}>
-      
       <View style={styles.headerContainer}>
         {/* Back Arrow Button */}
         <TouchableOpacity
@@ -442,7 +450,7 @@ const handleSwipeLetter = (letter) => {
           onPress={() => navigation.navigate("MainTabs")}
         >
           <Image
-            source={require('../../assets/icons/back_arrow.webp')}
+            source={require("../../assets/icons/back_arrow.webp")}
             style={styles.backArrow}
           />
         </TouchableOpacity>
@@ -456,54 +464,47 @@ const handleSwipeLetter = (letter) => {
           onPress={() => setModalVisible(true)}
         >
           <Image
-            source={require('../../assets/icons/add_person.png')}
+            source={require("../../assets/icons/add_person.png")}
             style={styles.addPersonIcon}
           />
         </TouchableOpacity>
-
       </View>
-      
+
       {/* Alphabet List with swipe and click */}
       <AlphabetList
         onLetterPress={handleLetterPress} // Handle tap
         onSwipeLetter={handleSwipeLetter} // Handle swipe
       />
 
-
       <View style={styles.GCContainer}>
-
-      <View style={styles.groupchatContainer}>
-      {/* Group Chat Button */}
-      <LinearGradient
-        colors={['#FFDDF7', '#C5ECFF', '#DEE9FF', '#FFDCF8']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradientContainer}  // Apply the gradient to the groupContainer
-      >
-        <TouchableOpacity
-          style={styles.groupButton}
-          onPress={() => {
-            // Creating a group chat
-            createGroupChat(item.profiles.id);
-          }}
-        >
-          <View style={styles.buttonContent}>
-            {/* Icon */}
-            <Image
-              source={require("../../assets/icons/group_chat.png")}
-              style={styles.groupButtonImage}
-            />
-            {/* Text */}
-            <Text style={styles.buttonText}>Create Group Chat</Text>
-          </View>
-        </TouchableOpacity>
-      </LinearGradient>
-    </View>
-    </View>
-
-
-
-
+        <View style={styles.groupchatContainer}>
+          {/* Group Chat Button */}
+          <LinearGradient
+            colors={["#FFDDF7", "#C5ECFF", "#DEE9FF", "#FFDCF8"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientContainer} // Apply the gradient to the groupContainer
+          >
+            <TouchableOpacity
+              style={styles.groupButton}
+              onPress={() => {
+                // Creating a group chat
+                createGroupChat(item.profiles.id);
+              }}
+            >
+              <View style={styles.buttonContent}>
+                {/* Icon */}
+                <Image
+                  source={require("../../assets/icons/group_chat.png")}
+                  style={styles.groupButtonImage}
+                />
+                {/* Text */}
+                <Text style={styles.buttonText}>Create Group</Text>
+              </View>
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
+      </View>
 
       <View style={styles.searchWrapper}>
         <View style={styles.search}>
@@ -527,7 +528,9 @@ const handleSwipeLetter = (letter) => {
         ref={flatListRef}
         data={dataToRender} // Render either filtered or full contacts
         renderItem={input.length > 0 ? renderContact : renderGroup}
-        keyExtractor={(item, index) => input.length > 0 ? item.profiles.id : item.letter + index}
+        keyExtractor={(item, index) =>
+          input.length > 0 ? item.profiles.id : item.letter + index
+        }
         style={styles.flatList}
         showsVerticalScrollIndicator={false}
         getItemLayout={(data, index) => ({
@@ -542,20 +545,20 @@ const handleSwipeLetter = (letter) => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)} // Close modal when back button pressed
       >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <AddContact
-            onClose={() => setModalVisible(false)}
-            contacts={contacts}
-          />
-          <Pressable
-            onPress={() => setModalVisible(false)}
-            style={styles.closeButton} 
-          >
-            <Text style={styles.closeButtonText}>Cancel</Text> 
-          </Pressable>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <AddContact
+              onClose={() => setModalVisible(false)}
+              contacts={contacts}
+            />
+            <Pressable
+              onPress={() => setModalVisible(false)}
+              style={styles.closeButton}
+            >
+              <Text style={styles.closeButtonText}>Cancel</Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
       </Modal>
     </SafeAreaView>
   );
@@ -570,7 +573,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: "semibold",
     marginBottom: 20,
     color: "#333",
     textAlign: "center",
@@ -582,9 +585,9 @@ const styles = StyleSheet.create({
     marginRight: 10, // Space between image and text
   },
   headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginTop: 20,
     zIndex: 3,
   },
@@ -594,14 +597,14 @@ const styles = StyleSheet.create({
   backArrow: {
     width: 30,
     height: 30,
-    tintColor: 'black',
+    tintColor: "black",
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: 'black',
+    fontWeight: "bold",
+    color: "black",
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   addPersonButton: {
     paddingRight: 10,
@@ -619,11 +622,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3, 
+    elevation: 3,
     flexDirection: "row", // Align content horizontally
     // alignItems: "center", // Center the profile image and text
-    alignItems: "left", // Center the profile image and text
-    justifyContent: "space-between", 
+    alignItems: "flex-start", // Center the profile image and text
+    justifyContent: "space-between", // Space between profile and contact details
+    // borderWidth: 1,
+    // borderColor: "#000",
     borderRadius: 25,
     shadowOffset: {
       width: 0,
@@ -634,7 +639,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     marginHorizontal: 10,
     marginBottom: 5,
-    width: '90%', // Adjust the width to a percentage or fixed value
+    width: "90%", // Adjust the width to a percentage or fixed value
   },
   wrapperRow: {
     flexDirection: "row",
@@ -645,68 +650,66 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contactText: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: "semibold",
   },
   contactUsername: {
     fontSize: 14,
-    color: "#555",
+    fontWeight: "300", // Use '300' for light or '400' for regular
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    alignItems: "center",     // Center them horizontally
+    alignItems: "center", // Center them horizontally
   },
   chatButton: {
-    backgroundColor: "rgba(195, 217, 246, 0.85)",  // Soft pastel blue (same as the original)
-    borderRadius: 25,  // Circular shape
-    padding: 10,
-    elevation: 10,  // Depth effect
+    backgroundColor: "rgba(195, 217, 246, 0.85)", // Soft pastel blue (same as the original)
+    borderRadius: 25, // Circular shape
+    // padding: 10,
+    elevation: 10, // Depth effect
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 3,
     borderWidth: 1,
-    borderColor: "rgba(195, 217, 246, 0.85)",  // Matching pastel blue border
+    borderColor: "rgba(195, 217, 246, 0.85)", // Matching pastel blue border
     marginLeft: 3,
-    width: 35,  // Reduced button width
-    height: 35,  // Reduced button height
+    width: 35, // Reduced button width
+    height: 35, // Reduced button height
+    justifyContent: 'center', 
+    alignItems: 'center', 
   },
-  
+
   callButton: {
-    backgroundColor: "rgba(158, 228, 173, 0.85)",  // Pastel green (soft and pastel)
-    borderRadius: 25,  // Circular shape
-    padding: 10,
-    elevation: 10,  // Same shadow as chatButton
+    backgroundColor: "rgba(158, 228, 173, 0.85)", // Pastel green (soft and pastel)
+    borderRadius: 25, // Circular shape
+    elevation: 10, // Same shadow as chatButton
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 3,
     borderWidth: 1,
-    borderColor: "rgba(158, 228, 173, 0.85)",  // Matching pastel green border
+    borderColor: "rgba(158, 228, 173, 0.85)", // Matching pastel green border
     marginLeft: 10,
-    width: 35,  // Reduced button width
-    height: 35,  // Reduced button height
+    width: 35, // Reduced button width
+    height: 35, // Reduced button height
+    justifyContent: 'center', 
+    alignItems: 'center', 
   },
-  
+
   chatIcon: {
-    width: 20,  // Fixed size of icon for consistency
-    height: 20, // Fixed size of icon for consistency
-    top: "45%",  // Center vertically
-    left: "50%",  // Center horizontally
-    transform: [{ translateX: -10 }, { translateY: -10 }], // Adjust to truly center it
+    width: 20,
+    height: 20, 
   },
-  
+
   callIcon: {
-    width: 20,  // Fixed size of icon for consistency
+    width: 20, // Fixed size of icon for consistency
     height: 20, // Fixed size of icon for consistency
-    top: "50%",  // Center vertically
-    right: 1,
-    transform: [{ translateY: -9 }], // Adjust to center it vertically
+    // top: "50%", // Center vertically
+    left: 2,
+    // transform: [{ translateY: -9 }], // Adjust to center it vertically
   },
-  
-  
-  
+
   addButtonImage: {
     width: 50,
     height: 50,
@@ -731,22 +734,21 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   closeButton: {
-    backgroundColor: '#FFABAB', // Cancel button color
+    backgroundColor: "#FFABAB", // Cancel button color
     borderRadius: 25,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 5,
     marginRight: 15,
-    width: '30%',
-    alignSelf: 'center',
-    marginTop: 5,
-  },  
+    width: "30%",
+    alignSelf: "center",
+  },
   closeButtonText: {
     fontSize: 20,
     color: "#333",
@@ -766,7 +768,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderWidth: 1,
     borderColor: "#d1d1d1",
-    width: '90%',
+    width: "90%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
@@ -781,15 +783,14 @@ const styles = StyleSheet.create({
     height: 30,
     fontSize: 16,
     color: "#333",
-  }, 
-
+  },
 
   flatList: {
     flex: 1,
   },
 
   alphabetIndex: {
-    position: 'absolute',
+    position: "absolute",
     right: 0,
     top: 250,
     paddingVertical: 10,
@@ -798,78 +799,76 @@ const styles = StyleSheet.create({
   },
   alphabetLetter: {
     paddingVertical: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   alphabetText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-  }, 
-  alphabetItem: {
-    fontSize: 10,           // Smaller text size
-    color: "#555",          // Lighter text color
-    paddingVertical: 5,     // Space between letters
+    fontWeight: "bold",
+    color: "#000",
   },
-
+  alphabetItem: {
+    fontSize: 10, // Smaller text size
+    color: "#555", // Lighter text color
+    paddingVertical: 5, // Space between letters
+  },
 
   letterHeader: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: "semibold",
     color: "#333",
     marginBottom: 5,
     marginLeft: 10,
   },
   GCContainer: {
-    justifyContent: 'center',        // Vertically center content
-    alignItems: 'center',            // Horizontally center content
+    justifyContent: "center", // Vertically center content
+    alignItems: "center", // Horizontally center content
     marginTop: 20,
     marginBottom: 10,
   },
   groupchatContainer: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 2,               // Adds depth and shadow
-    elevation: 5,                  // For Android shadow  
-    height: 35,                    // Smaller height
-    width: 200,                    // Smaller width  
-    justifyContent: 'center',       // Center content vertically
-    alignItems: 'center',           // Center content horizontally
+    shadowRadius: 2, // Adds depth and shadow
+    elevation: 5, // For Android shadow
+    height: 35, // Smaller height
+    width: 200, // Smaller width
+    justifyContent: "center", // Center content vertically
+    alignItems: "center", // Center content horizontally
   },
   gradientContainer: {
-    flexDirection: 'row',
-    borderRadius: 30,              // Circular shape (bubble effect)
-    paddingHorizontal: 5,         // Shortened padding for smaller width
-    justifyContent: 'center',
+    flexDirection: "row",
+    borderRadius: 30, // Circular shape (bubble effect)
+    paddingHorizontal: 5, // Shortened padding for smaller width
+    justifyContent: "center",
   },
   groupButton: {
-    flexDirection: 'row',          // Align text and icon in a row
-    alignItems: 'center',          // Vertically center the content
-    paddingHorizontal: 15,         // Shortened padding for smaller width
-    paddingVertical: 5,           // Vertical padding to make the button bigger
-    borderRadius: 30,              // Circular shape (bubble effect)
-    justifyContent: 'center',
+    flexDirection: "row", // Align text and icon in a row
+    alignItems: "center", // Vertically center the content
+    paddingHorizontal: 15, // Shortened padding for smaller width
+    paddingVertical: 5, // Vertical padding to make the button bigger
+    borderRadius: 30, // Circular shape (bubble effect)
   },
   groupButtonImage: {
-    width: 40,                     // Adjust the size of the icon
-    height: 40,                    // Adjust the size of the icon
-    marginRight: 10,               // Space between the icon and text
+    width: 40, // Adjust the size of the icon
+    height: 40, // Adjust the size of the icon
+    marginRight: 10, // Space between the icon and text
   },
   buttonText: {
-    fontSize: 18,                  // Adjust font size as needed
-    color: '#fff',                 // White text color
-    fontWeight: 'bold',            // Bold text for emphasis
+    fontSize: 18, // Adjust font size as needed
+    color: "#fff", // White text color
+    fontWeight: "bold", // Bold text for emphasis
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
-    shadowRadius: 2,               // Adds depth and shadow
-    elevation: 3,                  // For Android shadow
+    shadowRadius: 2, // Adds depth and shadow
+    elevation: 3, // For Android shadow
   },
   buttonContent: {
-    flexDirection: 'row',          // Arrange icon and text in a row
-    alignItems: 'center',          // Center items vertically
-    justifyContent: 'center',
+    flexDirection: "row", // Arrange icon and text in a row
+    alignItems: "center", // Center items vertically
+    justifyContent: "center",
   },
 });
 
