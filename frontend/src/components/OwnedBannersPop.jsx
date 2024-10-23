@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Modal, ScrollView, Image, TouchableOpacity, Ale
 import { supabase } from "../lib/supabase"; // Import Supabase client
 import useStore from "../store/store"; // Importing the store
 
-const OwnedBannersModal = ({ visible, onClose }) => {
+const OwnedBannersPop = ({ visible, onClose }) => { // Functional component for displaying owned banners in a modal
   const { user } = useStore(); // Retrieve the user from the store
   const [ownedBanners, setOwnedBanners] = useState([]); // State for storing owned banners
   const [loading, setLoading] = useState(true); // Loading state
@@ -13,28 +13,28 @@ const OwnedBannersModal = ({ visible, onClose }) => {
       if (!user) return; // Exit if user is not defined
 
       const { data: userBanners, error } = await supabase
-        .from("user_banners")
-        .select("banner_id")
-        .eq("user_id", user.id); // Assuming `user.id` is the correct way to access user ID
+        .from("user_banners")      // Select from the 'user_banners' table
+        .select("banner_id")      // Select only the 'banner_id' field
+        .eq("user_id", user.id);  //Filter by the current user's ID
 
-      if (error) {
-        console.error("Error fetching user_banners:", error.message);
+      if (error) { // Handle any errors during the fetch
+        console.error("Error fetching user_banners:", error.message); // Log the error message
         Alert.alert("Error", "Failed to fetch owned banners.");
-        setLoading(false);
+        setLoading(false); 
         return;
       }
 
-      // Fetch the banner details
+      // Fetch the details of the banners owned by the user
       if (userBanners.length > 0) {
         const bannerIds = userBanners.map(banner => banner.banner_id);
         const { data: banners, error: bannersError } = await supabase
-          .from("banners")
-          .select("*")
-          .in("id", bannerIds);
+          .from("banners") // Select from the 'banners' table
+          .select("*")    // Select all fields
+          .in("id", bannerIds);  // Filter by the list of banner IDs
 
-        if (bannersError) {
-          console.error("Error fetching banners:", bannersError.message);
-          Alert.alert("Error", "Failed to fetch banners.");
+        if (bannersError) {  // Handle any errors during the banner fetch
+          console.error("Error fetching banners:", bannersError.message); // Log the error message
+          Alert.alert("Error", "Failed to fetch banners."); // Show an alert for the error
         } else {
           setOwnedBanners(banners); // Set the owned banners to the state
         }
@@ -43,19 +43,19 @@ const OwnedBannersModal = ({ visible, onClose }) => {
       setLoading(false); // Stop loading
     };
 
-    fetchOwnedBanners();
-  }, [user]); // Dependency on user
+    fetchOwnedBanners(); // Call the fetch function
+  }, [user]); // Run this effect when the 'user' changes
 
   return (
-    <Modal
-      transparent={true}
-      animationType="slide"
-      visible={visible}
-      onRequestClose={onClose}
+    <Modal  //POP
+      transparent={true} // Make the modal background transparent
+      animationType="slide"  // Animate the modal with a slide effect
+      visible={visible}    // Control visibility based on the 'visible' prop
+      onRequestClose={onClose}   // Handle request to close the modal
     >
-      <View style={styles.modalOverlay}>
+      <View style={styles.modalOverlay}>    
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Select Banners</Text>
+          <Text style={styles.modalTitle}>Select a Banner</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
@@ -135,4 +135,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OwnedBannersModal;
+export default OwnedBannersPop;

@@ -8,52 +8,52 @@ import {
   Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase"; // Import Supabase client
-import useStore from "../store/store"; // Assuming this handles user and tokens
-import Header from "../components/Header";
+import { supabase } from "../lib/supabase"; // Import Supabase client for Database Operations
+import useStore from "../store/store"; // Import store for state management
+import Header from "../components/Header"; //Import Header Component
 
 const GiftsScreen = ({ navigation }) => {
   const { user } = useStore(); // Retrieve the user from the store
-  const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState(null); // State for storing the user ID
   const [banners, setBanners] = useState([]); // State for storing fetched banners
   const [stickers, setStickers] = useState([]); // State for storing fetched stickers
   const [showOwned, setShowOwned] = useState(false); // State for toggle switch
-  const [ownedBanners, setOwnedBanners] = useState(new Set()); // Set to track owned banners
-  const [ownedStickers, setOwnedStickers] = useState(new Set()); // Set to track owned stickers
+  const [user_banners, setUserBanners] = useState(new Set()); // Set to track owned banners
+  const [user_stickers, setUserStickers] = useState(new Set()); // Set to track owned stickers
 
   // Fetch and log user ID, banners (IDs), stickers (IDs), user_banners (IDs), and user_stickers (IDs)
-  useEffect(() => {
+  useEffect(() => { // side effects in function compenents
     const logUserData = async () => {
       if (user) {
-        setUserId(user.id);
+        setUserId(user.id); // Set the user ID in the state
         console.log("User ID:", user.id); // Log user ID
 
-        // Fetch user-owned banners
+        // Fetch user-owned banners from Supabase
         const { data: userBanners, error: userBannersError } = await supabase
           .from("user_banners")
-          .select("banner_id")
-          .eq("user_id", user.id);
+          .select("banner_id") // Select only the banner_id column
+          .eq("user_id", user.id); // Filter by user ID
 
         if (userBannersError) {
-          console.error("Error fetching user_banners:", userBannersError.message);
+          console.error("Error fetching user_banners:", userBannersError.message);// Log any errors
         } else {
-          const userBannerIds = userBanners.map((ub) => ub.banner_id);
+          const userBannerIds = userBanners.map((ub) => ub.banner_id); // Extract banner IDs from the response
           console.log("user_banners:", userBannerIds); // Log user_banners IDs once
-          setOwnedBanners(new Set(userBannerIds)); // Store owned banners in state
+          setUserBanners(new Set(userBannerIds)); // Store owned banners in state
         }
 
         // Fetch user-owned stickers
         const { data: userStickers, error: userStickersError } = await supabase
           .from("user_stickers")
-          .select("sticker_id")
-          .eq("user_id", user.id);
+          .select("sticker_id") // Select only the sticker_id column
+          .eq("user_id", user.id);  // Filter by user ID
 
         if (userStickersError) {
-          console.error("Error fetching user_stickers:", userStickersError.message);
+          console.error("Error fetching user_stickers:", userStickersError.message); // Log any errors
         } else {
-          const userStickerIds = userStickers.map((us) => us.sticker_id);
+          const userStickerIds = userStickers.map((us) => us.sticker_id); // Extract sticker IDs from the response
           console.log("user_stickers:", userStickerIds); // Log user_stickers IDs once
-          setOwnedStickers(new Set(userStickerIds)); // Store owned stickers in state
+          setUserStickers(new Set(userStickerIds)); //Store owned stickers in state as a Set for unique values
         }
       }
     };
@@ -68,10 +68,10 @@ const GiftsScreen = ({ navigation }) => {
       let data;
       let error;
 
-      // Fetch all banners
+      // Fetch all banners from the database
       const { data: allBanners, error: fetchError } = await supabase
         .from("banners")
-        .select();
+        .select(); // Fetch all records
 
       data = allBanners;
       error = fetchError;
@@ -83,7 +83,7 @@ const GiftsScreen = ({ navigation }) => {
       }
     };
 
-    fetchBanners();
+    fetchBanners();  // Invoke the fetchBanners function
   }, []);
 
   // Fetch stickers based on toggle state
@@ -91,11 +91,11 @@ const GiftsScreen = ({ navigation }) => {
     const fetchStickers = async () => {
       let data;
       let error;
-
-      // Fetch all stickers
+ 
+      // Fetch all stickers from the database
       const { data: allStickers, error: fetchError } = await supabase
         .from("stickers")
-        .select();
+        .select(); // Fetch all records
 
       data = allStickers;
       error = fetchError;
@@ -107,19 +107,19 @@ const GiftsScreen = ({ navigation }) => {
       }
     };
 
-    fetchStickers();
+    fetchStickers(); // Invoke the fetchStickers function
   }, []);
 
-  // Toggle function for switch
+  // Toggle function for switch to show owned items
   const toggleSwitch = () => {
     setShowOwned((prev) => !prev);
     console.log("Show Owned:", !showOwned); // Log the toggle switch state
   };
 
-  const handleGetBanner = async (bannerId) => {
+  const handleGetBanner = async (bannerId) => { // Function to handle acquiring a banner
     if (!userId) return;
 
-    const { data, error: checkError } = await supabase
+    const { data, error: checkError } = await supabase // Check if the user already owns this banner
       .from("user_banners")
       .select("id")
       .eq("user_id", userId)
@@ -136,26 +136,26 @@ const GiftsScreen = ({ navigation }) => {
       return;
     }
 
-    const { error } = await supabase
+    const { error } = await supabase // Insert the banner acquisition into the user_banners table
       .from("user_banners")
-      .insert([{ user_id: userId, banner_id: bannerId }]);
+      .insert([{ user_id: userId, banner_id: bannerId }]); // Insert new ownership record
 
     if (error) {
       console.error("Error inserting into user_banners:", error.message);
       Alert.alert("Error", "Failed to acquire banner. Please try again.");
     } else {
-      Alert.alert("Success", "You have acquired the banner!");
-      console.log("Acquired Banner ID:", bannerId);
-      setOwnedBanners((prev) => new Set(prev).add(bannerId)); // Update owned banners
+      Alert.alert("Success", "You have acquired the banner!"); // Notify success
+      console.log("Acquired Banner ID:", bannerId); // Log the acquired banner ID
+      setUserBanners((prev) => new Set(prev).add(bannerId)); // Update owned banners in state
     }
   };
 
-  const handleGetSticker = async (stickerId) => {
-    if (!userId) return;
+  const handleGetSticker = async (stickerId) => { // Function to handle acquiring a sticker
+    if (!userId) return; // If user ID is not available, exit
 
-    const { data, error: checkError } = await supabase
+    const { data, error: checkError } = await supabase // Check if the user already owns this sticker
       .from("user_stickers")
-      .select("id")
+      .select("id") // Select any ID to check existence
       .eq("user_id", userId)
       .eq("sticker_id", stickerId);
 
@@ -166,32 +166,32 @@ const GiftsScreen = ({ navigation }) => {
     }
 
     if (data.length > 0) {
-      Alert.alert("Notice", "You already own this sticker.");
+      Alert.alert("Notice", "You already own this sticker."); // Notify the user if they already own the sticker
       return;
     }
 
-    const { error } = await supabase
+    const { error } = await supabase // Insert the sticker acquisition into the user_stickers table
       .from("user_stickers")
-      .insert([{ user_id: userId, sticker_id: stickerId }]);
+      .insert([{ user_id: userId, sticker_id: stickerId }]); // Insert new ownership record
 
     if (error) {
-      console.error("Error inserting into user_stickers:", error.message);
-      Alert.alert("Error", "Failed to acquire sticker. Please try again.");
-    } else {
-      Alert.alert("Success", "You have acquired the sticker!");
-      console.log("Acquired Sticker ID:", stickerId);
-      setOwnedStickers((prev) => new Set(prev).add(stickerId)); // Update owned stickers
+      console.error("Error inserting into user_stickers:", error.message); // Log any errors
+      Alert.alert("Error", "Failed to acquire sticker. Please try again."); // Show error alert
+    } else { 
+      Alert.alert("Success", "You have acquired the sticker!"); // Notify success
+      console.log("Acquired Sticker ID:", stickerId); // Log the acquired sticker ID
+      setUserStickers((prev) => new Set(prev).add(stickerId)); // Update owned stickers in state
     }
   };
 
   return (
     <View>
       <Header
-        event="shop"
-        navigation={navigation}
-        title="Shop"
-        toggleSwitch={toggleSwitch} // Pass toggleSwitch function
-        switchValue={showOwned} // Pass switch value
+        event="shop" // Pass event prop for identifying shop context
+        navigation={navigation} // Pass navigation prop for navigation
+        title="Shop"  // Set static title for the Header
+        toggleSwitch={toggleSwitch} // Pass toggleSwitch function for handling switch
+        switchValue={showOwned} // Pass switch value to Header
       />
 
       <ScrollView contentContainerStyle={styles.container}>
@@ -201,17 +201,17 @@ const GiftsScreen = ({ navigation }) => {
         </View>
         <ScrollView
           horizontal
-          showsHorizontalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}  // Hide horizontal scroll indicator
           contentContainerStyle={styles.scrollContainer}
         >
           <View style={styles.itemsContainer}>
             {banners.map((banner) => {
-              const isOwned = ownedBanners.has(banner.id);
+              const isOwned = user_banners.has(banner.id); // Check if the current banner is owned
               return showOwned ? (
-                isOwned ? (
+                isOwned ? (  // If showOwned is true, render owned banners only
                   <View key={banner.id} style={styles.itemFrame}>
                     <Image
-                      source={{ uri: banner.image_url }} // Assuming image_url is available
+                      source={{ uri: banner.image_url }} //  image_url is available
                       style={styles.image}
                       resizeMode="contain"
                     />
@@ -225,10 +225,10 @@ const GiftsScreen = ({ navigation }) => {
                     </TouchableOpacity>
                   </View>
                 ) : null
-              ) : !isOwned ? (
+              ) : !isOwned ? (  // If showOwned is false, render unowned banners only
                 <View key={banner.id} style={styles.itemFrame}>
                   <Image
-                    source={{ uri: banner.image_url }} // Assuming image_url is available
+                    source={{ uri: banner.image_url }} // image_url is available
                     style={styles.image}
                     resizeMode="contain"
                   />
@@ -257,7 +257,7 @@ const GiftsScreen = ({ navigation }) => {
         >
           <View style={styles.itemsContainer}>
             {stickers.map((sticker) => {
-              const isOwned = ownedStickers.has(sticker.id);
+              const isOwned = user_stickers.has(sticker.id);
               return showOwned ? (
                 isOwned ? (
                   <View key={sticker.id} style={styles.itemFrame}>
@@ -279,7 +279,7 @@ const GiftsScreen = ({ navigation }) => {
               ) : !isOwned ? (
                 <View key={sticker.id} style={styles.itemFrame}>
                   <Image
-                    source={{ uri: sticker.image_url }} // Assuming image_url is available
+                    source={{ uri: sticker.image_url }} // image_url is available
                     style={styles.image}
                     resizeMode="contain"
                   />
@@ -302,28 +302,28 @@ const GiftsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
+  container: {  // Main container fir GiftSCreen component
+    padding: 16,  //Providing some space between container's border and its content
   },
-  categoryContainer: {
-    marginBottom: 8,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
+  categoryContainer: { //Style for boxes for Banners and Stickers
+    marginBottom: 8,  //Adds vertical margin (Space above and below)
+    padding: 10,      // Adds Padding inside the box
+    borderWidth: 1,   // Defines the border's width as 1 pixel.
+    borderColor: "#ccc",  // Sets the border color to a loght gray
+    borderRadius: 8,   // Rounds the corners of the box.
   },
-  categoryText: {
+  categoryText: {  // Style adds text to display Catefgory names (Banners/Stickers)
     fontSize: 20,
     fontWeight: "bold",
   },
-  scrollContainer: {
-    flexDirection: "row",
-    paddingVertical: 10,
+  scrollContainer: {  // USed for SCrollView for contain items
+    flexDirection: "row",  // Horizontal
+    paddingVertical: 10,  // vertical space
   },
-  itemsContainer: {
-    flexDirection: "row",
+  itemsContainer: {  //Individual item box
+    flexDirection: "row", //
   },
-  itemFrame: {
+  itemFrame: {  // image displayed for each banner or sticker
     backgroundColor: "#f9f9f9",
     borderWidth: 1,
     borderColor: "#ddd",

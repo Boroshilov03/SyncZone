@@ -7,7 +7,7 @@ import * as Font from 'expo-font';
 import Constants from 'expo-constants';
 import { LinearGradient } from "expo-linear-gradient";
 import GradientText from "react-native-gradient-texts";
-import OwnedBannersModal from '../components/OwnedBannersModal';
+import OwnedBannersPop from '../components/OwnedBannersPop';
 
 const ProfileSettings = ({ navigation }) => {
     const [visible, setVisible] = useState(false);
@@ -15,7 +15,7 @@ const ProfileSettings = ({ navigation }) => {
     const [isModalVisible, setModalVisible] = useState(false);
     const [isEnabled, setIsEnabled] = useState(false);
     const [fontsLoaded, setFontsLoaded] = useState(false);
-    const [ownedBannersVisible, setOwnedBannersVisible] = useState(false); // State for OwnedBannersModal
+    const [ownedBanners, setOwnedBanners] = useState(false); // State for OwnedBannersModal
 
     useEffect(() => {
         const loadFonts = async () => {
@@ -115,7 +115,7 @@ const ProfileSettings = ({ navigation }) => {
                         <TouchableOpacity
                             style={styles.button2}
                             borderRadius={20}
-                            onPress={() => setOwnedBannersVisible(true)} // Show OwnedBannersModal
+                            onPress={() => setOwnedBanners(true)} // Show OwnedBannersModal
                         >
                             <Text style={[styles.buttonText, { color: 'black' }]}>
                                 View Owned Banners
@@ -156,9 +156,9 @@ const ProfileSettings = ({ navigation }) => {
                 </TouchableOpacity>
 
                 {/* Owned Banners Modal */}
-                <OwnedBannersModal
-                    visible={ownedBannersVisible}
-                    onClose={() => setOwnedBannersVisible(false)}
+                <OwnedBannersPop
+                    visible={ownedBanners}
+                    onClose={() => setOwnedBanners(false)}
                 />
             </ScrollView>
         </SafeAreaView>
