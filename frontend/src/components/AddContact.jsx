@@ -91,7 +91,6 @@ const AddContact = ({ toggleModal }) => {
   };
 
   // Function to add a contact
-// Function to add a contact
 const handleAdd = async (contactID) => {
   if (!user) {
     console.error("User is not logged in.");
@@ -109,30 +108,46 @@ const handleAdd = async (contactID) => {
   );
 
   try {
-    const { data, error } = await supabase
+    // Insert the first entry: user_id and contact_id
+    const { data: firstEntryData, error: firstEntryError } = await supabase
       .from("contacts")
       .insert({ user_id: user.id, contact_id: contactID })
       .select();
 
-    if (error) {
-      console.error("Error adding contact:", error.message);
-      setError("Failed to add contact. Please try again.");
+    if (firstEntryError) {
+      throw new Error(firstEntryError.message); // Throw error to handle below
+    }
 
-      // If the add fails, revert the optimistic update
+    // Insert the second entry: contact_id and user_id
+    const { data: secondEntryData, error: secondEntryError } = await supabase
+      .from("contacts")
+      .insert({ user_id: contactID, contact_id: user.id })
+      .select();
+
+    if (secondEntryError) {
+      // If the second add fails, revert the optimistic update and log error
+      console.error("Error adding contact (reverse):", secondEntryError.message);
+      setError("Failed to add contact (reverse). Please try again.");
+
+      // Revert the optimistic update
       setProfiles((prevProfiles) =>
         prevProfiles.map((profile) =>
           profile.id === contactID ? { ...profile, added: false } : profile
         )
       );
     } else {
-      console.log("Contact added successfully:", data);
-      setContacts([...contacts, { contact_id: contactID }]); // Update contacts state
+      console.log("Both contacts added successfully:", firstEntryData, secondEntryData);
+      setContacts((prevContacts) => [
+        ...prevContacts,
+        { contact_id: contactID },
+        { contact_id: user.id }, // Add the reverse entry if necessary
+      ]); // Update contacts state
     }
-  } catch (err) {
-    console.error("Unexpected error while adding contact:", err);
-    setError("An error occurred. Please try again.");
+  } catch (error) {
+    console.error("Error adding contact:", error.message);
+    setError("Failed to add contact. Please try again.");
 
-    // Revert optimistic update in case of unexpected errors
+    // If any add fails, revert the optimistic update
     setProfiles((prevProfiles) =>
       prevProfiles.map((profile) =>
         profile.id === contactID ? { ...profile, added: false } : profile

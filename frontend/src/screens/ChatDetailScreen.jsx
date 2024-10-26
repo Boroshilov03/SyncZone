@@ -405,7 +405,6 @@ const ChatDetailScreen = () => {
         {typingUser && (
           <Text style={styles.typingIndicator}>{typingUser} is typing...</Text>
         )}
-        <Text style={styles.typingIndicator}>Mirlan is typing...</Text>
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}

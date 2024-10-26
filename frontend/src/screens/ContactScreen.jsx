@@ -36,7 +36,8 @@ const fetchMutualContacts = async ({ queryKey }) => {
     .select(
       `profiles:contact_id (id, username, first_name, last_name, avatar_url)`
     )
-    .or(`user_id.eq.${userId},contact_id.eq.${userId}`);
+    .or(`user_id.eq.${userId},contact_id.eq.${userId}`)
+    .neq('contact_id', userId) // Exclude the logged-in user's ID
 
   if (error) throw new Error(error.message);
   return data;
@@ -167,8 +168,6 @@ const ContactScreen = ({ navigation, route }) => {
     setIsFavorite(!isFavorite);
     toggleFavorite(item.profiles.id); // Call the function to handle favorite toggling
   };
-
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split(""); // Alphabet array
 
   const AlphabetList = ({ onLetterPress, onSwipeLetter }) => {
     const [alphabetWidth, setAlphabetWidth] = useState(0); // State to store alphabet item width
