@@ -76,55 +76,59 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
 
   useEffect(() => {
     if (events.length) {
-      // Group events by date
-      const groupedAgendaItems = events.reduce((acc, event) => {
-        const eventDate = event.date;
-        const eventItem = {
-          title: event.title,
-          time: new Date(
-            `${event.date}T${event.start_time}`
-          ).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          endTime: new Date(
-            `${event.date}T${event.end_time}`
-          ).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          mood: event.mood,
-          description: event.description,
-          id: event.id,
-        };
-
-        // If the date doesn't exist in the accumulator, create it
-        if (!acc[eventDate]) {
-          acc[eventDate] = {
-            title: eventDate, // Set the date as the title
-            data: [eventItem], // Start the data array with the current event
+      const currentDate = new Date(); // Get the current date
+  
+      // Group events by date and filter out past events
+      const groupedAgendaItems = events
+        .filter((event) => new Date(event.date) >= currentDate) // Filter out events with past dates
+        .reduce((acc, event) => {
+          const eventDate = event.date;
+          const eventItem = {
+            title: event.title,
+            time: new Date(
+              `${event.date}T${event.start_time}`
+            ).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            endTime: new Date(
+              `${event.date}T${event.end_time}`
+            ).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            mood: event.mood,
+            description: event.description,
+            id: event.id,
           };
-        } else {
-          // Otherwise, push the event item into the existing date's data array
-          acc[eventDate].data.push(eventItem);
-        }
-
-        return acc;
-      }, {});
-
+  
+          // If the date doesn't exist in the accumulator, create it
+          if (!acc[eventDate]) {
+            acc[eventDate] = {
+              title: eventDate, // Set the date as the title
+              data: [eventItem], // Start the data array with the current event
+            };
+          } else {
+            // Otherwise, push the event item into the existing date's data array
+            acc[eventDate].data.push(eventItem);
+          }
+  
+          return acc;
+        }, {});
+  
       // Convert the object back into an array and sort
       const sortedAgendaItems = Object.values(groupedAgendaItems).sort(
         (a, b) => new Date(a.title) - new Date(b.title)
       );
-
+  
       setAgendaItems(sortedAgendaItems);
-
+  
       // Create marked dates with mood dots
       const markedDatesObj = {};
       sortedAgendaItems.forEach((item) => {
         const date = item.title;
         const moodDotColor = getMoodColor(item.data[0].mood);
-
+  
         if (!markedDatesObj[date]) {
           markedDatesObj[date] = {
             dots: [],
@@ -132,10 +136,11 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
         }
         markedDatesObj[date].dots.push({ color: moodDotColor });
       });
-
+  
       setMarkedDates(markedDatesObj);
     }
   }, [events]);
+  
 
   useEffect(() => {
     if (!user.id) return;
