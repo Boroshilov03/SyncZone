@@ -15,6 +15,8 @@ import {
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { format, isSameMonth, parseISO } from "date-fns"; // Import date-fns functions
+
 
 // Fetch event data function
 const fetchingData = async (userId) => {
@@ -54,6 +56,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
   const [selected, setSelected] = useState("");
   const [agendaItems, setAgendaItems] = useState([]);
   const [markedDates, setMarkedDates] = useState({});
+  const [selectedMonth, setSelectedMonth] = useState(new Date()); // Track the selected month
   const queryClient = useQueryClient();
   const { user } = useStore();
   const currentDate = new Date().toISOString().split("T")[0];
@@ -76,55 +79,59 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
 
   useEffect(() => {
     if (events.length) {
-      // Group events by date
-      const groupedAgendaItems = events.reduce((acc, event) => {
-        const eventDate = event.date;
-        const eventItem = {
-          title: event.title,
-          time: new Date(
-            `${event.date}T${event.start_time}`
-          ).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          endTime: new Date(
-            `${event.date}T${event.end_time}`
-          ).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          mood: event.mood,
-          description: event.description,
-          id: event.id,
-        };
-
-        // If the date doesn't exist in the accumulator, create it
-        if (!acc[eventDate]) {
-          acc[eventDate] = {
-            title: eventDate, // Set the date as the title
-            data: [eventItem], // Start the data array with the current event
+      const currentDate = new Date(); // Get the current date
+  
+      // Group events by date and filter out past events
+      const groupedAgendaItems = events
+        .filter((event) => new Date(event.date) >= currentDate && isSameMonth(parseISO(event.date), selectedMonth))
+        .reduce((acc, event) => {
+          const eventDate = event.date;
+          const eventItem = {
+            title: event.title,
+            time: new Date(
+              `${event.date}T${event.start_time}`
+            ).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            endTime: new Date(
+              `${event.date}T${event.end_time}`
+            ).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            mood: event.mood,
+            description: event.description,
+            id: event.id,
           };
-        } else {
-          // Otherwise, push the event item into the existing date's data array
-          acc[eventDate].data.push(eventItem);
-        }
-
-        return acc;
-      }, {});
-
+  
+          // If the date doesn't exist in the accumulator, create it
+          if (!acc[eventDate]) {
+            acc[eventDate] = {
+              title: eventDate, // Set the date as the title
+              data: [eventItem], // Start the data array with the current event
+            };
+          } else {
+            // Otherwise, push the event item into the existing date's data array
+            acc[eventDate].data.push(eventItem);
+          }
+  
+          return acc;
+        }, {});
+  
       // Convert the object back into an array and sort
       const sortedAgendaItems = Object.values(groupedAgendaItems).sort(
         (a, b) => new Date(a.title) - new Date(b.title)
       );
-
+  
       setAgendaItems(sortedAgendaItems);
-
+  
       // Create marked dates with mood dots
       const markedDatesObj = {};
       sortedAgendaItems.forEach((item) => {
         const date = item.title;
         const moodDotColor = getMoodColor(item.data[0].mood);
-
+  
         if (!markedDatesObj[date]) {
           markedDatesObj[date] = {
             dots: [],
@@ -132,10 +139,12 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
         }
         markedDatesObj[date].dots.push({ color: moodDotColor });
       });
-
+  
       setMarkedDates(markedDatesObj);
     }
-  }, [events]);
+  }, [events, selectedMonth]); // Re-run effect when selectedMonth changes
+
+  
 
   useEffect(() => {
     if (!user.id) return;
@@ -226,6 +235,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
       >
         <ExpandableCalendar
           onDayPress={(day) => setSelected(day.dateString)}
+          onMonthChange={(month) => setSelectedMonth(parseISO(month.dateString))} // Capture month change
           markedDates={markedDates}
           firstDay={1}
           theme={{
@@ -258,7 +268,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   agendaItem: {
-    padding: 5,
+    padding: 15,
     borderRadius: 8,
     shadowColor: "#000",
     shadowOpacity: 0.3,
@@ -268,6 +278,8 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 20,
     fontWeight: "600", // Changed from 'semibold' to '600' for compatibility
+    marginLeft: 5, 
+
   },
   timeContainer: {
     flexDirection: "row",
@@ -283,6 +295,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     marginTop: 5,
+    marginLeft: 5, 
   },
   pencilIconContainer: {
     position: "absolute", // Change to absolute positioning

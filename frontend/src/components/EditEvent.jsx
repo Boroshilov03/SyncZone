@@ -137,7 +137,7 @@ const EditEvent = ({ event, onClose }) => {
         >
           <Image
             source={require("../../assets/icons/trash_icon.png")}
-            style={[styles.trashIcon, { width: 16, height: 16 }]}
+            style={[styles.trashIcon]}
           />
         </TouchableOpacity>
 
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 10,
     top: "50%",
-    transform: [{ translateY: -13 }],
+    transform: [{ translateY: -16 }],
   },
   title: {
     fontSize: 24,
@@ -361,8 +361,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   trashIcon: {
-    width: 16,
-    height: 16,
+    width: 20,
+    height: 20,
   },
   input: {
     height: 40,
