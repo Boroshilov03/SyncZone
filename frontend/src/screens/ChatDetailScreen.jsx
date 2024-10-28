@@ -296,9 +296,7 @@ const ChatDetailScreen = () => {
             { backgroundColor: emotionColorMap[emotion.name] || "gray" },
           ]}
         />
-        <Text style={styles.emotionText}>
-          {emotion.name}
-        </Text>
+        <Text style={styles.emotionText}>{emotion.name}</Text>
       </View>
     );
   };
@@ -371,10 +369,15 @@ const ChatDetailScreen = () => {
           </TouchableOpacity>
 
           <View style={styles.centerContainer}>
-            <Image
-              source={otherPFP ? { uri: otherPFP } : noProfilePic}
-              style={styles.profileImage}
-            />
+            <TouchableOpacity
+              onPress={() => console.log("Opening profile", otherPFP, username)}
+            >
+              <Image
+                source={otherPFP ? { uri: otherPFP } : noProfilePic}
+                style={styles.profileImage}
+              />
+            </TouchableOpacity>
+
             <Text style={styles.title}>{username}</Text>
           </View>
 
