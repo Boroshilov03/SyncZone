@@ -297,7 +297,7 @@ const ChatDetailScreen = () => {
           ]}
         />
         <Text style={styles.emotionText}>
-          {emotion.name} ({Math.round(emotion.score * 100)}%)
+          {emotion.name}
         </Text>
       </View>
     );
@@ -330,9 +330,7 @@ const ChatDetailScreen = () => {
               ]}
             >
               <Text style={styles.emotionText}>
-                {`${item.senderEmotion.name} (${Math.round(
-                  item.senderEmotion.score * 100
-                )}%)`}
+                {`${item.senderEmotion.name}`}
               </Text>
             </View>
           )}
