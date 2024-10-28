@@ -62,7 +62,7 @@ const ProfileSettings = ({ navigation, route }) => {
             style={[styles.container, { marginTop: Constants.statusBarHeight }]}
         >
             <ScrollView style={styles.scroll}>
-                <Pressable style={styles.trash}>
+                <Pressable style={styles.trash}  >
                     <Icon
                         name="trash"
                         size={35}
@@ -70,11 +70,14 @@ const ProfileSettings = ({ navigation, route }) => {
                         onPress={() => setVisible(true)}
                     ></Icon>
                 </Pressable>
-                <View style={styles.profileContainer}>
-                    <Image
-                        source={{ uri: contactInfo.contactPFP }} // Ensure to use uri for images
-                        style={styles.placeholderImage}
-                    ></Image>
+                <View style={styles.profileContainer} >
+                    <Pressable style={styles.pic} onPress={() => setOwnedBannersVisible(true)}>
+                        <Image
+                            source={{ uri: contactInfo.contactPFP }}
+                            style={styles.placeholderImage}
+                            onPress={() => setOwnedBannersVisible(true)}
+                        ></Image>
+                    </Pressable>
                     {/* <Icon
                         name="camera"
                         size={25}
@@ -97,7 +100,24 @@ const ProfileSettings = ({ navigation, route }) => {
                         />
                     </View>
                 </View>
-
+                <Modal
+                    visible={settingVisible}
+                    animationType="slide"
+                    transparent={true}
+                >
+                    <View style={styles.modalContainer}>
+                        <Pressable style={styles.modalContent}>
+                            <View style={styles.right}>
+                                <Text
+                                    style={styles.rText}
+                                    onPress={() => setSettingVisible(false)}
+                                >
+                                    Cancel
+                                </Text>
+                            </View>
+                        </Pressable>
+                    </View>
+                </Modal>
                 <Modal visible={visible} animationType="fade" transparent={true}>
                     <View style={styles.modalContainer}>
                         <View style={styles.modalContent}>
@@ -147,7 +167,7 @@ const ProfileSettings = ({ navigation, route }) => {
                                 }}
                                 leftIcon={{
                                     type: "font-awesome",
-                                    name: field.label === "Password" ? "lock" : "user",
+                                    name: field.label === "Password" ? "lock" : (field.label === "Email" ? "envelope" : "user"),
                                     color: "#616061",
                                     size: 20,
                                 }}
@@ -179,15 +199,14 @@ const ProfileSettings = ({ navigation, route }) => {
                         <TouchableOpacity
                             style={styles.button2}
                             borderRadius={20}
-                            onPress={() => setOwnedBannersVisible(true)} // Show OwnedBannersModal
                         >
-                            <Text style={[styles.buttonText, { color: "black" }]}>
-                                View Owned Banners
+                            <Text style={[styles.buttontext]}>
+                                Update
                             </Text>
                         </TouchableOpacity>
                     </LinearGradient>
 
-                    <Modal
+                    {/* <Modal
                         visible={settingVisible}
                         animationType="slide"
                         transparent={true}
@@ -204,7 +223,7 @@ const ProfileSettings = ({ navigation, route }) => {
                                 </View>
                             </Pressable>
                         </View>
-                    </Modal>
+                    </Modal> */}
                 </View>
 
                 <View style={styles.box}>
@@ -285,6 +304,11 @@ const styles = StyleSheet.create({
     scroll: {
         //borderWidth: 1
     },
+    pic: {
+        flex: 1,
+        // borderWidth: 1,
+        borderRadius: 300,
+    },
     user: {
         fontFamily: "Inter_18pt-MediumItalic",
         color: "grey",
@@ -316,7 +340,7 @@ const styles = StyleSheet.create({
         borderWidth: 4,
         justifyContent: "center",
         alignItems: "center",
-        marginBottom: 20,
+        marginBottom: 10,
         margin: 10,
     },
     fields: {

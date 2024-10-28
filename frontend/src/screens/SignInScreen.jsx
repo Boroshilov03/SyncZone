@@ -22,13 +22,11 @@ export default function SignInScreen({ navigation }) {
   const { setUser, setAccessToken, setRefreshToken } = useStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState(""); // New error state
+  const [errorMessage, setErrorMessage] = useState("");
 
-  // Define the mutation for signing in
   const { mutate: signInWithEmail, isLoading } = useMutation({
     mutationFn: async () => {
-      // Validate email and password
-      loginSchema.parse({ email, password }); // Throws an error if validation fails
+      loginSchema.parse({ email, password });
 
       const { error, data } = await supabase.auth.signInWithPassword({
         email: email,
@@ -36,30 +34,25 @@ export default function SignInScreen({ navigation }) {
       });
 
       if (error) throw new Error(error.message);
-
-      return data; // Return data for further processing
+      return data;
     },
     onSuccess: (data) => {
       const { session, user } = data;
-      setUser(user); // Store user data
-      setAccessToken(session.access_token); // Store access token
-      setRefreshToken(session.refresh_token); // Store refresh token
+      setUser(user);
+      setAccessToken(session.access_token);
+      setRefreshToken(session.refresh_token);
       setErrorMessage(""); // Clear any previous error message on success
     },
     onError: (error) => {
-      // If validation error, show validation message
       if (error.errors) {
-        setErrorMessage(error.errors[0].message); // Display the first validation error
+        setErrorMessage(error.errors[0].message);
       } else {
-        setErrorMessage(error.message); // Handle any other error
+        setErrorMessage(error.message);
       }
     },
   });
 
   return (
-    // <SafeAreaView
-    //   style={styles.safeview}
-    // >
     <LinearGradient
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
@@ -75,16 +68,13 @@ export default function SignInScreen({ navigation }) {
             Login
           </Text>
         </View>
+        {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
         <View style={styles.fields}>
           <View style={[styles.verticallySpaced, styles.mt20]}>
+
             <Input
               label="Email"
-              labelStyle={{
-                position: "absolute",
-                top: -25,
-                left: 25,
-                color: "#616061",
-              }}
+              labelStyle={{ position: "absolute", top: -25, left: 25, color: "#616061" }}
               leftIcon={{
                 type: "font-awesome",
                 name: "envelope",
@@ -93,27 +83,25 @@ export default function SignInScreen({ navigation }) {
               }}
               onChangeText={setEmail}
               value={email}
-              //placeholder="email@address.com"
               autoCapitalize="none"
               inputContainerStyle={{
                 borderRadius: 30,
-                borderWidth: 3,
-                borderColor: "#8e9091",
+                borderTopWidth: 2.5,
+                borderBottomWidth: 2.5,
+                borderLeftWidth: 2.5,
+                borderRightWidth: 2.5,
+                borderColor: "#A7A7A7",
                 width: 270,
                 paddingLeft: 15,
                 height: 40,
               }}
             />
           </View>
+
           <View style={styles.verticallySpaced}>
             <Input
               label="Password"
-              labelStyle={{
-                position: "absolute",
-                top: -25,
-                left: 25,
-                color: "#616061",
-              }}
+              labelStyle={{ position: "absolute", top: -25, left: 25, color: "#616061" }}
               leftIcon={{
                 type: "font-awesome",
                 name: "lock",
@@ -123,32 +111,33 @@ export default function SignInScreen({ navigation }) {
               onChangeText={setPassword}
               value={password}
               secureTextEntry
-              //placeholder="Password"
               autoCapitalize="none"
               inputContainerStyle={{
                 borderRadius: 30,
-                borderWidth: 3,
-                borderColor: "#8e9091",
+                borderTopWidth: 2.5,
+                borderBottomWidth: 2.5,
+                borderLeftWidth: 2.5,
+                borderRightWidth: 2.5,
+                borderColor: "#A7A7A7",
                 width: 270,
                 paddingLeft: 15,
                 height: 40,
               }}
             />
           </View>
+          {/* {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>} */}
         </View>
         <View style={styles.buttonbox}>
           <LinearGradient
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            // style={styles.parent}
             colors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
             style={styles.gradient}
           >
             <TouchableOpacity
               style={styles.button}
               onPress={() => signInWithEmail()}
-              disabled={isLoading} // Disable the button when loading
-              borderRadius={20}
+              disabled={isLoading}
             >
               <Text style={styles.buttontext} fontFamily={"Karla-Medium"}>
                 Login
@@ -175,14 +164,12 @@ export default function SignInScreen({ navigation }) {
             isGradientStroke
             gradientColors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
             fontFamily={"Karla-Medium"}
-          //gradientColors={["#D49AC0", "#6FD2E2"]}
-          // fontFamily={"Gill Sans"}
           />
         </View>
       </View>
     </LinearGradient>
-    //</SafeAreaView>
   );
+
 }
 
 const styles = StyleSheet.create({
@@ -303,7 +290,9 @@ const styles = StyleSheet.create({
   errorText: {
     // New style for error messages
     color: "red", // Change color as needed
-    marginTop: 10,
-    textAlign: "center",
+    marginTop: 5,
+    textAlign: "left",
+    top: -30
   },
+
 });
