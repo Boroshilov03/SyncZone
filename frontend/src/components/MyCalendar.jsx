@@ -15,6 +15,8 @@ import {
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { format, isSameMonth, parseISO } from "date-fns"; // Import date-fns functions
+
 
 // Fetch event data function
 const fetchingData = async (userId) => {
@@ -54,6 +56,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
   const [selected, setSelected] = useState("");
   const [agendaItems, setAgendaItems] = useState([]);
   const [markedDates, setMarkedDates] = useState({});
+  const [selectedMonth, setSelectedMonth] = useState(new Date()); // Track the selected month
   const queryClient = useQueryClient();
   const { user } = useStore();
   const currentDate = new Date().toISOString().split("T")[0];
@@ -80,7 +83,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
   
       // Group events by date and filter out past events
       const groupedAgendaItems = events
-        .filter((event) => new Date(event.date) >= currentDate) // Filter out events with past dates
+        .filter((event) => new Date(event.date) >= currentDate && isSameMonth(parseISO(event.date), selectedMonth))
         .reduce((acc, event) => {
           const eventDate = event.date;
           const eventItem = {
@@ -139,7 +142,8 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
   
       setMarkedDates(markedDatesObj);
     }
-  }, [events]);
+  }, [events, selectedMonth]); // Re-run effect when selectedMonth changes
+
   
 
   useEffect(() => {
@@ -231,6 +235,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
       >
         <ExpandableCalendar
           onDayPress={(day) => setSelected(day.dateString)}
+          onMonthChange={(month) => setSelectedMonth(parseISO(month.dateString))} // Capture month change
           markedDates={markedDates}
           firstDay={1}
           theme={{
@@ -263,7 +268,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   agendaItem: {
-    padding: 5,
+    padding: 15,
     borderRadius: 8,
     shadowColor: "#000",
     shadowOpacity: 0.3,
@@ -273,6 +278,8 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 20,
     fontWeight: "600", // Changed from 'semibold' to '600' for compatibility
+    marginLeft: 5, 
+
   },
   timeContainer: {
     flexDirection: "row",
@@ -288,6 +295,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     marginTop: 5,
+    marginLeft: 5, 
   },
   pencilIconContainer: {
     position: "absolute", // Change to absolute positioning
