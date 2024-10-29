@@ -68,11 +68,11 @@ const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst,
 
       <View style={styles.profileContainer}>
         <View style={styles.weather}>
-          <Text style={styles.weatherText}>Barcelona, Spain</Text>
+          <Text style={styles.loc}>Barcelona, Spain</Text>
         </View>
         <View style={styles.midbox}>
           <View style={styles.temp}>
-            <Text style={styles.weatherText}>62°F   </Text>
+            <Text style={styles.weatherText}>62°F</Text>
           </View>
           {contactPFP ? (
             <Image source={{ uri: contactPFP }} style={styles.profileImage} />
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     //borderWidth: 1,
-    justifyContent: 'center',
+    //justifyContent: 'center',
     alignItems: 'center'
     //alignItems: 'center',
     //justifyContent: 'center',
@@ -137,6 +137,10 @@ const styles = StyleSheet.create({
   weatherText: {
     fontFamily: 'Rubik-Regular',
     fontSize: 18,
+  },
+  loc: {
+    fontFamily: 'Rubik-Regular',
+    fontSize: 21,
   },
   midbox: {
     //flexWrap: 'wrap',
@@ -198,7 +202,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    width: 150,
+    width: '100%',
     //borderWidth: 1,
   },
   temp: {

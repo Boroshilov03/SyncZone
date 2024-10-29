@@ -185,7 +185,7 @@ const GiftsScreen = ({ navigation }) => {
   };
 
   return (
-    <View>
+    <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <Header
         event="shop" // Pass event prop for identifying shop context
         navigation={navigation} // Pass navigation prop for navigation
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", //
   },
   itemFrame: {  // image displayed for each banner or sticker
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#ADD8E6", //light blue
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 10,

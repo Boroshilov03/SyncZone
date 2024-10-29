@@ -1,29 +1,49 @@
-import { React, useState, useEffect } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Pressable, Modal, Image, Switch, ScrollView } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { Ionicons } from '@expo/vector-icons';
+import { React, useState, useEffect } from "react";
+import {
+    StyleSheet,
+    Text,
+    View,
+    SafeAreaView,
+    TouchableOpacity,
+    Pressable,
+    Modal,
+    Image,
+    Switch,
+    ScrollView,
+} from "react-native";
+import Icon from "react-native-vector-icons/FontAwesome";
+import { Ionicons } from "@expo/vector-icons";
 import { Input } from "@rneui/themed";
-import * as Font from 'expo-font';
-import Constants from 'expo-constants';
+import * as Font from "expo-font";
+import Constants from "expo-constants";
 import { LinearGradient } from "expo-linear-gradient";
 import GradientText from "react-native-gradient-texts";
-import OwnedBannersPop from '../components/OwnedBannersPop';
+import OwnedBannersModal from "../components/OwnedBannersModal";
 
-const ProfileSettings = ({ navigation }) => {
+const ProfileSettings = ({ navigation, route }) => {
+    const { contactInfo } = route.params; // Access contactInfo correctly
     const [visible, setVisible] = useState(false);
     const [settingVisible, setSettingVisible] = useState(false);
     const [isModalVisible, setModalVisible] = useState(false);
     const [isEnabled, setIsEnabled] = useState(false);
     const [fontsLoaded, setFontsLoaded] = useState(false);
-    const [ownedBanners, setOwnedBanners] = useState(false); // State for OwnedBannersModal
+    const [ownedBannersVisible, setOwnedBannersVisible] = useState(false);
+
+    // State for form fields
+    const [username, setUsername] = useState(contactInfo.contactUsername || "");
+    const [email, setEmail] = useState(contactInfo.email || ""); // Make sure contactInfo has email property
+    const [password, setPassword] = useState(""); // Leave this blank for user to enter
+    const [firstName, setFirstName] = useState(contactInfo.contactFirst || "");
+    const [lastName, setLastName] = useState(contactInfo.contactLast || "");
 
     useEffect(() => {
         const loadFonts = async () => {
             await Font.loadAsync({
-                'Inter_18pt-Regular': require('./fonts/Inter_18pt-Regular.ttf'),
-                'Inter_18pt-Medium': require('./fonts/Inter_18pt-Medium.ttf'),
-                'Inter_18pt-MediumItalic': require('./fonts/Inter_18pt-MediumItalic.ttf'),
-                'Poppins-Regular': require('./fonts/Poppins-Regular.ttf'),
+                "Inter_18pt-Regular": require("./fonts/Inter_18pt-Regular.ttf"),
+                "Inter_18pt-Medium": require("./fonts/Inter_18pt-Medium.ttf"),
+                "Inter_18pt-MediumItalic": require("./fonts/Inter_18pt-MediumItalic.ttf"),
+                "Poppins-Regular": require("./fonts/Poppins-Regular.ttf"),
+                "Karla-Regular": require("./fonts/Karla-Regular.ttf"),
             });
             setFontsLoaded(true);
         };
@@ -31,33 +51,74 @@ const ProfileSettings = ({ navigation }) => {
         loadFonts();
     }, []);
 
-    const toggleSwitch = () => setIsEnabled(previousState => !previousState);
+    const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 
     if (!fontsLoaded) {
         return null; // You can return a loading spinner or similar
     }
 
     return (
-        <SafeAreaView style={[styles.container, { marginTop: Constants.statusBarHeight }]}>
+        <SafeAreaView
+            style={[styles.container, { marginTop: Constants.statusBarHeight }]}
+        >
             <ScrollView style={styles.scroll}>
-                <Pressable style={styles.trash}>
-                    <Icon name="trash" size={35} color='red' onPress={() => setVisible(true)}></Icon>
+                <Pressable style={styles.trash}  >
+                    <Icon
+                        name="trash"
+                        size={35}
+                        color="red"
+                        onPress={() => setVisible(true)}
+                    ></Icon>
                 </Pressable>
-                <View style={styles.profileContainer}>
-                    <Image source={require('../images/girl.png')} style={styles.placeholderImage} />
-                    <Text style={styles.name}>Overwatch Winston</Text>
-                    <Text style={styles.user}>@Lebron James</Text>
+                <View style={styles.profileContainer} >
+                    <Pressable style={styles.pic} onPress={() => setOwnedBannersVisible(true)}>
+                        <Image
+                            source={{ uri: contactInfo.contactPFP }}
+                            style={styles.placeholderImage}
+                            onPress={() => setOwnedBannersVisible(true)}
+                        ></Image>
+                    </Pressable>
+                    {/* <Icon
+                        name="camera"
+                        size={25}
+                        color='grey'
+                        onPress={() => setVisible(true)}
+                        style={styles.camera}
+                    ></Icon> */}
+                    <Text style={styles.name}>
+                        {contactInfo.contactFirst} {contactInfo.contactLast}
+                    </Text>
+                    <Text style={styles.user}>@{contactInfo.contactUsername}</Text>
                     <View style={styles.actbox}>
                         <Text style={styles.act}>Show Activity Status</Text>
-                        <Switch trackColor={{ false: '#ccc', true: '#4caf50' }} thumbColor={isEnabled ? '#fff' : '#fff'} onValueChange={toggleSwitch} value={isEnabled} />
+                        <Switch
+                            trackColor={{ false: "#ccc", true: "#4caf50" }}
+                            thumbColor={isEnabled ? "#fff" : "#fff"}
+                            onValueChange={toggleSwitch}
+                            value={isEnabled}
+                            marginHorizontal={10}
+                        />
                     </View>
                 </View>
-
                 <Modal
-                    visible={visible}
-                    animationType="fade"
+                    visible={settingVisible}
+                    animationType="slide"
                     transparent={true}
                 >
+                    <View style={styles.modalContainer}>
+                        <Pressable style={styles.modalContent}>
+                            <View style={styles.right}>
+                                <Text
+                                    style={styles.rText}
+                                    onPress={() => setSettingVisible(false)}
+                                >
+                                    Cancel
+                                </Text>
+                            </View>
+                        </Pressable>
+                    </View>
+                </Modal>
+                <Modal visible={visible} animationType="fade" transparent={true}>
                     <View style={styles.modalContainer}>
                         <View style={styles.modalContent}>
                             <View style={styles.modalText}>
@@ -65,10 +126,14 @@ const ProfileSettings = ({ navigation }) => {
                             </View>
                             <Pressable style={styles.modalButtons}>
                                 <View style={styles.left}>
-                                    <Text style={styles.lText} onPress={() => setVisible(false)}>Delete</Text>
+                                    <Text style={styles.lText} onPress={() => setVisible(false)}>
+                                        Delete
+                                    </Text>
                                 </View>
                                 <View style={styles.right}>
-                                    <Text style={styles.rText} onPress={() => setVisible(false)}>Cancel</Text>
+                                    <Text style={styles.rText} onPress={() => setVisible(false)}>
+                                        Cancel
+                                    </Text>
                                 </View>
                             </Pressable>
                         </View>
@@ -76,10 +141,24 @@ const ProfileSettings = ({ navigation }) => {
                 </Modal>
 
                 <View style={styles.fields}>
-                    {['Username', 'Email', 'Password', 'First Name', 'Last Name', 'Location', 'Timezone'].map((label, index) => (
+                    {[
+                        { label: "Username", value: username, setValue: setUsername },
+                        { label: "Email", value: email, setValue: setEmail },
+                        {
+                            label: "Password",
+                            value: password,
+                            setValue: setPassword,
+                            secureTextEntry: true,
+                        },
+                        { label: "First Name", value: firstName, setValue: setFirstName },
+                        { label: "Last Name", value: lastName, setValue: setLastName },
+                        // Add more fields as needed
+                    ].map((field, index) => (
                         <View key={index} style={styles.verticallySpaced}>
                             <Input
-                                label={label}
+                                label={field.label}
+                                value={field.value}
+                                onChangeText={field.setValue}
                                 labelStyle={{
                                     position: "absolute",
                                     top: -25,
@@ -88,20 +167,25 @@ const ProfileSettings = ({ navigation }) => {
                                 }}
                                 leftIcon={{
                                     type: "font-awesome",
-                                    name: "lock",
+                                    name: field.label === "Password" ? "lock" : (field.label === "Email" ? "envelope" : "user"),
                                     color: "#616061",
                                     size: 20,
                                 }}
                                 autoCapitalize="none"
+                                secureTextEntry={field.secureTextEntry} // Use for password field
                                 inputContainerStyle={{
                                     borderRadius: 30,
-                                    borderWidth: 3,
-                                    borderColor: "#8e9091",
+                                    borderTopWidth: 2.5,
+                                    borderBottomWidth: 2.5,
+                                    borderLeftWidth: 2.5,
+                                    borderRightWidth: 2.5,
+                                    borderColor: "#A7A7A7",
                                     width: 270,
                                     paddingLeft: 15,
                                     height: 40,
                                 }}
                             />
+
                         </View>
                     ))}
                 </View>
@@ -115,28 +199,31 @@ const ProfileSettings = ({ navigation }) => {
                         <TouchableOpacity
                             style={styles.button2}
                             borderRadius={20}
-                            onPress={() => setOwnedBanners(true)} // Show OwnedBannersModal
                         >
-                            <Text style={[styles.buttonText, { color: 'black' }]}>
-                                View Owned Banners
+                            <Text style={[styles.buttontext]}>
+                                Update
                             </Text>
                         </TouchableOpacity>
                     </LinearGradient>
 
-                    <Modal
+                    {/* <Modal
                         visible={settingVisible}
                         animationType="slide"
                         transparent={true}
                     >
                         <View style={styles.modalContainer}>
                             <Pressable style={styles.modalContent}>
-
                                 <View style={styles.right}>
-                                    <Text style={styles.rText} onPress={() => setSettingVisible(false)}>Cancel</Text>
+                                    <Text
+                                        style={styles.rText}
+                                        onPress={() => setSettingVisible(false)}
+                                    >
+                                        Cancel
+                                    </Text>
                                 </View>
                             </Pressable>
                         </View>
-                    </Modal>
+                    </Modal> */}
                 </View>
 
                 <View style={styles.box}>
@@ -149,16 +236,24 @@ const ProfileSettings = ({ navigation }) => {
                         fontFamily={"Karla-Medium"}
                     />
                 </View>
-                <TouchableOpacity style={styles.backButton} onPress={() => {
-                    navigation.navigate("MainTabs");
-                }}>
-                    <Ionicons name="arrow-back" size={35} color='grey' style={styles.backButtonText} />
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => {
+                        navigation.navigate("MainTabs");
+                    }}
+                >
+                    <Ionicons
+                        name="arrow-back"
+                        size={35}
+                        color="grey"
+                        style={styles.backButtonText}
+                    />
                 </TouchableOpacity>
 
                 {/* Owned Banners Modal */}
-                <OwnedBannersPop
-                    visible={ownedBanners}
-                    onClose={() => setOwnedBanners(false)}
+                <OwnedBannersModal
+                    visible={ownedBannersVisible}
+                    onClose={() => setOwnedBannersVisible(false)}
                 />
             </ScrollView>
         </SafeAreaView>
@@ -169,19 +264,16 @@ export default ProfileSettings;
 
 const styles = StyleSheet.create({
     container: {
-        // flex: 1,
-        //justifyContent: 'center',
-        //alignItems: 'center',
-        width: '100%',
-        height: '100%',
-        //borderWidth: 1
+        flex: 1,
+        justifyContent: "center",
+        marginVertical: 10,
     },
     backButton: {
-        position: 'absolute',
+        position: "absolute",
         top: 5,
         left: 20,
         padding: 10,
-        color: 'grey'
+        color: "grey",
         //backgroundColor: '#007bff', // Blue color for the button
         //borderRadius: 5,
     },
@@ -189,58 +281,66 @@ const styles = StyleSheet.create({
         fontSize: 30,
     },
     trash: {
-        position: 'absolute',
-        top: 10,
+        position: "absolute",
+        top: 5,
         right: 25,
+        //borderWidth: 1,
+        zIndex: 1,
+    },
+    camera: {
+        position: "absolute",
+        left: 1,
+        size: 5,
         //borderWidth: 1,
         zIndex: 1,
     },
     actbox: {
         flex: 1,
-        flexDirection: 'row',
+        flexDirection: "row",
         //borderWidth: 1,
-        justifyContent: 'center',
-        alignItems: 'center'
+        justifyContent: "center",
+        alignItems: "center",
     },
     scroll: {
         //borderWidth: 1
     },
+    pic: {
+        flex: 1,
+        // borderWidth: 1,
+        borderRadius: 300,
+    },
     user: {
-        fontFamily: 'Inter_18pt-MediumItalic',
-        color: 'grey',
-        textAlignVertical: 'top'
+        fontFamily: "Inter_18pt-MediumItalic",
+        color: "grey",
+        textAlignVertical: "top",
     },
     name: {
-        fontFamily: 'Inter_18pt-Medium',
+        fontFamily: "Inter_18pt-Medium",
         fontSize: 20,
-
     },
     act: {
-        fontFamily: 'Inter_18pt-Medium',
-
+        fontFamily: "Inter_18pt-Medium",
     },
     profileContainer: {
         flex: 1,
         //flexWrap: 'wrap',
-        justifyContent: 'center',
-        alignItems: 'center',
+        justifyContent: "center",
+        alignItems: "center",
         //marginTop: '10%',
         //borderWidth: 4,
-        width: '100%',
+        width: "100%",
         margin: 0, // Remove any margin that may prevent stretching
         padding: 0, // Remove padding if it exists
         //aspectRatio: 1
-
-
     },
     placeholderImage: {
         width: 110,
         height: 110,
         borderRadius: 155,
-
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 20,
+        borderWidth: 4,
+        justifyContent: "center",
+        alignItems: "center",
+        marginBottom: 10,
         margin: 10,
     },
     fields: {
@@ -249,24 +349,23 @@ const styles = StyleSheet.create({
         marginTop: 5,
         //padding: 20,
         //height: 1000,
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
+        justifyContent: "center",
+        alignItems: "center",
+        width: "100%",
         paddingVertical: 20,
     },
     verticallySpaced: {
         flex: 1,
-        flexWrap: 'wrap',
+        flexWrap: "wrap",
         // padding: 1,
         // margin: 1,
         position: "relative",
         //borderWidth: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '40%',
+        justifyContent: "center",
+        alignItems: "center",
+        height: "40%",
         marginVertical: 8,
     },
-
 
     button: {
         marginTop: 10,
@@ -277,63 +376,62 @@ const styles = StyleSheet.create({
 
     modalContainer: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.3)",
     },
     modalContent: {
-        flex: .12,
-        justifyContent: 'center',
-        alignItems: 'center',
+        flex: 0.12,
+        justifyContent: "center",
+        alignItems: "center",
         width: 190,
         //padding: 20,
         //paddingBottom: 20,
-        backgroundColor: 'white',
+        backgroundColor: "white",
         borderRadius: 25,
-        alignItems: 'center',
+        alignItems: "center",
         //borderWidth: 1,
-        borderColor: 'grey'
+        borderColor: "grey",
     },
     modalText: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        justifyContent: "center",
+        alignItems: "center",
         padding: 10,
-        borderBottomColor: 'grey',
+        borderBottomColor: "grey",
         borderBottomWidth: 1,
-        borderColor: 'grey',
-        width: '100%'
+        borderColor: "grey",
+        width: "100%",
     },
     mText: {
-        fontFamily: 'Poppins-Medium'
+        fontFamily: "Poppins-Medium",
     },
     modalButtons: {
         flex: 1,
-        flexDirection: 'row',
-
+        flexDirection: "row",
     },
     left: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderColor: 'grey',
+        justifyContent: "center",
+        alignItems: "center",
+        borderColor: "grey",
         borderRightWidth: 1,
         padding: 10,
     },
     right: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center'
+        justifyContent: "center",
+        alignItems: "center",
     },
     lText: {
-        color: 'red',
+        color: "red",
         //fontWeight: 'bold',
-        fontFamily: 'Poppins-Medium',
+        fontFamily: "Poppins-Medium",
     },
     rText: {
-        color: 'blue',
+        color: "blue",
         //fontWeight: 'bold',
-        fontFamily: 'Poppins-Medium',
+        fontFamily: "Poppins-Medium",
     },
 
     buttonbox: {

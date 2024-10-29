@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Modal, ScrollView, Image, TouchableOpacity, Ale
 import { supabase } from "../lib/supabase"; // Import Supabase client
 import useStore from "../store/store"; // Importing the store
 
-const OwnedBannersPop = ({ visible, onClose }) => { // Functional component for displaying owned banners in a modal
+const OwnedBannersModal = ({ visible, onClose }) => { // Functional component for displaying owned banners in a modal
   const { user } = useStore(); // Retrieve the user from the store
   const [ownedBanners, setOwnedBanners] = useState([]); // State for storing owned banners
   const [loading, setLoading] = useState(true); // Loading state
@@ -135,4 +135,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OwnedBannersPop;
+export default OwnedBannersModal;

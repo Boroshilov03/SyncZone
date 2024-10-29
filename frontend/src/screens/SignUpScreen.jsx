@@ -22,6 +22,7 @@ import { signupSchema } from "../utils/validation";
 import { LinearGradient } from "expo-linear-gradient";
 import GradientText from "react-native-gradient-texts";
 import Icon from "react-native-vector-icons/FontAwesome";
+import Acon from "react-native-vector-icons/AntDesign";
 import { TouchableOpacity } from "react-native-gesture-handler";
 
 export default function SignupScreen({ navigation }) {
@@ -158,7 +159,7 @@ export default function SignupScreen({ navigation }) {
         Alert.alert(
           "Error",
           "Failed to update avatar URL in profiles table: " +
-            updateProfileError.message
+          updateProfileError.message
         );
         setLoading(false);
         return;
@@ -209,31 +210,37 @@ export default function SignupScreen({ navigation }) {
 
             <TouchableWithoutFeedback>
               <View style={styles.imageContainer}>
-                <View style={styles.cam}>
+                {/* <View style={styles.cam}>
                   <Icon
                     name="camera"
                     size={35}
                     color="#616061"
                     onPress={pickImage}
                   ></Icon>
-                </View>
+                </View> */}
                 {profilePhoto ? (
                   <Image source={{ uri: profilePhoto }} style={styles.image} />
                 ) : (
-                  <Pressable style={styles.imagePlaceholder}>
-                    <Text style={styles.imagePlaceholderText}>
+                  <Pressable style={styles.imagePlaceholder} onPress={pickImage}>
+                    {/* <Text style={styles.imagePlaceholderText}>
                       Upload Photo
-                    </Text>
+                    </Text> */}
+                    <Acon name='plus' size={35} color="#858383" style={styles.icon} />
                   </Pressable>
                 )}
                 <View style={styles.cancel}>
-                  <Icon name="remove" size={35} color="#616061"></Icon>
+                  <Icon name="remove" size={35} color="#616061"
+                    onPress={() => {
+                      setProfilePhoto(null);
+                      setBase64Photo(null);
+                    }}
+                  ></Icon>
                 </View>
               </View>
             </TouchableWithoutFeedback>
             <View style={styles.inputbox}>
               {[
-                { key: "username", label: "Username" },
+                { key: "username", label: "Username", icon: "user" },
                 { key: "firstname", label: "First Name" },
                 { key: "lastname", label: "Last Name" },
                 { key: "email", label: "Email" },
@@ -248,6 +255,17 @@ export default function SignupScreen({ navigation }) {
                   error={errors[key]}
                   setValue={(value) => handleInputChange(key, value)}
                   secureTextEntry={key === "password1" || key === "password2"}
+
+                  leftIcon={{
+                    name:
+                      label === "Password" || label === "Confirm Password" ? "lock" :
+                        (label === "Email" ? "envelope" :
+                          (label === "Location" ? "fighter-jet" :
+                            (label === "Confirm" ? "fighter-jet" : "user"))),
+                    color: "#616061",
+                    size: 20,
+                  }}
+
                 />
               ))}
             </View>
@@ -288,8 +306,8 @@ export default function SignupScreen({ navigation }) {
                 isGradientStroke
                 gradientColors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
                 fontFamily={"Karla-Medium"}
-                //gradientColors={["#D49AC0", "#6FD2E2"]}
-                // fontFamily={"Gill Sans"}
+              //gradientColors={["#D49AC0", "#6FD2E2"]}
+              // fontFamily={"Gill Sans"}
               />
             </View>
           </ScrollView>
@@ -320,7 +338,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "green",
   },
   title: {
     fontSize: 34,
@@ -343,13 +360,15 @@ const styles = StyleSheet.create({
     //justifyContent: 'flex-start',
     alignItems: "flex-start",
   },
-  cam: {
-    flex: 0,
-    padding: 40,
-  },
+  // cam: {
+  //   flex: 0,
+  //   padding: 40,
+  // },
   cancel: {
     flex: 0,
     padding: 40,
+    position: 'absolute',
+    right: 20,
   },
   color: {
     color: "#d87af0",
@@ -407,6 +426,8 @@ const styles = StyleSheet.create({
   },
   imagePlaceholderText: {
     color: "#757575",
+    zIndex: 2,
+    position: 'absolute'
   },
   box: {
     //minWidth: 10,
@@ -414,5 +435,9 @@ const styles = StyleSheet.create({
     padding: 0,
     justifyContent: "flex-end",
     alignItems: "center",
+  },
+  icon: {
+    position: 'absolute', // Position the icon absolutely within the placeholder
+    zIndex: 1, // Ensure the icon is on top of the placeholder
   },
 });

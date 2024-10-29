@@ -15,7 +15,14 @@ const calendarImage = require("../../assets/icons/add_calendar.png");
 const messageImage = require("../../assets/icons/add_message.png");
 const callImage = require("../../assets/icons/add_call.png");
 
-const Header = ({ toggleAddEventModal, event, navigation, title, toggleSwitch, switchValue }) => {
+const Header = ({
+  toggleAddEventModal,
+  event,
+  navigation,
+  title,
+  toggleSwitch,
+  switchValue,
+}) => {
   const { user } = useStore();
   const [form, setForm] = useState({ emailNotifications: false });
 
@@ -86,18 +93,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 20,
     marginTop: 30,
-    position: 'relative', // Make sure the header has a relative position
+    position: "relative", // Make sure the header has a relative position
   },
   titleContainer: {
-    position: 'absolute', // Position the title absolutely
+    position: "absolute", // Position the title absolutely
     left: 0,
     right: 0,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    textAlign: 'center',
+    textAlign: "center",
   },
   profilePic: {
     width: 40,

@@ -9,15 +9,16 @@ import {
   Switch,
   Image,
   Modal,
-  Pressable
+  Pressable,
 } from "react-native";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
 const profilePic = require("../../assets/icons/pfp_icon.png");
 import { useRoute } from "@react-navigation/native";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 import Profile from "./ProfileScreen";
+import Constants from "expo-constants";
 
 export default function Example({ navigation }) {
   const { setUser, setAccessToken, setRefreshToken, user } = useStore();
@@ -31,12 +32,11 @@ export default function Example({ navigation }) {
   });
 
   const contactInfo = {
-
-    //contactID: profiles.id,
-    //contactPFP: profiles.avatar_url,
-    contactFirst: user.user_metadata?.first_name,
-    contactLast: user.user_metadata?.last_name,
-    contactUsername: user.user_metadata?.username,
+    contactID: user?.user_metadata?.id,
+    contactPFP: profilephoto,
+    contactFirst: user?.user_metadata?.first_name,
+    contactLast: user?.user_metadata?.last_name,
+    contactUsername: user?.user_metadata?.username,
   };
 
   const handleLogout = async () => {
@@ -51,7 +51,14 @@ export default function Example({ navigation }) {
     }
   };
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f8f8" }}>
+    // style={[styles.container, { marginTop: Constants.statusBarHeight }]}
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: "#f8f8f8",
+        marginTop: Constants.statusBarHeight,
+      }}
+    >
       <View style={styles.header}>
         <View style={styles.headerAction}>
           <TouchableOpacity onPress={() => navigation.navigate("MainTabs")}>
@@ -74,19 +81,16 @@ export default function Example({ navigation }) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-
         {user ? (
           <Pressable style={[styles.section, { paddingTop: 4 }]}>
-            <Text style={styles.sectionTitle} >Account</Text>
+            <Text style={styles.sectionTitle}>Account</Text>
 
             <View style={styles.sectionBody}>
-
               <TouchableOpacity
                 onPress={() => {
-                  navigation.navigate("ProfileSettings");
+                  navigation.navigate("ProfileSettings", { contactInfo });
                   /* handle onPress */
                 }}
-
                 style={styles.profile}
               >
                 <Image
@@ -122,7 +126,6 @@ export default function Example({ navigation }) {
             <Text>No user logged in</Text>
           </View>
         )}
-
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>
@@ -192,72 +195,6 @@ export default function Example({ navigation }) {
                   value={form.pushNotifications}
                 />
               </View>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Resources</Text>
-
-          <View style={styles.sectionBody}>
-            <View style={[styles.rowWrapper, styles.rowFirst]}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}
-              >
-                <Text style={styles.rowLabel}>Contact Us</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.rowWrapper}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}
-              >
-                <Text style={styles.rowLabel}>Report Bug</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.rowWrapper}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}
-              >
-                <Text style={styles.rowLabel}>Rate in App Store</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={[styles.rowWrapper, styles.rowLast]}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}
-              >
-                <Text style={styles.rowLabel}>Terms and Privacy</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
-              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -423,9 +360,9 @@ const styles = StyleSheet.create({
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContainer: {
     flex: 1,
@@ -434,8 +371,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    width: '85%',
-    height: '70%',
+    width: "85%",
+    height: "70%",
     padding: 40,
     paddingTop: 40,
     backgroundColor: "#fff",

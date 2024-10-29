@@ -296,9 +296,7 @@ const ChatDetailScreen = () => {
             { backgroundColor: emotionColorMap[emotion.name] || "gray" },
           ]}
         />
-        <Text style={styles.emotionText}>
-          {emotion.name} ({Math.round(emotion.score * 100)}%)
-        </Text>
+        <Text style={styles.emotionText}>{emotion.name}</Text>
       </View>
     );
   };
@@ -330,9 +328,7 @@ const ChatDetailScreen = () => {
               ]}
             >
               <Text style={styles.emotionText}>
-                {`${item.senderEmotion.name} (${Math.round(
-                  item.senderEmotion.score * 100
-                )}%)`}
+                {`${item.senderEmotion.name}`}
               </Text>
             </View>
           )}
@@ -373,10 +369,15 @@ const ChatDetailScreen = () => {
           </TouchableOpacity>
 
           <View style={styles.centerContainer}>
-            <Image
-              source={otherPFP ? { uri: otherPFP } : noProfilePic}
-              style={styles.profileImage}
-            />
+            <TouchableOpacity
+              onPress={() => console.log("Opening profile", otherPFP, username)}
+            >
+              <Image
+                source={otherPFP ? { uri: otherPFP } : noProfilePic}
+                style={styles.profileImage}
+              />
+            </TouchableOpacity>
+
             <Text style={styles.title}>{username}</Text>
           </View>
 
@@ -405,7 +406,6 @@ const ChatDetailScreen = () => {
         {typingUser && (
           <Text style={styles.typingIndicator}>{typingUser} is typing...</Text>
         )}
-        <Text style={styles.typingIndicator}>Mirlan is typing...</Text>
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
@@ -419,12 +419,20 @@ const ChatDetailScreen = () => {
 
           <TouchableOpacity onPress={handleSendMessage}>
             <LinearGradient
-              colors={["#A0D7E5", "#A0D7E5"]}
+              colors={["#A0D7E5", "#D1EBEF"]}
               style={styles.sendButtonContainer}
             >
               <Image
-                style={styles.sendButton}
-                source={require("../../assets/icons/sendIcon.png")}
+                style={[
+                  styles.sendButton,
+                  {
+                    tintColor: "white",
+                    transform: [{ rotate: "-45deg" }],
+                    width: 20,
+                    height: 20,
+                  },
+                ]}
+                source={require("../../assets/icons/send_icon.png")}
               />
             </LinearGradient>
           </TouchableOpacity>
@@ -446,48 +454,50 @@ const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     padding: 15,
-    backgroundColor: "#DEDEF8",
+    backgroundColor: "rgba(209, 235, 239, 0.7)", // Set to a glassy transparent color
     borderRadius: 10,
-    marginBottom: 20,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "rgba(221, 221, 221, 0.5)", // Slightly transparent border for a softer look
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    justifyContent: "space-between",
   },
   backButton: {
-    padding: 10,
+    flex: 1,
+    justifyContent: "flex-start",
   },
   backIcon: {
-    width: 24,
-    height: 24,
+    width: 30,
+    height: 30,
   },
   centerContainer: {
     flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
-    flex: 1, // Allow it to take available space for centering
+    flex: 2,
   },
   profileImage: {
     width: 48,
     height: 48,
     borderRadius: 50,
-    borderColor: "#007BFF",
     marginBottom: 5,
   },
   title: {
     fontSize: 24,
     fontWeight: "400",
     color: "#333",
+    marginLeft: 10,
   },
   callIconContainer: {
-    padding: 10,
+    flex: 1,
+    alignItems: "flex-end",
   },
   callIcon: {
-    width: 25,
+    width: 27,
     height: 25,
   },
   typingIndicator: {
@@ -498,7 +508,6 @@ const styles = StyleSheet.create({
   },
   messageWrapper: {
     marginVertical: 5,
-    marginLeft: 10,
   },
   messageList: {
     marginTop: 20,
@@ -508,13 +517,20 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 8,
     maxWidth: "80%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
+    marginBottom: 20,
   },
   myMessageContainer: {
     alignSelf: "flex-end",
     paddingTop: 10,
     paddingLeft: 20,
     fontWeight: "semibold",
-    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBlockColor: "#F6D6EE",
   },
   otherMessageContainer: {
     alignSelf: "flex-start",
@@ -523,17 +539,17 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     paddingLeft: 10,
     fontWeight: "semibold",
-    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBlockColor: "#D1EBEF",
   },
   messageText: {
     fontSize: 16,
-    fontWeight: "300"
-
+    fontWeight: "300",
   },
   myMessageText: {
     textAlign: "left", // Aligns the text to the right
     fontSize: 16,
-    fontWeight: "300"
+    fontWeight: "300",
   },
   otherMessageText: {
     color: "#333",
@@ -542,6 +558,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#999",
     textAlign: "right",
+    marginVertical: 5,
   },
   inputContainer: {
     flexDirection: "row",
@@ -551,6 +568,12 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     borderWidth: 1,
     borderColor: "#ddd",
+    margin: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
   },
   input: {
     flex: 1,
@@ -559,10 +582,15 @@ const styles = StyleSheet.create({
   },
   sendButtonContainer: {
     borderRadius: "50%",
+    padding: 8,
+    alignItems: "center", // Center horizontally
+    justifyContent: "center", // Center vertically
   },
   sendButton: {
     width: 40,
     height: 40,
+    alignItems: "center", // Center horizontally
+    justifyContent: "center", // Center vertically
   },
   errorText: {
     color: "red",
@@ -580,20 +608,30 @@ const styles = StyleSheet.create({
     left: -10,
   },
   myEmotionContainer: {
-    position: "absolute",  // Allows it to be positioned absolutely within the parent
+    position: "absolute", // Allows it to be positioned absolutely within the parent
     padding: 5,
-    borderTopLeftRadius: 12,  // Round the top left corner
+    borderTopLeftRadius: 0, // Round the top left corner
     borderBottomLeftRadius: 12, // Round the bottom left corner
-    borderTopRightRadius: 0,    // No rounding on the top right corner
+    borderTopRightRadius: 12, // No rounding on the top right corner
     borderBottomRightRadius: 12, // Round the bottom right corner
-    top: -15,  // Adjust the vertical position as needed
+    top: -15, // Adjust the vertical position as needed
     right: -10, // Move it to the right side, adjust as needed
   },
   otherEmotionContainer: {
+    position: "absolute", // Allows it to be positioned absolutely within the parent
+    padding: 5,
+    borderTopLeftRadius: 0, // Round the top left corner
+    borderTopRightRadius: 0, // No rounding on the top right corner
+    top: -15, // Adjust the vertical position as needed
+    left: 0, // Move it to the right side, adjust as needed
   },
   emotionText: {
     fontSize: 10,
-    fontWeight: "200",
+    fontWeight: "bold", // Change to bold for better visibility
+    color: "#FFFFFF", // Change text color to white for high contrast
+    textShadowColor: "rgba(0, 0, 0, 0.5)", // Softer gray shadow (semi-transparent black)
+    textShadowOffset: { width: 1, height: 1 }, // Slight offset for depth
+    textShadowRadius: 2, // Increase radius for a softer shadow effect
   },
 });
 
