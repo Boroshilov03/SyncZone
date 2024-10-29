@@ -126,10 +126,19 @@ const AddEvent = ({ onClose }) => {
   };
 
   const onDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || date;
-    setShowPicker(Platform.OS === "ios"); // Keep picker open for iOS only
-    setDate(currentDate); // Set the selected date
+    // Check if a valid date is selected
+    if (selectedDate) {
+      // Create a new Date object and prevent timezone changes
+      const localDate = new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate()
+      );
+      setDate(localDate); // Set the date without any timezone adjustments
+    }
+    setShowPicker(false); // Close the picker after selecting
   };
+  
 
   const predefinedPFPs = [
     require("../../assets/icons/pfp1.png"),
