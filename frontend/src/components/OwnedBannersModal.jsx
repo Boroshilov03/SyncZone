@@ -4,18 +4,19 @@ import { supabase } from "../lib/supabase"; // Import Supabase client
 import useStore from "../store/store"; // Importing the store
 
 const OwnedBannersModal = ({ visible, onClose }) => {
-  const { user } = useStore(); // Retrieve the user from the store
-  const [ownedBanners, setOwnedBanners] = useState([]); // State for storing owned banners
-  const [loading, setLoading] = useState(true); // Loading state
+  const { user } = useStore();
+  const [ownedBanners, setOwnedBanners] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeBannerId, setActiveBannerId] = useState(null); // State to track the active banner
 
   useEffect(() => {
     const fetchOwnedBanners = async () => {
-      if (!user) return; // Exit if user is not defined
+      if (!user) return;
 
       const { data: userBanners, error } = await supabase
         .from("user_banners")
         .select("banner_id")
-        .eq("user_id", user.id); // Assuming `user.id` is the correct way to access user ID
+        .eq("user_id", user.id);
 
       if (error) {
         console.error("Error fetching user_banners:", error.message);
@@ -24,7 +25,6 @@ const OwnedBannersModal = ({ visible, onClose }) => {
         return;
       }
 
-      // Fetch the banner details
       if (userBanners.length > 0) {
         const bannerIds = userBanners.map(banner => banner.banner_id);
         const { data: banners, error: bannersError } = await supabase
@@ -36,15 +36,83 @@ const OwnedBannersModal = ({ visible, onClose }) => {
           console.error("Error fetching banners:", bannersError.message);
           Alert.alert("Error", "Failed to fetch banners.");
         } else {
-          setOwnedBanners(banners); // Set the owned banners to the state
+          setOwnedBanners(banners);
         }
       }
 
-      setLoading(false); // Stop loading
+      // Fetch current active banner
+      const { data: currentActive, error: currentActiveError } = await supabase
+        .from("active_banner")
+        .select("banner_id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!currentActiveError && currentActive) {
+        setActiveBannerId(currentActive.banner_id); // Set active banner ID
+      }
+
+      setLoading(false);
     };
 
     fetchOwnedBanners();
-  }, [user]); // Dependency on user
+  }, [user]);
+
+  const handleBannerSelect = async (bannerId) => {
+    if (!user) return;
+
+    // Check if the bannerId is already set as active
+    const { data: currentActive, error: currentActiveError } = await supabase
+      .from("active_banner")
+      .select("banner_id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (currentActiveError && currentActiveError.code !== 'PGRST116') {
+      Alert.alert("Error", "Failed to fetch current active banner.");
+      return;
+    }
+
+    if (currentActive && currentActive.banner_id === bannerId) {
+      Alert.alert("Info", "This banner is already active.");
+      return; // Do nothing if the selected banner is already active
+    }
+
+    // Update or insert the active banner
+    const { data, error } = currentActive
+      ? await supabase
+          .from("active_banner")
+          .update({ banner_id: bannerId })
+          .eq("user_id", user.id)
+      : await supabase
+          .from("active_banner")
+          .insert({ user_id: user.id, banner_id: bannerId });
+
+    if (error) {
+      console.error("Error setting active banner:", error.message);
+      Alert.alert("Error", "Failed to set active banner.");
+    } else {
+      setActiveBannerId(bannerId); // Update the active banner ID in state
+      Alert.alert("Success", "Active banner updated successfully.");
+      // Do not close the modal here
+    }
+  };
+
+  const handleRemoveActiveBanner = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("active_banner")
+      .delete()
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error("Error removing active banner:", error.message);
+      Alert.alert("Error", "Failed to remove active banner.");
+    } else {
+      setActiveBannerId(null); // Clear the active banner ID in state
+      Alert.alert("Success", "Active banner removed successfully.");
+    }
+  };
 
   return (
     <Modal
@@ -55,7 +123,7 @@ const OwnedBannersModal = ({ visible, onClose }) => {
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Select Banners</Text>
+          <Text style={styles.modalTitle}>Select a Banner</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
@@ -66,15 +134,28 @@ const OwnedBannersModal = ({ visible, onClose }) => {
             <ScrollView contentContainerStyle={styles.scrollContainer}>
               {ownedBanners.length > 0 ? (
                 ownedBanners.map(banner => (
-                  <View key={banner.id} style={styles.bannerContainer}>
+                  <TouchableOpacity 
+                    key={banner.id} 
+                    onPress={() => handleBannerSelect(banner.id)} 
+                    style={[
+                      styles.bannerContainer,
+                      activeBannerId === banner.id && styles.activeBanner // Apply active style if this banner is active
+                    ]}
+                  >
                     <Image source={{ uri: banner.image_url }} style={styles.bannerImage} />
                     <Text style={styles.bannerName}>{banner.name}</Text>
-                  </View>
+                  </TouchableOpacity>
                 ))
               ) : (
                 <Text style={styles.noBannersText}>You have no owned banners.</Text>
               )}
             </ScrollView>
+          )}
+          {/* Button to remove the active banner */}
+          {activeBannerId && (
+            <TouchableOpacity onPress={handleRemoveActiveBanner} style={styles.removeButton}>
+              <Text style={styles.removeButtonText}>Remove Active Banner</Text>
+            </TouchableOpacity>
           )}
         </View>
       </View>
@@ -99,7 +180,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 5,
-    
   },
   closeButton: {
     alignSelf: 'flex-end',
@@ -109,16 +189,19 @@ const styles = StyleSheet.create({
     color: '#007bff',
   },
   scrollContainer: {
-    alignItems: 'center', // Center the items in the column
+    alignItems: 'center',
   },
   bannerContainer: {
     marginBottom: 15,
-    padding: 10, // Add some padding
-    borderWidth: 1, // Add a border
-    borderColor: '#ddd', // Set the border color
-    borderRadius: 5, // Round the corners
-    alignItems: 'center', // Center the items in the container
-    //backgroundColor: '#fffbf5', // Use your preferred background color
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  activeBanner: {
+    backgroundColor: '#e0f7fa', // Change to the desired color for the active banner
+    borderColor: '#007bff', // Optional: change border color for the active banner
   },
   bannerImage: {
     width: 100,
@@ -127,11 +210,22 @@ const styles = StyleSheet.create({
   bannerName: {
     marginTop: 5,
     textAlign: 'center',
-    color: 'black', // Set text color to black
+    color: 'black',
   },
   noBannersText: {
     textAlign: 'center',
     marginTop: 10,
+  },
+  removeButton: {
+    marginTop: 0,
+    backgroundColor: '#ff5252', // Change to the desired color for the remove button
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  removeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 
