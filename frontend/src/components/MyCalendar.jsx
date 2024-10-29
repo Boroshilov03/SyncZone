@@ -83,8 +83,10 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
   
       // Group events by date and filter out past events
       const groupedAgendaItems = events
-        .filter((event) => new Date(event.date) >= currentDate && isSameMonth(parseISO(event.date), selectedMonth))
-        .reduce((acc, event) => {
+      .filter((event) => {const eventDate = new Date(event.date);
+        return ((eventDate >= new Date(currentDate.setHours(0, 0, 0, 0))) && isSameMonth(parseISO(event.date), selectedMonth)
+        );
+      })        .reduce((acc, event) => {
           const eventDate = event.date;
           const eventItem = {
             title: event.title,
