@@ -43,6 +43,7 @@ const ProfileSettings = ({ navigation, route }) => {
                 "Inter_18pt-Medium": require("./fonts/Inter_18pt-Medium.ttf"),
                 "Inter_18pt-MediumItalic": require("./fonts/Inter_18pt-MediumItalic.ttf"),
                 "Poppins-Regular": require("./fonts/Poppins-Regular.ttf"),
+                "Poppins-Medium": require("./fonts/Poppins-Regular.ttf"),
                 "Karla-Regular": require("./fonts/Karla-Regular.ttf"),
             });
             setFontsLoaded(true);
@@ -71,7 +72,7 @@ const ProfileSettings = ({ navigation, route }) => {
                     ></Icon>
                 </Pressable>
                 <View style={styles.profileContainer} >
-                    <Pressable style={styles.pic} onPress={() => setOwnedBannersVisible(true)}>
+                    <Pressable style={styles.pic} onPress={() => setModalVisible(true)}>
                         <Image
                             source={{ uri: contactInfo.contactPFP }}
                             style={styles.placeholderImage}
@@ -110,12 +111,36 @@ const ProfileSettings = ({ navigation, route }) => {
                             <View style={styles.right}>
                                 <Text
                                     style={styles.rText}
-                                    onPress={() => setSettingVisible(false)}
+                                    onPress={() => {
+                                        setOwnedBannersVisible(true);
+                                        setVisible(false);
+                                    }}
                                 >
                                     Cancel
                                 </Text>
                             </View>
                         </Pressable>
+                    </View>
+                </Modal>
+                <Modal visible={isModalVisible} animationType="fade" transparent={true}>
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalContent}>
+                            <View style={styles.modalText}>
+                                <Text style={styles.mText}>Banners?</Text>
+                            </View>
+                            <Pressable style={styles.modalButtons}>
+                                <View style={styles.left}>
+                                    <Text style={styles.lText} onPress={() => setModalVisible(false)}>
+                                        Delete
+                                    </Text>
+                                </View>
+                                <View style={styles.right}>
+                                    <Text style={styles.rText} onPress={() => setModalVisible(false)}>
+                                        Cancel
+                                    </Text>
+                                </View>
+                            </Pressable>
+                        </View>
                     </View>
                 </Modal>
                 <Modal visible={visible} animationType="fade" transparent={true}>
@@ -125,11 +150,11 @@ const ProfileSettings = ({ navigation, route }) => {
                                 <Text style={styles.mText}>Delete Account?</Text>
                             </View>
                             <Pressable style={styles.modalButtons}>
-                                <View style={styles.left}>
-                                    <Text style={styles.lText} onPress={() => setVisible(false)}>
+                                <Pressable style={styles.left}>
+                                    <Text style={styles.lText} onPress={() => setOwnedBannersVisible(true)}>
                                         Delete
                                     </Text>
-                                </View>
+                                </Pressable>
                                 <View style={styles.right}>
                                     <Text style={styles.rText} onPress={() => setVisible(false)}>
                                         Cancel
