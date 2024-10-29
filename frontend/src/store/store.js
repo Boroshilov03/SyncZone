@@ -9,6 +9,7 @@ const useStore = create((set) => ({
   stickers: [], // State for stickers
   user_banners: [], // State for user's owned banners
   user_stickers: [], // State for user's owned stickers
+  active_banner: null, // State for the user's active banner
 
   setUser: (userData) => set({ user: userData, session: userData ? true : false }), // Set user details and update session state
   setAccessToken: (token) => set({ accessToken: token }), // Set access token
@@ -18,6 +19,7 @@ const useStore = create((set) => ({
   setStickers: (stickersData) => set({ stickers: stickersData }), // Set stickers data
   setUserBanners: (UseBannersData) => set({ user_banners: UseBannersData }), // Set user's owned banners
   setUserStickers: (UseStickersData) => set({ user_stickers: UseStickersData }), // Set user's owned stickers
+  setActiveBanner: (bannerId) => set({ active_banner: bannerId }), // Set user's active banner
 }));
 
 export default useStore;
