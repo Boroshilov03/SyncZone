@@ -24,6 +24,7 @@ import GradientText from "react-native-gradient-texts";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Acon from "react-native-vector-icons/AntDesign";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function SignupScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -229,12 +230,12 @@ export default function SignupScreen({ navigation }) {
                   </Pressable>
                 )}
                 <View style={styles.cancel}>
-                  <Icon name="remove" size={35} color="#616061"
+                  <Ionicons name="close" size={35} color="#616061"
                     onPress={() => {
                       setProfilePhoto(null);
                       setBase64Photo(null);
                     }}
-                  ></Icon>
+                  ></Ionicons>
                 </View>
               </View>
             </TouchableWithoutFeedback>
@@ -255,6 +256,7 @@ export default function SignupScreen({ navigation }) {
                   error={errors[key]}
                   setValue={(value) => handleInputChange(key, value)}
                   secureTextEntry={key === "password1" || key === "password2"}
+                  backgroundColor='#fffbf5'
 
                   leftIcon={{
                     name:
@@ -320,6 +322,7 @@ export default function SignupScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fffbf5',
   },
   scrollView: {
     flexGrow: 1,
@@ -377,6 +380,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+
   },
   buttonbox: {
     flex: 0,

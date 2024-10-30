@@ -10,6 +10,7 @@ import {
     Image,
     Switch,
     ScrollView,
+    PanResponder,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { Ionicons } from "@expo/vector-icons";
@@ -43,7 +44,9 @@ const ProfileSettings = ({ navigation, route }) => {
                 "Inter_18pt-Medium": require("./fonts/Inter_18pt-Medium.ttf"),
                 "Inter_18pt-MediumItalic": require("./fonts/Inter_18pt-MediumItalic.ttf"),
                 "Poppins-Regular": require("./fonts/Poppins-Regular.ttf"),
+                "Poppins-Medium": require("./fonts/Poppins-Medium.ttf"),
                 "Karla-Regular": require("./fonts/Karla-Regular.ttf"),
+                "Karla-Medium": require("./fonts/Karla-Medium.ttf"),
             });
             setFontsLoaded(true);
         };
@@ -53,6 +56,16 @@ const ProfileSettings = ({ navigation, route }) => {
 
     const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 
+    const panResponder = PanResponder.create({
+        onMoveShouldSetPanResponder: (evt, gestureState) => {
+            return gestureState.dy > 10; // Start responding to the gesture
+        },
+        onPanResponderRelease: (evt, gestureState) => {
+            if (gestureState.dy > 50) { // Swipe down threshold
+                setModalVisible(false); // Close modal
+            }
+        },
+    });
     if (!fontsLoaded) {
         return null; // You can return a loading spinner or similar
     }
@@ -71,7 +84,7 @@ const ProfileSettings = ({ navigation, route }) => {
                     ></Icon>
                 </Pressable>
                 <View style={styles.profileContainer} >
-                    <Pressable style={styles.pic} onPress={() => setOwnedBannersVisible(true)}>
+                    <Pressable style={styles.pic} onPress={() => setModalVisible(true)}>
                         <Image
                             source={{ uri: contactInfo.contactPFP }}
                             style={styles.placeholderImage}
@@ -110,7 +123,10 @@ const ProfileSettings = ({ navigation, route }) => {
                             <View style={styles.right}>
                                 <Text
                                     style={styles.rText}
-                                    onPress={() => setSettingVisible(false)}
+                                    onPress={() => {
+                                        setOwnedBannersVisible(true);
+                                        setVisible(false);
+                                    }}
                                 >
                                     Cancel
                                 </Text>
@@ -118,6 +134,51 @@ const ProfileSettings = ({ navigation, route }) => {
                         </Pressable>
                     </View>
                 </Modal>
+
+                <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+                    <View style={styles.pfpModalContainer} {...panResponder.panHandlers}>
+                        <View
+                            style={styles.pfpContent}
+
+                        >
+                            <View style={styles.modText}>
+                                <Text style={styles.pfText}>Profile Picture</Text>
+                                {/* <Ionicons
+                                    name="close"
+                                    size={35}
+                                    color="#555A70"
+                                    style={styles.pfpClose}
+                               
+                                /> */}
+                            </View>
+                            <Pressable style={styles.pfpButtons}>
+                                <View style={styles.upload}>
+                                    <Text style={styles.uploadText}
+
+                                    >
+                                        Upload Image
+                                    </Text>
+                                </View>
+                                <View style={styles.banButton}>
+                                    <Text style={styles.banText} onPress={() => {
+                                        setOwnedBannersVisible(true);
+                                        setVisible(false);
+                                    }}>
+                                        Change Banner
+                                    </Text>
+                                </View>
+                                <View style={styles.right}>
+                                    <Text style={styles.removeText}
+
+                                    >
+                                        Remove Image
+                                    </Text>
+                                </View>
+                            </Pressable>
+                        </View>
+                    </View>
+                </Modal>
+
                 <Modal visible={visible} animationType="fade" transparent={true}>
                     <View style={styles.modalContainer}>
                         <View style={styles.modalContent}>
@@ -125,11 +186,11 @@ const ProfileSettings = ({ navigation, route }) => {
                                 <Text style={styles.mText}>Delete Account?</Text>
                             </View>
                             <Pressable style={styles.modalButtons}>
-                                <View style={styles.left}>
-                                    <Text style={styles.lText} onPress={() => setVisible(false)}>
+                                <Pressable style={styles.left}>
+                                    <Text style={styles.lText} onPress={() => setOwnedBannersVisible(true)}>
                                         Delete
                                     </Text>
-                                </View>
+                                </Pressable>
                                 <View style={styles.right}>
                                     <Text style={styles.rText} onPress={() => setVisible(false)}>
                                         Cancel
@@ -469,4 +530,87 @@ const styles = StyleSheet.create({
         justifyContent: "flex-start",
         alignItems: "center",
     },
+    pfpButtons: {
+        flex: 2.5,
+        //borderWidth: 1,
+        borderColor: 'red',
+        width: '90%',
+        borderRadius: 25,
+        margin: 10,
+        backgroundColor: '#FFFFFF',
+        zIndex: 1
+        //flexDirection: "row",
+    },
+    pfpModalContainer: {
+        flex: 1,
+        justifyContent: "flex-end",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.3)",
+    },
+    pfpContent: {
+        flex: .4,
+        justifyContent: "space-evenly",
+        alignItems: "center",
+        width: '100%',
+        //margin: 10,
+        //padding: 20,
+        //paddingBottom: 20,
+        backgroundColor: 'rgba(242, 244, 255, 0.90)',
+        //borderRadius: 25,
+        borderTopRightRadius: 25,
+        borderTopLeftRadius: 25,
+        alignItems: "center",
+        //borderWidth: 1,
+        borderColor: "blue",
+    },
+    modText: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+
+        borderBottomColor: "grey",
+        //borderBottomWidth: 1,
+        borderColor: "grey",
+        width: "100%",
+    },
+    banButton: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        borderColor: "#F2F4FF",
+        borderBottomWidth: 3,
+        padding: 10,
+    },
+    upload: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        borderBottomWidth: 3,
+        borderColor: '#F2F4FF'
+    },
+    uploadText: {
+        //fontWeight: 'bold',
+        fontFamily: "Karla-Medium",
+        fontSize: 17,
+        color: '#555A70'
+    },
+    banText: {
+        fontFamily: "Karla-Medium",
+        fontSize: 17,
+        color: '#555A70'
+    },
+    removeText: {
+        fontFamily: "Karla-Medium",
+        fontSize: 17,
+        color: '#B96C6C'
+    },
+    pfText: {
+        fontFamily: "Karla-Medium",
+        fontSize: 22,
+        color: '#555A70'
+    },
+    pfpClose: {
+        position: 'absolute',
+        left: 30
+    }
 });
