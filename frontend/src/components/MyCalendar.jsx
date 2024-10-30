@@ -279,8 +279,9 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOpacity: 0.3,
     shadowRadius: 5,
+    shadowOffset: { width: 0, height: 3 }, // Moves shadow more towards bottom
     elevation: 3,
-  },
+  },  
   itemTitle: {
     fontSize: 20,
     fontWeight: "600", // Changed from 'semibold' to '600' for compatibility

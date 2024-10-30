@@ -53,6 +53,7 @@ const ContactScreen = ({ navigation, route }) => {
   const flatListRef = useRef(null); // Add this line at the top of the component
   const [alphabetWidth, setAlphabetWidth] = useState(0); // State to store alphabet item width
 
+
   const {
     data: contacts,
     error,
@@ -64,6 +65,9 @@ const ContactScreen = ({ navigation, route }) => {
   });
 
   const groupContactsByLetter = (contacts) => {
+
+    if (!contacts || contacts.length === 0) return {}; // Return empty object if no contacts
+
     // First, sort contacts alphabetically by their first name
     const sortedContacts = contacts.sort((a, b) =>
       a.profiles.first_name.localeCompare(b.profiles.first_name)
@@ -98,6 +102,12 @@ const ContactScreen = ({ navigation, route }) => {
 
   // Function to scroll to the selected letter section
   const scrollToLetter = (letter) => {
+
+      // Check if groupedData is empty
+      if (!groupedData || groupedData.length === 0) {
+        return; // Do nothing if there are no contacts
+      }
+
     const index = groupedData.findIndex((item) => item.letter === letter);
 
     if (index !== -1 && flatListRef.current) {
@@ -169,12 +179,12 @@ const ContactScreen = ({ navigation, route }) => {
     toggleFavorite(item.profiles.id); // Call the function to handle favorite toggling
   };
 
-  const AlphabetList = ({ onLetterPress, onSwipeLetter }) => {
+  const AlphabetList = ({ onLetterPress, onSwipeLetter, hasContacts }) => {
     const [alphabetWidth, setAlphabetWidth] = useState(0); // State to store alphabet item width
     const alphabetRef = useRef(); // Reference to track the position of the alphabet
-
+  
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split(""); // Alphabet array
-
+  
     // Helper function to calculate which letter corresponds to the Y position
     const getLetterFromPosition = (y) => {
       const letterHeight = alphabetWidth / alphabet.length;
@@ -184,18 +194,22 @@ const ContactScreen = ({ navigation, route }) => {
       }
       return null;
     };
-
+  
     const panResponder = PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => hasContacts, // Only enable pan gesture if there are contacts
       onPanResponderGrant: (evt, gestureState) => {
         const { y0 } = gestureState;
-        const letter = getLetterFromPosition(y0);
-        if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on touch start
+        if (hasContacts) {
+          const letter = getLetterFromPosition(y0);
+          if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on touch start
+        }
       },
       onPanResponderMove: (evt, gestureState) => {
         const { moveY } = gestureState;
-        const letter = getLetterFromPosition(moveY);
-        if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on move
+        if (hasContacts) {
+          const letter = getLetterFromPosition(moveY);
+          if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on move
+        }
       },
       onPanResponderRelease: () => {
         // Optional: Handle release event, e.g., resetting state if needed
@@ -491,7 +505,6 @@ const ContactScreen = ({ navigation, route }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Alphabet List with swipe and click */}
       <AlphabetList
         onLetterPress={handleLetterPress} // Handle tap
         onSwipeLetter={handleSwipeLetter} // Handle swipe

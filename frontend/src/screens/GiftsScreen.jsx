@@ -319,7 +319,7 @@ const GiftsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     // Main container fir GiftSCreen component
-    padding: 16, //Providing some space between container's border and its content
+    // padding: 10, //Providing some space between container's border and its content
   },
   categoryContainer: {
     //Style for boxes for Banners and Stickers
@@ -328,6 +328,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, // Defines the border's width as 1 pixel.
     borderColor: "#ccc", // Sets the border color to a loght gray
     borderRadius: 8, // Rounds the corners of the box.
+    marginHorizontal: 10,
   },
   categoryText: {
     // Style adds text to display Catefgory names (Banners/Stickers)
@@ -341,7 +342,14 @@ const styles = StyleSheet.create({
   },
   itemsContainer: {
     //Individual item box
-    flexDirection: "row", //
+    flexDirection: "row", 
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 1.5 },
+    shadowOpacity: 0.25, 
+    shadowRadius: 2,
+    elevation: 3,
+    marginLeft: 10,
+    marginBottom: 10, 
   },
   itemFrame: {
     // image displayed for each banner or sticker
@@ -370,9 +378,19 @@ const styles = StyleSheet.create({
   },
   getButton: {
     backgroundColor: "#F6D6EE",
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 1.5 },
+    shadowOpacity: 0.25, 
+    shadowRadius: 3,
+    elevation: 3,
   },
   ownedButton: {
-    backgroundColor: "#6c757d",
+    backgroundColor: "#adb5bd",
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 1.5 },
+    shadowOpacity: 0.25, 
+    shadowRadius: 3,
+    elevation: 3,
   },
   buttonText: {
     fontWeight: "lightbold",
