@@ -17,7 +17,6 @@ import useStore from "../store/store";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, isSameMonth, parseISO } from "date-fns"; // Import date-fns functions
 
-
 // Fetch event data function
 const fetchingData = async (userId) => {
   try {
@@ -80,17 +79,22 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
   useEffect(() => {
     if (events.length) {
       const currentDate = new Date(); // Get the current date
-  
+
       // Group events by date and filter out past events
       const groupedAgendaItems = events
-      .filter((event) => {const eventDate = new Date(event.date);
-        return ((eventDate >= new Date(currentDate.setHours(0, 0, 0, 0))) && isSameMonth(parseISO(event.date), selectedMonth)
-        );
-      })        .reduce((acc, event) => {
+        .filter((event) => {
+          const eventDate = new Date(event.date);
+          return (
+            eventDate >= new Date(currentDate.setHours(0, 0, 0, 0)) &&
+            isSameMonth(parseISO(event.date), selectedMonth)
+          );
+        })
+        .reduce((acc, event) => {
           const eventDate = event.date;
           const eventItem = {
             title: event.title,
-            time: new Date(
+            date: event.date,
+            startTime: new Date(
               `${event.date}T${event.start_time}`
             ).toLocaleTimeString([], {
               hour: "2-digit",
@@ -106,7 +110,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
             description: event.description,
             id: event.id,
           };
-  
+
           // If the date doesn't exist in the accumulator, create it
           if (!acc[eventDate]) {
             acc[eventDate] = {
@@ -117,23 +121,23 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
             // Otherwise, push the event item into the existing date's data array
             acc[eventDate].data.push(eventItem);
           }
-  
+
           return acc;
         }, {});
-  
+
       // Convert the object back into an array and sort
       const sortedAgendaItems = Object.values(groupedAgendaItems).sort(
         (a, b) => new Date(a.title) - new Date(b.title)
       );
-  
+
       setAgendaItems(sortedAgendaItems);
-  
+
       // Create marked dates with mood dots
       const markedDatesObj = {};
       sortedAgendaItems.forEach((item) => {
         const date = item.title;
         const moodDotColor = getMoodColor(item.data[0].mood);
-  
+
         if (!markedDatesObj[date]) {
           markedDatesObj[date] = {
             dots: [],
@@ -141,12 +145,10 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
         }
         markedDatesObj[date].dots.push({ color: moodDotColor });
       });
-  
+
       setMarkedDates(markedDatesObj);
     }
   }, [events, selectedMonth]); // Re-run effect when selectedMonth changes
-
-  
 
   useEffect(() => {
     if (!user.id) return;
@@ -209,7 +211,7 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
             <Text style={styles.itemTitle}>{item.title}</Text>
             <View style={styles.timeContainer}>
               <Text style={styles.itemTime}>
-                ({item.time} - {item.endTime})
+                ({item.startTime} - {item.endTime})
               </Text>
             </View>
           </View>
@@ -237,7 +239,9 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
       >
         <ExpandableCalendar
           onDayPress={(day) => setSelected(day.dateString)}
-          onMonthChange={(month) => setSelectedMonth(parseISO(month.dateString))} // Capture month change
+          onMonthChange={(month) =>
+            setSelectedMonth(parseISO(month.dateString))
+          } // Capture month change
           markedDates={markedDates}
           firstDay={1}
           theme={{
@@ -280,13 +284,12 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 20,
     fontWeight: "600", // Changed from 'semibold' to '600' for compatibility
-    marginLeft: 5, 
-
+    marginLeft: 5,
   },
   timeContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center", 
+    alignItems: "center",
   },
   itemTime: {
     fontSize: 14,
@@ -297,7 +300,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     marginTop: 5,
-    marginLeft: 5, 
+    marginLeft: 5,
   },
   pencilIconContainer: {
     position: "absolute", // Change to absolute positioning

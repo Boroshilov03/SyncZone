@@ -22,7 +22,8 @@ const GiftsScreen = ({ navigation }) => {
   const [user_stickers, setUserStickers] = useState(new Set()); // Set to track owned stickers
 
   // Fetch and log user ID, banners (IDs), stickers (IDs), user_banners (IDs), and user_stickers (IDs)
-  useEffect(() => { // side effects in function compenents
+  useEffect(() => {
+    // side effects in function compenents
     const logUserData = async () => {
       if (user) {
         setUserId(user.id); // Set the user ID in the state
@@ -35,7 +36,10 @@ const GiftsScreen = ({ navigation }) => {
           .eq("user_id", user.id); // Filter by user ID
 
         if (userBannersError) {
-          console.error("Error fetching user_banners:", userBannersError.message);// Log any errors
+          console.error(
+            "Error fetching user_banners:",
+            userBannersError.message
+          ); // Log any errors
         } else {
           const userBannerIds = userBanners.map((ub) => ub.banner_id); // Extract banner IDs from the response
           console.log("user_banners:", userBannerIds); // Log user_banners IDs once
@@ -46,10 +50,13 @@ const GiftsScreen = ({ navigation }) => {
         const { data: userStickers, error: userStickersError } = await supabase
           .from("user_stickers")
           .select("sticker_id") // Select only the sticker_id column
-          .eq("user_id", user.id);  // Filter by user ID
+          .eq("user_id", user.id); // Filter by user ID
 
         if (userStickersError) {
-          console.error("Error fetching user_stickers:", userStickersError.message); // Log any errors
+          console.error(
+            "Error fetching user_stickers:",
+            userStickersError.message
+          ); // Log any errors
         } else {
           const userStickerIds = userStickers.map((us) => us.sticker_id); // Extract sticker IDs from the response
           console.log("user_stickers:", userStickerIds); // Log user_stickers IDs once
@@ -83,7 +90,7 @@ const GiftsScreen = ({ navigation }) => {
       }
     };
 
-    fetchBanners();  // Invoke the fetchBanners function
+    fetchBanners(); // Invoke the fetchBanners function
   }, []);
 
   // Fetch stickers based on toggle state
@@ -91,7 +98,7 @@ const GiftsScreen = ({ navigation }) => {
     const fetchStickers = async () => {
       let data;
       let error;
- 
+
       // Fetch all stickers from the database
       const { data: allStickers, error: fetchError } = await supabase
         .from("stickers")
@@ -116,7 +123,8 @@ const GiftsScreen = ({ navigation }) => {
     console.log("Show Owned:", !showOwned); // Log the toggle switch state
   };
 
-  const handleGetBanner = async (bannerId) => { // Function to handle acquiring a banner
+  const handleGetBanner = async (bannerId) => {
+    // Function to handle acquiring a banner
     if (!userId) return;
 
     const { data, error: checkError } = await supabase // Check if the user already owns this banner
@@ -127,7 +135,10 @@ const GiftsScreen = ({ navigation }) => {
 
     if (checkError) {
       console.error("Error checking user_banners:", checkError.message);
-      Alert.alert("Error", "Failed to check banner ownership. Please try again.");
+      Alert.alert(
+        "Error",
+        "Failed to check banner ownership. Please try again."
+      );
       return;
     }
 
@@ -150,7 +161,8 @@ const GiftsScreen = ({ navigation }) => {
     }
   };
 
-  const handleGetSticker = async (stickerId) => { // Function to handle acquiring a sticker
+  const handleGetSticker = async (stickerId) => {
+    // Function to handle acquiring a sticker
     if (!userId) return; // If user ID is not available, exit
 
     const { data, error: checkError } = await supabase // Check if the user already owns this sticker
@@ -161,7 +173,10 @@ const GiftsScreen = ({ navigation }) => {
 
     if (checkError) {
       console.error("Error checking user_stickers:", checkError.message);
-      Alert.alert("Error", "Failed to check sticker ownership. Please try again.");
+      Alert.alert(
+        "Error",
+        "Failed to check sticker ownership. Please try again."
+      );
       return;
     }
 
@@ -177,7 +192,7 @@ const GiftsScreen = ({ navigation }) => {
     if (error) {
       console.error("Error inserting into user_stickers:", error.message); // Log any errors
       Alert.alert("Error", "Failed to acquire sticker. Please try again."); // Show error alert
-    } else { 
+    } else {
       Alert.alert("Success", "You have acquired the sticker!"); // Notify success
       console.log("Acquired Sticker ID:", stickerId); // Log the acquired sticker ID
       setUserStickers((prev) => new Set(prev).add(stickerId)); // Update owned stickers in state
@@ -189,7 +204,7 @@ const GiftsScreen = ({ navigation }) => {
       <Header
         event="shop" // Pass event prop for identifying shop context
         navigation={navigation} // Pass navigation prop for navigation
-        title="Shop"  // Set static title for the Header
+        title="Shop" // Set static title for the Header
         toggleSwitch={toggleSwitch} // Pass toggleSwitch function for handling switch
         switchValue={showOwned} // Pass switch value to Header
       />
@@ -201,14 +216,14 @@ const GiftsScreen = ({ navigation }) => {
         </View>
         <ScrollView
           horizontal
-          showsHorizontalScrollIndicator={false}  // Hide horizontal scroll indicator
+          showsHorizontalScrollIndicator={false} // Hide horizontal scroll indicator
           contentContainerStyle={styles.scrollContainer}
         >
           <View style={styles.itemsContainer}>
             {banners.map((banner) => {
               const isOwned = user_banners.has(banner.id); // Check if the current banner is owned
               return showOwned ? (
-                isOwned ? (  // If showOwned is true, render owned banners only
+                isOwned ? ( // If showOwned is true, render owned banners only
                   <View key={banner.id} style={styles.itemFrame}>
                     <Image
                       source={{ uri: banner.image_url }} //  image_url is available
@@ -225,7 +240,7 @@ const GiftsScreen = ({ navigation }) => {
                     </TouchableOpacity>
                   </View>
                 ) : null
-              ) : !isOwned ? (  // If showOwned is false, render unowned banners only
+              ) : !isOwned ? ( // If showOwned is false, render unowned banners only
                 <View key={banner.id} style={styles.itemFrame}>
                   <Image
                     source={{ uri: banner.image_url }} // image_url is available
@@ -302,29 +317,35 @@ const GiftsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {  // Main container fir GiftSCreen component
-    padding: 16,  //Providing some space between container's border and its content
+  container: {
+    // Main container fir GiftSCreen component
+    padding: 16, //Providing some space between container's border and its content
   },
-  categoryContainer: { //Style for boxes for Banners and Stickers
-    marginBottom: 8,  //Adds vertical margin (Space above and below)
-    padding: 10,      // Adds Padding inside the box
-    borderWidth: 1,   // Defines the border's width as 1 pixel.
-    borderColor: "#ccc",  // Sets the border color to a loght gray
-    borderRadius: 8,   // Rounds the corners of the box.
+  categoryContainer: {
+    //Style for boxes for Banners and Stickers
+    marginBottom: 8, //Adds vertical margin (Space above and below)
+    padding: 10, // Adds Padding inside the box
+    borderWidth: 1, // Defines the border's width as 1 pixel.
+    borderColor: "#ccc", // Sets the border color to a loght gray
+    borderRadius: 8, // Rounds the corners of the box.
   },
-  categoryText: {  // Style adds text to display Catefgory names (Banners/Stickers)
+  categoryText: {
+    // Style adds text to display Catefgory names (Banners/Stickers)
     fontSize: 20,
     fontWeight: "bold",
   },
-  scrollContainer: {  // USed for SCrollView for contain items
-    flexDirection: "row",  // Horizontal
-    paddingVertical: 10,  // vertical space
+  scrollContainer: {
+    // USed for SCrollView for contain items
+    flexDirection: "row", // Horizontal
+    paddingVertical: 10, // vertical space
   },
-  itemsContainer: {  //Individual item box
+  itemsContainer: {
+    //Individual item box
     flexDirection: "row", //
   },
-  itemFrame: {  // image displayed for each banner or sticker
-    backgroundColor: "#ADD8E6", //light blue
+  itemFrame: {
+    // image displayed for each banner or sticker
+    backgroundColor: "#D1EBEF", //light blue
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 10,
@@ -348,14 +369,13 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   getButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#F6D6EE",
   },
   ownedButton: {
     backgroundColor: "#6c757d",
   },
   buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
+    fontWeight: "lightbold",
   },
 });
 
