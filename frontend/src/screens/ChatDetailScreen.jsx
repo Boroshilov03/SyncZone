@@ -20,6 +20,7 @@ import { initializeWebSocket, saveMessageToSupabase } from "../../emotion/api";
 import { processMessageWithEmotion } from "../../emotion/emotionAnalysisService";
 const noProfilePic = require("../../assets/icons/pfp_icon.png");
 import { LinearGradient } from "expo-linear-gradient";
+import ScheduleButton from '../../emotion/ScheduleButton';
 
 const ChatDetailScreen = () => {
   const { user } = useStore();
@@ -346,6 +347,26 @@ const ChatDetailScreen = () => {
               minute: "2-digit",
             })}
           </Text>
+          {/* Schedule button */}
+          {!isMyMessage && 
+           item.senderEmotion && 
+           negativeEmotions.includes(item.senderEmotion.name) && (
+            <TouchableOpacity
+              style={styles.scheduleButton}
+              onPress={() => {
+                navigation.navigate('MainTabs', {
+                  screen: 'Calendar',
+                  params: {
+                    showAddEvent: true,
+                    defaultTitle: `Follow-up: ${item.content.substring(0, 30)}...`,
+                    relatedMessageId: item.id
+                  }
+                });
+              }}
+            >
+              <Text style={styles.scheduleButtonText}>Schedule</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -441,6 +462,32 @@ const ChatDetailScreen = () => {
     </KeyboardAvoidingView>
   );
 };
+
+const negativeEmotions = [
+  'Sadness',
+  'Anger',
+  'Fear',
+  'Disgust',
+  'Horror',
+  'Surprise (negative)',
+  'Anxiety',
+  'Confusion',
+  'Disappointment',
+  'Distress',
+  'Pain',
+  'Shame',
+  'Guilt',
+  'Contempt',
+  'Disapproval',
+  'Awkwardness',
+  'Doubt',
+  'Annoyance',
+  'Boredom',
+  'Empathic Pain',
+  'Embarrassment',
+  'Envy',
+  'Tiredness'
+];
 
 const styles = StyleSheet.create({
   container: {
@@ -632,6 +679,25 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.5)", // Softer gray shadow (semi-transparent black)
     textShadowOffset: { width: 1, height: 1 }, // Slight offset for depth
     textShadowRadius: 2, // Increase radius for a softer shadow effect
+  },
+  scheduleButton: {
+    position: 'absolute',
+    right: -65,
+    bottom: 5,
+    backgroundColor: '#A0D7E5',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+    elevation: 2,
+  },
+  scheduleButtonText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
 
