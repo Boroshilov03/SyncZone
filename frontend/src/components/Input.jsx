@@ -10,6 +10,8 @@ function Input({ title, value, error, setValue, secureTextEntry, leftIcon }) {
           color: error ? "#ff5555" : "#70747a",
           marginVertical: 6,
           paddingHorizontal: 16,
+          fontWeight: 'bold'
+
         }}
       >
         {error || title}
@@ -33,8 +35,8 @@ function Input({ title, value, error, setValue, secureTextEntry, leftIcon }) {
           autoComplete="off"
           secureTextEntry={secureTextEntry}
           style={{
-            backgroundColor: "#f3f4f6",
-            borderWidth: 2,
+            backgroundColor: "#fffbf5",
+            borderWidth: 2.5,
             borderColor: error ? "#ff5555" : "#8e9091",
             borderRadius: 40,
             padding: 10,
@@ -45,6 +47,7 @@ function Input({ title, value, error, setValue, secureTextEntry, leftIcon }) {
           }}
           value={value}
           onChangeText={(text) => setValue(text)}
+
         />
       </View>
     </View>
