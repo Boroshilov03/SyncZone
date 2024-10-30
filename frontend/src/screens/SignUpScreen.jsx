@@ -307,7 +307,7 @@ export default function SignupScreen({ navigation }) {
                 isGradientFill
                 isGradientStroke
                 gradientColors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
-                fontFamily={"Karla-Medium"}
+                fontFamily={"Karla-Bold"}
               //gradientColors={["#D49AC0", "#6FD2E2"]}
               // fontFamily={"Gill Sans"}
               />

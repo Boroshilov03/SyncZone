@@ -91,7 +91,7 @@ export default function SignInScreen({ navigation }) {
 
             <Input
               label="Email"
-              labelStyle={{ position: "absolute", top: -25, left: 25, color: "#616061", fontFamily: "Karla-Regular" }}
+              labelStyle={{ position: "absolute", top: -25, left: 25, color: "#616061" }}
               leftIcon={{
                 type: "font-awesome",
                 name: "envelope",
@@ -180,7 +180,7 @@ export default function SignInScreen({ navigation }) {
             isGradientFill
             isGradientStroke
             gradientColors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
-            fontFamily={"Karla-Medium"}
+            fontFamily={"Karla-Bold"}
           />
         </View>
       </View>
