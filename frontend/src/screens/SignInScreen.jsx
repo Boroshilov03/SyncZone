@@ -269,7 +269,6 @@ const styles = StyleSheet.create({
   },
   box: {
     minWidth: 10,
-    marginTop: 40,
     padding: 12,
     alignItems: "center",
   },
@@ -297,6 +296,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   signInText: {
+    fontSize: 18,
     textAlign: "center",
     color: "#616061",
   },

@@ -327,13 +327,12 @@ const styles = StyleSheet.create({
   scrollView: {
     flexGrow: 1,
     paddingHorizontal: 16,
-    paddingVertical: 24,
+    paddingVertical: 10,
   },
   imageContainer: {
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 16,
     padding: 5,
     //borderWidth: 3,
   },
@@ -385,7 +384,7 @@ const styles = StyleSheet.create({
   buttonbox: {
     flex: 0,
     padding: 15,
-    paddingTop: 40,
+    paddingTop: 20,
     justifyContent: "center",
     alignItems: "center",
 
@@ -412,7 +411,7 @@ const styles = StyleSheet.create({
     //padding: 100,
   },
   signInText: {
-    marginTop: 16,
+    fontSize: 18,
     textAlign: "center",
     color: "#8e9091",
   },
@@ -434,8 +433,7 @@ const styles = StyleSheet.create({
     position: 'absolute'
   },
   box: {
-    //minWidth: 10,
-    marginTop: 10,
+    //minWidth: 10,,
     padding: 0,
     justifyContent: "flex-end",
     alignItems: "center",
