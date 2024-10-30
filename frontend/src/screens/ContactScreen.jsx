@@ -37,7 +37,7 @@ const fetchMutualContacts = async ({ queryKey }) => {
       `profiles:contact_id (id, username, first_name, last_name, avatar_url)`
     )
     .or(`user_id.eq.${userId},contact_id.eq.${userId}`)
-    .neq('contact_id', userId) // Exclude the logged-in user's ID
+    .neq("contact_id", userId); // Exclude the logged-in user's ID
 
   if (error) throw new Error(error.message);
   return data;
@@ -410,6 +410,15 @@ const ContactScreen = ({ navigation, route }) => {
           </View>
           <View style={styles.buttonContainer}>
             <TouchableOpacity
+              style={styles.favButton}
+              onPress={() => console.log(item.profiles.id)}
+            >
+              <Image
+                source={require("../../assets/icons/white-heart.png")}
+                style={styles.favoriteIcon}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
               style={styles.chatButton}
               onPress={() => createChat(item.profiles.id)}
             >
@@ -601,6 +610,15 @@ const styles = StyleSheet.create({
     marginTop: 20,
     zIndex: 3,
   },
+  favoriteIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 155,
+    justifyContent: "center",
+    alignItems: "center",
+    // margin: 20,
+    //borderWidth: 3,
+  },
   backButton: {
     paddingLeft: 10,
   },
@@ -671,6 +689,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     alignItems: "center", // Center them horizontally
+    gap: 10,
+  },
+  favButton: {
+    backgroundColor: "rgba(195, 217, 246, 0.85)", // Soft pastel blue (same as the original)
+    borderRadius: 25, // Circular shape
+    // padding: 10,
+    elevation: 10, // Depth effect
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    borderWidth: 1,
+    borderColor: "rgba(195, 217, 246, 0.85)", // Matching pastel blue border
+    width: 35, // Reduced button width
+    height: 35, // Reduced button height
+    justifyContent: "center",
+    alignItems: "center",
   },
   chatButton: {
     backgroundColor: "rgba(195, 217, 246, 0.85)", // Soft pastel blue (same as the original)
@@ -683,7 +718,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     borderWidth: 1,
     borderColor: "rgba(195, 217, 246, 0.85)", // Matching pastel blue border
-    marginLeft: 3,
     width: 35, // Reduced button width
     height: 35, // Reduced button height
     justifyContent: "center",
@@ -700,7 +734,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     borderWidth: 1,
     borderColor: "rgba(158, 228, 173, 0.85)", // Matching pastel green border
-    marginLeft: 10,
     width: 35, // Reduced button width
     height: 35, // Reduced button height
     justifyContent: "center",
