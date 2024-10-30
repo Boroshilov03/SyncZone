@@ -1,5 +1,5 @@
 import { View, SafeAreaView, StyleSheet, Pressable, Text } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MyCalendar from "../components/MyCalendar";
 import AddEvent from "../components/AddEvent";
 import EditEvent from "../components/EditEvent";
@@ -9,11 +9,21 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 const Tab = createBottomTabNavigator();
 
-const CalendarScreen = ({ navigation }) => {
-  const [isAddEventVisible, setAddEventVisible] = useState(false);
+const CalendarScreen = ({ navigation, route }) => {
+  const [isAddEventVisible, setAddEventVisible] = useState(route?.params?.showAddEvent || false);
   const [isEditEventVisible, setEditEventVisible] = useState(false);
   const [isDeletePopupVisible, setDeletePopupVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [defaultEventTitle, setDefaultEventTitle] = useState(route?.params?.defaultTitle || '');
+  const [relatedMessageId, setRelatedMessageId] = useState(route?.params?.relatedMessageId || null);
+
+  useEffect(() => { // emotion chat to calendar
+    if (route?.params?.showAddEvent) {
+      setAddEventVisible(true);
+      setDefaultEventTitle(route.params.defaultTitle || '');
+      setRelatedMessageId(route.params.relatedMessageId || null);
+    }
+  }, [route?.params]);
 
   const toggleAddEventModal = () => {
     setAddEventVisible(!isAddEventVisible);
@@ -29,7 +39,6 @@ const CalendarScreen = ({ navigation }) => {
   };
 
   const handleDeleteEvent = () => {
-    // Logic for deleting the event
     console.log("Event Deleted:", selectedEvent);
     setDeletePopupVisible(false);
     setEditEventVisible(false);
@@ -44,7 +53,13 @@ const CalendarScreen = ({ navigation }) => {
         title="Events"
       />
       <MyCalendar toggleEditEventModal={toggleEditEventModal} />
-      {isAddEventVisible && <AddEvent onClose={toggleAddEventModal} />}
+      {isAddEventVisible && (
+        <AddEvent 
+          onClose={toggleAddEventModal}
+          defaultTitle={defaultEventTitle}
+          relatedMessageId={relatedMessageId}
+        />
+      )}
       {isEditEventVisible && (
         <EditEvent
           event={selectedEvent}
