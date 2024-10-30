@@ -5,75 +5,81 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
-  SafeAreaView,
+  TextInput,
 } from "react-native";
-import React from "react";
-import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { supabase } from "../lib/supabase";
 import Header from "../components/Header";
 
 const RecentCalls = ({ navigation }) => {
-  const router = useRouter();
+  const [input, setInput] = useState(""); // for search bar filtering
+  const recentCallsData = []; // empty data array as a placeholder for now
 
-  //   Mock data for sample call history
-  const recentCallsData = [
-    {
-      id: "1",
-      name: "Lara Mueller",
-      time: "17:33",
-      avatar: "https://via.placeholder.com/50",
-    },
-    {
-      id: "2",
-      name: "Lara Mueller",
-      time: "14:33",
-      avatar: "https://via.placeholder.com/50",
-    },
-    {
-      id: "3",
-      name: "Lara Mueller",
-      time: "9:33",
-      avatar: "https://via.placeholder.com/50",
-    },
-    {
-      id: "4",
-      name: "Lara Mueller",
-      time: "8:33",
-      avatar: "https://via.placeholder.com/50",
-    },
-    {
-      id: "5",
-      name: "Lara Mueller",
-      time: "7:33",
-      avatar: "https://via.placeholder.com/50",
-    },
-  ];
+  const filteredCalls = recentCallsData.filter((call) =>
+    call.name.toLowerCase().includes(input.toLowerCase())
+  );
+
+  const renderCallItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => console.log("Start Call with", item.name)}
+    >
+      {item.avatar ? (
+        <Image source={{ uri: item.avatar }} style={styles.cardImg} />
+      ) : (
+        <View style={[styles.cardImg, styles.cardAvatar]}>
+          <Text style={styles.cardAvatarText}>{item.name[0]}</Text>
+        </View>
+      )}
+      <View style={styles.cardBody}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>{item.name}</Text>
+          <Text style={styles.cardTimestamp}>{item.time}</Text>
+        </View>
+        <Text style={styles.cardMessage}>Recent call placeholder</Text>
+      </View>
+      <Ionicons name="call-outline" size={24} color="black" />
+    </TouchableOpacity>
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Top Bar */}
+    <View style={styles.container}>
+      {/* Header */}
       <Header event="call" navigation={navigation} title="Recent Calls" />
 
-      {/* Recent Calls list */}
-      <FlatList
-        data={recentCallsData}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.callItem}
-            onPress={() => console.log("Start Call with", item.name)}
-          >
-            <Image source={{ uri: item.avatar }} style={styles.avatar} />
-            <View style={styles.callDetails}>
-              <Text style={styles.callName}>{item.name}</Text>
-              <Text style={styles.callTime}>{item.time}</Text>
-            </View>
-            <Ionicons name="call-outline" size={24} color="black" />
-          </TouchableOpacity>
-        )}
-      />
-    </SafeAreaView>
+      {/* Search Bar */}
+      <View style={{flexGrow: 1,  flexShrink:1, flexBasis:0}}>
+        <View style={styles.searchWrapper}>
+          <View style={styles.search}>
+
+            <Ionicons name="search-outline" size={17} color="#848484" style={styles.searchIcon} />
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              clearButtonMode="while-editing"
+              onChangeText={(val) => setInput(val)}
+              placeholder="Search.."
+              placeholderTextColor="#848484"
+              returnKeyType="done"
+              style={styles.searchControl}
+              value={input}
+            />
+          </View>
+        </View>
+      </View>
+
+      {/* Recent Calls List */}
+      {filteredCalls.length ? (
+        <FlatList
+          data={filteredCalls}
+          keyExtractor={(item) => item.id}
+          renderItem={renderCallItem}
+          contentContainerStyle={styles.listContent}
+        />
+      ) : (
+        <Text style={styles.noDataText}>No recent calls</Text>
+      )}
+    </View>
   );
 };
 
@@ -82,44 +88,92 @@ export default RecentCalls;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
-  },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
     backgroundColor: "#fff",
-    elevation: 2,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
+  searchWrapper: {
+    paddingTop: 8,
+    paddingBottom: 16,
+    borderColor: "#efefef",
+    width: "100%",
   },
-  callItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#d6eef7",
-    padding: 15,
-    marginVertical: 5,
-    marginHorizontal: 10,
+  search: {
+    position: "relative",
+    backgroundColor: "#efefef",
     borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    minHeight: "7%",
+    marginHorizontal: 12,
   },
-  avatar: {
+  searchIcon: {
+    position: "absolute",
+    left: 10,
+  },
+  searchControl: {
+    paddingLeft: 34,
+    width: "100%",
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#000",
+  },
+  card: {
+    flexDirection: "row",
+    padding: 12,
+    marginVertical: 4,
+    backgroundColor: "#D1EBEF",
+    borderRadius: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+    width: "95%",
+    alignSelf: "center",
+  },
+  cardImg: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    marginRight: 15,
+    marginRight: 8,
   },
-  callDetails: {
+  cardAvatar: {
+    backgroundColor: "#efefef",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardAvatarText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  cardBody: {
     flex: 1,
   },
-  callName: {
-    fontSize: 16,
-    fontWeight: "500",
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
   },
-  callTime: {
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "semibold",
+    flex: 1,
+  },
+  cardMessage: {
     fontSize: 14,
-    color: "#666",
+    fontWeight: "300",
+  },
+  cardTimestamp: {
+    fontSize: 12,
+    fontWeight: "300",
+    marginLeft: 8,
+  },
+  noDataText: {
+    textAlign: "center",
+    color: "#9ca3af",
+    marginTop: 20,
   },
 });
