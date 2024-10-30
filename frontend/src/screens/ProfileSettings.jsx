@@ -158,15 +158,15 @@ const ProfileSettings = ({ navigation, route }) => {
                   <Text style={styles.uploadText}>Upload Image</Text>
                 </View>
                 <View style={styles.banButton}>
-                  <Text
-                    style={styles.banText}
+                  <TouchableOpacity
+                    style={styles.banButton}
                     onPress={() => {
-                      setOwnedBannersVisible(true);
-                      setVisible(false);
+                      setModalVisible(false); // Close the current modal
+                      setOwnedBannersVisible(true); // Open the OwnedBannersModal
                     }}
                   >
-                    Change Banner
-                  </Text>
+                    <Text style={styles.banText}>Change Banner</Text>
+                  </TouchableOpacity>
                 </View>
                 <View style={styles.right}>
                   <Text style={styles.removeText}>Remove Image</Text>
@@ -327,6 +327,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     marginVertical: 10,
+    zIndex: 20,
   },
   backButton: {
     position: "absolute",

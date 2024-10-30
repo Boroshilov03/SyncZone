@@ -629,12 +629,12 @@ const styles = StyleSheet.create({
     borderBlockColor: "#D1EBEF",
   },
   messageText: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "300",
   },
   myMessageText: {
     textAlign: "left", // Aligns the text to the right
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "300",
   },
   otherMessageText: {
@@ -714,8 +714,8 @@ const styles = StyleSheet.create({
     left: 0, // Move it to the right side, adjust as needed
   },
   emotionText: {
-    fontSize: 10,
-    fontWeight: "lightbold", // Change to bold for better visibility
+    fontSize: 12,
+    fontWeight: "bold", // Change to bold for better visibility
     color: "#FFFFFF", // Change text color to white for high contrast
     textShadowColor: "rgba(0, 0, 0, 0.5)", // Softer gray shadow (semi-transparent black)
     textShadowOffset: { width: 1, height: 1 }, // Slight offset for depth

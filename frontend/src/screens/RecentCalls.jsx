@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons"; // Import MaterialIcons for different call type icons
 import { supabase } from "../lib/supabase";
 import Header from "../components/Header";
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import FeatherIcon from "react-native-vector-icons/Feather";
 
 const RecentCalls = ({ navigation }) => {
@@ -81,11 +81,26 @@ const RecentCalls = ({ navigation }) => {
           <Text style={styles.cardTimestamp}>{item.time}</Text>
         </View>
         <View style={styles.cardMessageContainer}>
-        {item.type === 'missed' && <MaterialCommunityIcons name="phone-missed" size={15} color="red" />}
-        {item.type === 'answered' && <MaterialIcons name="call-received" size={15} color="green" />}
-          {item.type === 'outgoing' && <MaterialIcons name="call-made" size={15} color="blue" />}
-          <Text style={[styles.cardMessage, item.type === 'missed' && styles.missedCall]}>
-            {item.type === 'missed' ? 'Missed Call' : item.type === 'answered' ? 'Answered' : 'Outgoing'}
+          {item.type === "missed" && (
+            <MaterialCommunityIcons name="phone-missed" size={15} color="red" />
+          )}
+          {item.type === "answered" && (
+            <MaterialIcons name="call-received" size={15} color="green" />
+          )}
+          {item.type === "outgoing" && (
+            <MaterialIcons name="call-made" size={15} color="blue" />
+          )}
+          <Text
+            style={[
+              styles.cardMessage,
+              item.type === "missed" && styles.missedCall,
+            ]}
+          >
+            {item.type === "missed"
+              ? "Missed Call"
+              : item.type === "answered"
+              ? "Answered"
+              : "Outgoing"}
           </Text>
         </View>
       </View>
@@ -147,12 +162,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    minHeight: "7%",
+    minHeight: "6%",
     marginHorizontal: 12,
   },
   searchIcon: {
     position: "absolute",
-    left: 10,
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2,
   },
   searchControl: {
     paddingLeft: 34,
@@ -214,7 +235,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "300",
     marginLeft: 8,
-    
   },
   cardTimestamp: {
     fontSize: 12,
