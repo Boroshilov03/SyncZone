@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Added useEffect
 import {
   StyleSheet,
   SafeAreaView,
@@ -17,14 +17,15 @@ import useStore from "../store/store";
 const profilePic = require("../../assets/icons/pfp_icon.png");
 import { useRoute } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import Profile from "./ProfileScreen";
 import Constants from "expo-constants";
+import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
 
 export default function Example({ navigation }) {
   const { setUser, setAccessToken, setRefreshToken, user } = useStore();
+  const [activeBannerData, setActiveBannerData] = useState(null); 
 
   const route = useRoute();
-  const { profilephoto } = route.params; // Make sure this param is passed correctly
+  const { profilephoto } = route.params; // Ensure this param is passed correctly
 
   const [form, setForm] = useState({
     emailNotifications: true,
@@ -50,8 +51,46 @@ export default function Example({ navigation }) {
       console.error("Error logging out:", error.message);
     }
   };
+
+  // Function to fetch the active banner
+  const fetchActiveBanner = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("active_banner")
+      .select("banner_id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching active banner:", error.message);
+      return;
+    }
+
+    const { data: bannerData, error: bannerError } = await supabase
+      .from("banners")
+      .select("image_url")
+      .eq("id", data.banner_id)
+      .single();
+
+    if (bannerError) {
+      console.error("Error fetching banner details:", bannerError.message);
+    } else {
+      setActiveBannerData(bannerData); 
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchActiveBanner();
+    }, [user]) // Re-run when user changes
+  );
+
+  useEffect(() => {
+    fetchActiveBanner(); // Fetch the active banner when the component mounts
+  }, [user]); // Dependency on user to refetch when user state changes
+
   return (
-    // style={[styles.container, { marginTop: Constants.statusBarHeight }]}
     <SafeAreaView
       style={{
         flex: 1,
@@ -89,14 +128,19 @@ export default function Example({ navigation }) {
               <TouchableOpacity
                 onPress={() => {
                   navigation.navigate("ProfileSettings", { contactInfo });
-                  /* handle onPress */
                 }}
                 style={styles.profile}
               >
+                {activeBannerData && (
+                  <Image
+                    source={{ uri: activeBannerData.image_url }}
+                    style={styles.bannerImage}
+                  />
+                )}  
                 <Image
                   accessibilityLabel=""
                   source={{
-                    uri: profilephoto || profilePic.uri, // Use profilePic.uri if profilePic is an image
+                    uri: profilephoto || profilePic.uri,
                   }}
                   style={styles.profileAvatar}
                 />
@@ -117,7 +161,6 @@ export default function Example({ navigation }) {
 
                 <FeatherIcon color="#bcbcbc" name="chevron-right" size={22} />
               </TouchableOpacity>
-              {/* </Pressable> */}
             </View>
           </Pressable>
         ) : (
@@ -291,6 +334,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
+  },
+  bannerImage: {
+    position: 'absolute',
+    width: 80, // Slightly wider than the profile picture
+    height: 80, // Fixed height to fit the banner
+    top: 7, // Adjust this value to position the banner above the profile picture
+    left: 3, // Center the banner horizontally (adjust as necessary)
+    zIndex: 1, // Ensure the banner is infront the profile picture
+    borderRadius: 20, // Adjust to create a smoother edge
+    justifyContent: "center",
+    alignItems: "center",
+    
   },
   profileAvatar: {
     width: 60,

@@ -1,4 +1,5 @@
-import { React, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+
 import {
   StyleSheet,
   Text,
@@ -20,6 +21,9 @@ import Constants from "expo-constants";
 import { LinearGradient } from "expo-linear-gradient";
 import GradientText from "react-native-gradient-texts";
 import OwnedBannersModal from "../components/OwnedBannersModal";
+import useStore from "../store/store";
+import { supabase } from "../lib/supabase";
+import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
 
 const ProfileSettings = ({ navigation, route }) => {
   const { contactInfo } = route.params; // Access contactInfo correctly
@@ -29,6 +33,9 @@ const ProfileSettings = ({ navigation, route }) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [ownedBannersVisible, setOwnedBannersVisible] = useState(false);
+  const { user } = useStore();
+  const [activeBannerData, setActiveBannerData] = useState(null); 
+
 
   // State for form fields
   const [username, setUsername] = useState(contactInfo.contactUsername || "");
@@ -54,6 +61,48 @@ const ProfileSettings = ({ navigation, route }) => {
     loadFonts();
   }, []);
 
+ // Function to fetch the active banner
+  const fetchActiveBanner = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("active_banner")
+      .select("banner_id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching active banner:", error.message);
+      return;
+    }
+
+    const { data: bannerData, error: bannerError } = await supabase
+      .from("banners")
+      .select("image_url")
+      .eq("id", data.banner_id)
+      .single();
+
+    if (bannerError) {
+      console.error("Error fetching banner details:", bannerError.message);
+    } else {
+      setActiveBannerData(bannerData); 
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchActiveBanner();
+    }, [user]) // Re-run when user changes
+  );
+
+  useEffect(() => {
+    fetchActiveBanner(); // Fetch the active banner when the component mounts
+  }, [user]); // Dependency on user to refetch when user state changes
+ 
+    // Use useFocusEffect to refetch active banner on screen focus
+
+
+  
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 
   const panResponder = PanResponder.create({
@@ -86,6 +135,12 @@ const ProfileSettings = ({ navigation, route }) => {
         </Pressable>
         <View style={styles.profileContainer}>
           <Pressable style={styles.pic} onPress={() => setModalVisible(true)}>
+           {activeBannerData && (
+            <Image
+              source={{ uri: activeBannerData.image_url }}
+              style={styles.bannerImage} // New style for the banner image
+            />
+          )}
             <Image
               source={{ uri: contactInfo.contactPFP }}
               style={styles.placeholderImage}
@@ -378,6 +433,7 @@ const styles = StyleSheet.create({
   name: {
     fontFamily: "Inter_18pt-Medium",
     fontSize: 20,
+    padding: 5,
   },
   act: {
     fontFamily: "Inter_18pt-Medium",
@@ -391,18 +447,31 @@ const styles = StyleSheet.create({
     //borderWidth: 4,
     width: "100%",
     margin: 0, // Remove any margin that may prevent stretching
-    padding: 0, // Remove padding if it exists
+    padding: 5, // Remove padding if it exists
     //aspectRatio: 1
   },
+  bannerImage: {
+    position: 'absolute',
+    width: 180, // Slightly wider than the profile picture
+    height: 180, // Fixed height to fit the banner
+    top: 0, // Adjust this value to position the banner above the profile picture
+    left: -5, // Center the banner horizontally (adjust as necessary)
+    zIndex: 1, // Ensure the banner is infront the profile picture
+    borderRadius: 20, // Adjust to create a smoother edge
+    justifyContent: "center",
+    alignItems: "center",
+    
+  },
   placeholderImage: {
-    width: 110,
-    height: 110,
+    width: 150,
+    height: 150,
     borderRadius: 155,
     borderWidth: 4,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 10,
     margin: 10,
+    backgroundColor: 'grey'
   },
   fields: {
     flexGrow: 1,
