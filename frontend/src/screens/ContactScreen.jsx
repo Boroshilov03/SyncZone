@@ -37,7 +37,7 @@ const fetchMutualContacts = async ({ queryKey }) => {
       `profiles:contact_id (id, username, first_name, last_name, avatar_url)`
     )
     .or(`user_id.eq.${userId},contact_id.eq.${userId}`)
-    .neq('contact_id', userId) // Exclude the logged-in user's ID
+    .neq("contact_id", userId); // Exclude the logged-in user's ID
 
   if (error) throw new Error(error.message);
   return data;
@@ -53,6 +53,7 @@ const ContactScreen = ({ navigation, route }) => {
   const flatListRef = useRef(null); // Add this line at the top of the component
   const [alphabetWidth, setAlphabetWidth] = useState(0); // State to store alphabet item width
 
+
   const {
     data: contacts,
     error,
@@ -64,6 +65,9 @@ const ContactScreen = ({ navigation, route }) => {
   });
 
   const groupContactsByLetter = (contacts) => {
+
+    if (!contacts || contacts.length === 0) return {}; // Return empty object if no contacts
+
     // First, sort contacts alphabetically by their first name
     const sortedContacts = contacts.sort((a, b) =>
       a.profiles.first_name.localeCompare(b.profiles.first_name)
@@ -98,6 +102,12 @@ const ContactScreen = ({ navigation, route }) => {
 
   // Function to scroll to the selected letter section
   const scrollToLetter = (letter) => {
+
+      // Check if groupedData is empty
+      if (!groupedData || groupedData.length === 0) {
+        return; // Do nothing if there are no contacts
+      }
+
     const index = groupedData.findIndex((item) => item.letter === letter);
 
     if (index !== -1 && flatListRef.current) {
@@ -169,12 +179,12 @@ const ContactScreen = ({ navigation, route }) => {
     toggleFavorite(item.profiles.id); // Call the function to handle favorite toggling
   };
 
-  const AlphabetList = ({ onLetterPress, onSwipeLetter }) => {
+  const AlphabetList = ({ onLetterPress, onSwipeLetter, hasContacts }) => {
     const [alphabetWidth, setAlphabetWidth] = useState(0); // State to store alphabet item width
     const alphabetRef = useRef(); // Reference to track the position of the alphabet
-
+  
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split(""); // Alphabet array
-
+  
     // Helper function to calculate which letter corresponds to the Y position
     const getLetterFromPosition = (y) => {
       const letterHeight = alphabetWidth / alphabet.length;
@@ -184,18 +194,22 @@ const ContactScreen = ({ navigation, route }) => {
       }
       return null;
     };
-
+  
     const panResponder = PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => hasContacts, // Only enable pan gesture if there are contacts
       onPanResponderGrant: (evt, gestureState) => {
         const { y0 } = gestureState;
-        const letter = getLetterFromPosition(y0);
-        if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on touch start
+        if (hasContacts) {
+          const letter = getLetterFromPosition(y0);
+          if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on touch start
+        }
       },
       onPanResponderMove: (evt, gestureState) => {
         const { moveY } = gestureState;
-        const letter = getLetterFromPosition(moveY);
-        if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on move
+        if (hasContacts) {
+          const letter = getLetterFromPosition(moveY);
+          if (letter) onSwipeLetter(letter); // Trigger scroll to the letter on move
+        }
       },
       onPanResponderRelease: () => {
         // Optional: Handle release event, e.g., resetting state if needed
@@ -410,6 +424,15 @@ const ContactScreen = ({ navigation, route }) => {
           </View>
           <View style={styles.buttonContainer}>
             <TouchableOpacity
+              style={styles.favButton}
+              onPress={() => console.log(item.profiles.id)}
+            >
+              <Image
+                source={require("../../assets/icons/white-heart.png")}
+                style={styles.favoriteIcon}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
               style={styles.chatButton}
               onPress={() => createChat(item.profiles.id)}
             >
@@ -482,7 +505,6 @@ const ContactScreen = ({ navigation, route }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Alphabet List with swipe and click */}
       <AlphabetList
         onLetterPress={handleLetterPress} // Handle tap
         onSwipeLetter={handleSwipeLetter} // Handle swipe
@@ -601,6 +623,15 @@ const styles = StyleSheet.create({
     marginTop: 20,
     zIndex: 3,
   },
+  favoriteIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 155,
+    justifyContent: "center",
+    alignItems: "center",
+    // margin: 20,
+    //borderWidth: 3,
+  },
   backButton: {
     paddingLeft: 10,
   },
@@ -671,6 +702,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     alignItems: "center", // Center them horizontally
+    gap: 10,
+  },
+  favButton: {
+    backgroundColor: "rgba(195, 217, 246, 0.85)", // Soft pastel blue (same as the original)
+    borderRadius: 25, // Circular shape
+    // padding: 10,
+    elevation: 10, // Depth effect
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    borderWidth: 1,
+    borderColor: "rgba(195, 217, 246, 0.85)", // Matching pastel blue border
+    width: 35, // Reduced button width
+    height: 35, // Reduced button height
+    justifyContent: "center",
+    alignItems: "center",
   },
   chatButton: {
     backgroundColor: "rgba(195, 217, 246, 0.85)", // Soft pastel blue (same as the original)
@@ -683,7 +731,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     borderWidth: 1,
     borderColor: "rgba(195, 217, 246, 0.85)", // Matching pastel blue border
-    marginLeft: 3,
     width: 35, // Reduced button width
     height: 35, // Reduced button height
     justifyContent: "center",
@@ -700,7 +747,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     borderWidth: 1,
     borderColor: "rgba(158, 228, 173, 0.85)", // Matching pastel green border
-    marginLeft: 10,
     width: 35, // Reduced button width
     height: 35, // Reduced button height
     justifyContent: "center",

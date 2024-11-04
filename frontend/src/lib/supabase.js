@@ -8,7 +8,7 @@ const supabaseUrl = REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = REACT_APP_ANON_KEY;
 
 
-console.log(supabaseAnonKey);
+console.log(REACT_APP_SUPABASE_URL, REACT_APP_ANON_KEY);
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

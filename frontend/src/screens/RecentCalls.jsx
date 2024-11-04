@@ -6,73 +6,138 @@ import {
   FlatList,
   Image,
   SafeAreaView,
+  TextInput,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons"; // Import MaterialIcons for different call type icons
 import { supabase } from "../lib/supabase";
 import Header from "../components/Header";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import FeatherIcon from "react-native-vector-icons/Feather";
 
 const RecentCalls = ({ navigation }) => {
   const router = useRouter();
+  const [input, setInput] = useState(""); // for search bar filtering
 
-  //   Mock data for sample call history
   const recentCallsData = [
     {
       id: "1",
       name: "Lara Mueller",
-      time: "17:33",
+      time: "5:33 AM",
       avatar: "https://via.placeholder.com/50",
+      type: "missed",
     },
     {
       id: "2",
-      name: "Lara Mueller",
-      time: "14:33",
+      name: "John Doe",
+      time: "2:33 PM",
       avatar: "https://via.placeholder.com/50",
+      type: "answered",
     },
     {
       id: "3",
-      name: "Lara Mueller",
-      time: "9:33",
+      name: "Jane Smith",
+      time: "9:33 AM",
       avatar: "https://via.placeholder.com/50",
+      type: "outgoing",
     },
     {
       id: "4",
       name: "Lara Mueller",
-      time: "8:33",
+      time: "3:33 AM",
       avatar: "https://via.placeholder.com/50",
+      type: "missed",
     },
     {
       id: "5",
-      name: "Lara Mueller",
-      time: "7:33",
+      name: "Alex Johnson",
+      time: "7:00 PM",
       avatar: "https://via.placeholder.com/50",
+      type: "answered",
     },
   ];
 
+  const filteredCalls = recentCallsData.filter((call) =>
+    call.name.toLowerCase().includes(input.toLowerCase())
+  );
+
+  const renderCallItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => console.log("Start Call with", item.name)}
+    >
+      {item.avatar ? (
+        <Image source={{ uri: item.avatar }} style={styles.cardImg} />
+      ) : (
+        <View style={[styles.cardImg, styles.cardAvatar]}>
+          <Text style={styles.cardAvatarText}>{item.name[0]}</Text>
+        </View>
+      )}
+      <View style={styles.cardBody}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>{item.name}</Text>
+          <Text style={styles.cardTimestamp}>{item.time}</Text>
+        </View>
+        <View style={styles.cardMessageContainer}>
+          {item.type === "missed" && (
+            <MaterialCommunityIcons name="phone-missed" size={15} color="red" />
+          )}
+          {item.type === "answered" && (
+            <MaterialIcons name="call-received" size={15} color="green" />
+          )}
+          {item.type === "outgoing" && (
+            <MaterialIcons name="call-made" size={15} color="blue" />
+          )}
+          <Text
+            style={[
+              styles.cardMessage,
+              item.type === "missed" && styles.missedCall,
+            ]}
+          >
+            {item.type === "missed"
+              ? "Missed Call"
+              : item.type === "answered"
+              ? "Answered"
+              : "Outgoing"}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
-      {/* Top Bar */}
       <Header event="call" navigation={navigation} title="Recent Calls" />
-
-      {/* Recent Calls list */}
-      <FlatList
-        data={recentCallsData}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.callItem}
-            onPress={() => console.log("Start Call with", item.name)}
-          >
-            <Image source={{ uri: item.avatar }} style={styles.avatar} />
-            <View style={styles.callDetails}>
-              <Text style={styles.callName}>{item.name}</Text>
-              <Text style={styles.callTime}>{item.time}</Text>
-            </View>
-            <Ionicons name="call-outline" size={24} color="black" />
-          </TouchableOpacity>
-        )}
-      />
+      <View style={styles.searchWrapper}>
+        <View style={styles.search}>
+          <View style={styles.searchIcon}>
+            <FeatherIcon color="#848484" name="search" size={17} />
+          </View>
+          <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            clearButtonMode="while-editing"
+            onChangeText={(val) => setInput(val)}
+            placeholder="Search.."
+            placeholderTextColor="#848484"
+            returnKeyType="done"
+            style={styles.searchControl}
+            value={input}
+          />
+        </View>
+      </View>
+      {filteredCalls.length ? (
+        <FlatList
+          data={filteredCalls}
+          keyExtractor={(item) => item.id}
+          renderItem={renderCallItem}
+          contentContainerStyle={styles.listContent}
+        />
+      ) : (
+        <Text style={styles.noDataText}>No recent calls</Text>
+      )}
     </View>
   );
 };
@@ -82,44 +147,106 @@ export default RecentCalls;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
-  },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
     backgroundColor: "#fff",
-    elevation: 2,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
+  searchWrapper: {
+    paddingTop: 8,
+    paddingBottom: 16,
+    borderColor: "#efefef",
+    width: "100%",
   },
-  callItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#d6eef7",
-    padding: 15,
-    marginVertical: 5,
-    marginHorizontal: 10,
+  search: {
+    position: "relative",
+    backgroundColor: "#efefef",
     borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    minHeight: "6%",
+    marginHorizontal: 12,
   },
-  avatar: {
+  searchIcon: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2,
+  },
+  searchControl: {
+    paddingLeft: 34,
+    width: "100%",
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#000",
+  },
+  card: {
+    flexDirection: "row",
+    padding: 12,
+    marginVertical: 4,
+    backgroundColor: "#D1EBEF",
+    borderRadius: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+    width: "95%",
+    alignSelf: "center",
+  },
+  cardImg: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    marginRight: 15,
+    marginRight: 8,
   },
-  callDetails: {
+  cardAvatar: {
+    backgroundColor: "#efefef",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardAvatarText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  cardBody: {
     flex: 1,
   },
-  callName: {
-    fontSize: 16,
-    fontWeight: "500",
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
   },
-  callTime: {
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "semibold",
+    flex: 1,
+  },
+  cardMessageContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  cardMessage: {
     fontSize: 14,
-    color: "#666",
+    fontWeight: "300",
+    marginLeft: 8,
+  },
+  cardTimestamp: {
+    fontSize: 12,
+    fontWeight: "300",
+    marginLeft: 8,
+  },
+  missedCall: {
+    color: "red",
+  },
+  noDataText: {
+    textAlign: "center",
+    color: "#9ca3af",
+    marginTop: 20,
   },
 });

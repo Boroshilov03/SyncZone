@@ -24,6 +24,7 @@ import GradientText from "react-native-gradient-texts";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Acon from "react-native-vector-icons/AntDesign";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function SignupScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -229,12 +230,12 @@ export default function SignupScreen({ navigation }) {
                   </Pressable>
                 )}
                 <View style={styles.cancel}>
-                  <Icon name="remove" size={35} color="#616061"
+                  <Ionicons name="close" size={35} color="#616061"
                     onPress={() => {
                       setProfilePhoto(null);
                       setBase64Photo(null);
                     }}
-                  ></Icon>
+                  ></Ionicons>
                 </View>
               </View>
             </TouchableWithoutFeedback>
@@ -255,6 +256,7 @@ export default function SignupScreen({ navigation }) {
                   error={errors[key]}
                   setValue={(value) => handleInputChange(key, value)}
                   secureTextEntry={key === "password1" || key === "password2"}
+                  backgroundColor='#fffbf5'
 
                   leftIcon={{
                     name:
@@ -305,7 +307,7 @@ export default function SignupScreen({ navigation }) {
                 isGradientFill
                 isGradientStroke
                 gradientColors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
-                fontFamily={"Karla-Medium"}
+                fontFamily={"Karla-Bold"}
               //gradientColors={["#D49AC0", "#6FD2E2"]}
               // fontFamily={"Gill Sans"}
               />
@@ -320,17 +322,17 @@ export default function SignupScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fffbf5',
   },
   scrollView: {
     flexGrow: 1,
     paddingHorizontal: 16,
-    paddingVertical: 24,
+    paddingVertical: 10,
   },
   imageContainer: {
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 16,
     padding: 5,
     //borderWidth: 3,
   },
@@ -377,11 +379,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+
   },
   buttonbox: {
     flex: 0,
     padding: 15,
-    paddingTop: 40,
+    paddingTop: 20,
     justifyContent: "center",
     alignItems: "center",
 
@@ -408,7 +411,7 @@ const styles = StyleSheet.create({
     //padding: 100,
   },
   signInText: {
-    marginTop: 16,
+    fontSize: 18,
     textAlign: "center",
     color: "#8e9091",
   },
@@ -430,8 +433,7 @@ const styles = StyleSheet.create({
     position: 'absolute'
   },
   box: {
-    //minWidth: 10,
-    marginTop: 10,
+    //minWidth: 10,,
     padding: 0,
     justifyContent: "flex-end",
     alignItems: "center",

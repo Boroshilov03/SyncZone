@@ -14,7 +14,6 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import useStore from "../store/store";
 import DeleteEvent from "../components/DeleteEvent";
 
-
 const getMoodColor = (mood) => {
   switch (mood) {
     case "blue":
@@ -33,23 +32,35 @@ const getMoodColor = (mood) => {
 };
 
 const parseTimeString = (timeString) => {
+  // Log the input time string
+  console.log(`Input time string: ${timeString}`);
+
   const [time, modifier] = timeString.split(" ");
+
+  // Log the extracted time and modifier
+  console.log(`Time: ${time}, Modifier: ${modifier}`);
+
   let [hours, minutes] = time.split(":");
   hours = parseInt(hours, 10);
   minutes = parseInt(minutes, 10);
 
+  // Log parsed hours and minutes
+  console.log(`Parsed hours: ${hours}, Parsed minutes: ${minutes}`);
+
+  // Adjust hours based on AM/PM
   if (modifier === "PM" && hours < 12) {
-    hours += 12;
+    hours += 12; // Convert PM to 24-hour format
+  } else if (modifier === "AM" && hours === 12) {
+    hours = 0; // Convert 12 AM to 0 hours
   }
-  if (modifier === "AM" && hours === 12) {
-    hours = 0;
-  }
+
+  // Log the final hours after modification
+  console.log(`Final hours after modification: ${hours}`);
 
   const date = new Date();
-  date.setHours(hours, minutes, 0, 0);
+  date.setHours(hours, minutes, 0, 0); // Set the date to the current date
   return date;
 };
-
 
 const handleTimeChange = (event, selectedTime, setTime) => {
   if (selectedTime) {
@@ -69,30 +80,33 @@ const handleTimeChange = (event, selectedTime, setTime) => {
   }
 };
 
-
-
 const EditEvent = ({ event, onClose }) => {
   console.log(event);
   const { user } = useStore();
   const [titleValue, settitleValue] = useState(event.title); // Title
-  const [date, setDate] = useState(new Date());
 
-
+  console.log(event.date);
   const [showDatePicker, setShowDatePicker] = useState(false); // Toggle date picker
 
-    // Use existing times from the event
-    const initialStartTime = event.startTime
+  // Use existing times from the event
+  const initialStartTime = event.startTime
     ? parseTimeString(event.startTime)
     : new Date();
   const initialEndTime = event.endTime
     ? parseTimeString(event.endTime)
     : new Date();
 
+  const [startTime, setStartTime] = useState(initialStartTime);
+  const [endTime, setEndTime] = useState(initialEndTime);
+  const [date, setDate] = useState(() => {
+    const initialDate = new Date(event.date);
+    initialDate.setDate(initialDate.getDate() + 1); // Increment by one day
+    return initialDate;
+  });
+  console.log(date);
 
-    const [startTime, setStartTime] = useState(initialStartTime);
-    const [endTime, setEndTime] = useState(initialEndTime);
-
-
+  // Now you can format the date
+  const formattedDate = date.toISOString().split("T")[0]; // Formats as YYYY-MM-DD
   const [showStartTimePicker, setShowStartTimePicker] = useState(false); // State to show start time picker
   const [showEndTimePicker, setShowEndTimePicker] = useState(false); // State to show end time picker
   const [description, setDescription] = useState(event.description); // Description
@@ -102,30 +116,51 @@ const EditEvent = ({ event, onClose }) => {
   const [deletePopupVisible, setDeletePopupVisible] = useState(false); // Controls visibility of DeleteEvent
 
   const handleEditEvent = async () => {
-    const formatTime = (date) => {
-      return date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true, // Set to true to get 12-hour format
-      });
+    // Function to format date as YYYY-MM-DD
+    const formatDateForSubmission = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`; // Format: YYYY-MM-DD
     };
 
-    const formattedStartTime = formatTime(startTime);
-    const formattedEndTime = formatTime(endTime);
+    // Function to format time as HH:mm:ss
+    const formatTimeForSubmission = (date) => {
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      const seconds = String(date.getSeconds()).padStart(2, "0");
+      return `${hours}:${minutes}:${seconds}`; // Format: HH:mm:ss
+    };
+
+    // Formatting the start and end times
+    const formattedStartTime = formatTimeForSubmission(startTime);
+    const formattedEndTime = formatTimeForSubmission(endTime);
 
     try {
+      console.log(
+        titleValue,
+        formatDateForSubmission(date), // Ensure the date is formatted
+        formattedStartTime,
+        formattedEndTime,
+        description,
+        mood
+      );
+
+      // Update the event in the database
       const { data, error } = await supabase
         .from("event")
         .update({
           title: titleValue,
-          date: date.toISOString().split("T")[0],
+          date: formatDateForSubmission(date), // Format the date for submission
           start_time: formattedStartTime,
           end_time: formattedEndTime,
-          description,
-          mood,
+          description: description,
+          mood: mood,
         })
-        .eq("id", event.id);
+        .eq("id", event.id)
+        .select();
 
+      // Check for errors
       if (error) {
         console.error("Error updating event:", error.message);
       } else {
@@ -150,7 +185,6 @@ const EditEvent = ({ event, onClose }) => {
     }
     setShowDatePicker(false); // Close the picker after selecting
   };
-  
 
   const EditEventParticipants = async () => {
     try {
@@ -283,8 +317,6 @@ const EditEvent = ({ event, onClose }) => {
         />
       </View>
 
-
-
       {/* Start Time */}
       <View style={styles.column}>
         <View style={styles.row}>
@@ -301,25 +333,25 @@ const EditEvent = ({ event, onClose }) => {
               {startTime.toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
-                hour12: true,  // Force 12-hour format with AM/PM
+                hour12: true, // Force 12-hour format with AM/PM
               })}
             </Text>
           </TouchableOpacity>
         </View>
         {showStartTimePicker && (
-        <DateTimePicker
-          testID="startTimePicker"
-          value={startTime} 
-          mode="time"
-          is24Hour={false}
-          display="spinner"
-          onChange={(event, selectedTime) => {
-            const currentTime = selectedTime || startTime;
-            setShowStartTimePicker(false);
-            setStartTime(currentTime);
-          }}
-        />
-      )}
+          <DateTimePicker
+            testID="startTimePicker"
+            value={startTime}
+            mode="time"
+            is24Hour={false}
+            display="spinner"
+            onChange={(event, selectedTime) => {
+              const currentTime = selectedTime || startTime;
+              setShowStartTimePicker(false);
+              setStartTime(currentTime);
+            }}
+          />
+        )}
       </View>
 
       {/* End Time */}
@@ -338,25 +370,25 @@ const EditEvent = ({ event, onClose }) => {
               {endTime.toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
-                hour12: true,  // Force 12-hour format with AM/PM
+                hour12: true, // Force 12-hour format with AM/PM
               })}
             </Text>
           </TouchableOpacity>
         </View>
         {showEndTimePicker && (
-        <DateTimePicker
-          testID="endTimePicker"
-          value={endTime} 
-          mode="time"
-          is24Hour={false}
-          display="spinner"
-          onChange={(event, selectedTime) => {
-            const currentTime = selectedTime || endTime;
-            setShowEndTimePicker(false);
-            setEndTime(currentTime);
-          }}
-        />
-      )}
+          <DateTimePicker
+            testID="endTimePicker"
+            value={endTime}
+            mode="time"
+            is24Hour={false}
+            display="spinner"
+            onChange={(event, selectedTime) => {
+              const currentTime = selectedTime || endTime;
+              setShowEndTimePicker(false);
+              setEndTime(currentTime);
+            }}
+          />
+        )}
       </View>
 
       <TextInput

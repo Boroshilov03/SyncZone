@@ -126,6 +126,7 @@ const AddEvent = ({ onClose }) => {
   };
 
   const onDateChange = (event, selectedDate) => {
+    console.log(selectedDate);
     // Check if a valid date is selected
     if (selectedDate) {
       // Create a new Date object and prevent timezone changes
@@ -138,7 +139,6 @@ const AddEvent = ({ onClose }) => {
     }
     setShowPicker(false); // Close the picker after selecting
   };
-  
 
   const predefinedPFPs = [
     require("../../assets/icons/pfp1.png"),

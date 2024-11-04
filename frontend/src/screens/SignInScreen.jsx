@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -10,6 +10,7 @@ import {
 import { supabase } from "../lib/supabase";
 import { Input } from "@rneui/themed";
 import GradientText from "react-native-gradient-texts";
+import * as Font from 'expo-font';
 import { LinearGradient } from "expo-linear-gradient";
 import useStore from "../store/store"; // Assuming this handles user and tokens
 import { loginSchema } from "../utils/validation"; // Import the login schema
@@ -23,6 +24,24 @@ export default function SignInScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadFonts = async () => {
+      await Font.loadAsync({
+        "Inter_18pt-Regular": require("./fonts/Inter_18pt-Regular.ttf"),
+        "Inter_18pt-Medium": require("./fonts/Inter_18pt-Medium.ttf"),
+        "Inter_18pt-MediumItalic": require("./fonts/Inter_18pt-MediumItalic.ttf"),
+        "Poppins-Regular": require("./fonts/Poppins-Regular.ttf"),
+        "Poppins-Medium": require("./fonts/Poppins-Medium.ttf"),
+        "Karla-Regular": require("./fonts/Karla-Regular.ttf"),
+        "Karla-Medium": require("./fonts/Karla-Medium.ttf"),
+      });
+      setFontsLoaded(true);
+    };
+
+    loadFonts();
+  }, []);
 
   const { mutate: signInWithEmail, isLoading } = useMutation({
     mutationFn: async () => {
@@ -64,9 +83,7 @@ export default function SignInScreen({ navigation }) {
       </View>
       <View style={styles.container}>
         <View style={styles.loginbox}>
-          <Text style={styles.title} fontFamily={"Karla-Medium"}>
-            Login
-          </Text>
+          <Text style={[styles.title, { fontFamily: "Karla-Medium" }]}>Login</Text>
         </View>
         {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
         <View style={styles.fields}>
@@ -163,7 +180,7 @@ export default function SignInScreen({ navigation }) {
             isGradientFill
             isGradientStroke
             gradientColors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
-            fontFamily={"Karla-Medium"}
+            fontFamily={"Karla-Bold"}
           />
         </View>
       </View>
@@ -175,7 +192,7 @@ export default function SignInScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeview: {
     flex: 1,
-    flex: 1,
+
   },
   parent: {
     flex: 1,
@@ -247,12 +264,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     color: "#616061",
-    fontWeight: "bold",
+    //fontWeight: "bold",
     lineHeight: 34,
   },
   box: {
     minWidth: 10,
-    marginTop: 40,
     padding: 12,
     alignItems: "center",
   },
@@ -280,6 +296,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   signInText: {
+    fontSize: 18,
     textAlign: "center",
     color: "#616061",
   },

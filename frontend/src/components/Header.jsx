@@ -12,8 +12,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const profilePic = require("../../assets/icons/pfp_icon.png");
 const calendarImage = require("../../assets/icons/add_calendar.png");
-const messageImage = require("../../assets/icons/add_message.png");
-const callImage = require("../../assets/icons/add_call.png");
+const messageImage = require("../../assets/icons/plus.png");
+const callImage = require("../../assets/icons/plus.png");
 
 const Header = ({
   toggleAddEventModal,
@@ -116,8 +116,8 @@ const styles = StyleSheet.create({
     height: 35,
   },
   messageIcon: {
-    width: 30,
-    height: 30,
+    width: 23,
+    height: 23,
   },
   callIcon: {
     width: 23,

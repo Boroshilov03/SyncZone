@@ -20,6 +20,7 @@ import { initializeWebSocket, saveMessageToSupabase } from "../../emotion/api";
 import { processMessageWithEmotion } from "../../emotion/emotionAnalysisService";
 const noProfilePic = require("../../assets/icons/pfp_icon.png");
 import { LinearGradient } from "expo-linear-gradient";
+import ScheduleButton from '../../emotion/ScheduleButton';
 
 const ChatDetailScreen = () => {
   const { user } = useStore();
@@ -227,10 +228,10 @@ const ChatDetailScreen = () => {
     Ecstasy: "#FFC0CB",
     Contentment: "#87CEEB",
     Relief: "#98FF98",
-    Satisfaction: "#DDA0DD",
-    Romance: "#FFB6C1",
+    Satisfaction: "#C5DCB6",
+    Romance: "#DF2C1C",
     Admiration: "#FFE4B5",
-    Adoration: "#FFB6C1",
+    Adoration: "#FBFBFB",
     "Aesthetic Appreciation": "#E6E6FA",
     Amusement: "#FFDAB9",
     Awe: "#E0FFFF",
@@ -240,10 +241,10 @@ const ChatDetailScreen = () => {
     Interest: "#DEB887",
     Contemplation: "#B8860B",
     Concentration: "#BDB76B",
-    Desire: "#CD853F",
+    Desire: "#EA3B52",
     Realization: "#DAA520",
-    "Surprise (positive)": "#FF69B4",
-    Nostalgia: "#DDA0DD",
+    "Surprise (positive)": "#FF9CCE",
+    Nostalgia: "#EBC6EB",
     Determination: "#CD853F",
     Craving: "#D2691E",
 
@@ -270,7 +271,7 @@ const ChatDetailScreen = () => {
     "Empathic Pain": "#8B4513",
     Embarrassment: "#DB7093",
     Envy: "#6B8E23",
-    Tiredness: "#696969",
+    Tiredness: "#515DDC",
 
     // Special Cases
     Sympathy: "#DDA0DD",
@@ -346,6 +347,26 @@ const ChatDetailScreen = () => {
               minute: "2-digit",
             })}
           </Text>
+          {/* Schedule button */}
+          {!isMyMessage && 
+           item.senderEmotion && 
+           negativeEmotions.includes(item.senderEmotion.name) && (
+            <TouchableOpacity
+              style={styles.scheduleButton}
+              onPress={() => {
+                navigation.navigate('MainTabs', {
+                  screen: 'Calendar',
+                  params: {
+                    showAddEvent: true,
+                    defaultTitle: `Follow-up: ${item.content.substring(0, 30)}...`,
+                    relatedMessageId: item.id
+                  }
+                });
+              }}
+            >
+              <Text style={styles.scheduleButtonText}>Schedule</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -404,8 +425,15 @@ const ChatDetailScreen = () => {
           />
         )}
         {typingUser && (
-          <Text style={styles.typingIndicator}>{typingUser} is typing...</Text>
+          <View style={styles.mainTyping}>
+            <View style={styles.typingIndicatorBubble}>
+              <Text style={styles.typingIndicator}>
+                {typingUser} is typing...
+              </Text>
+            </View>
+          </View>
         )}
+
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
@@ -442,6 +470,32 @@ const ChatDetailScreen = () => {
   );
 };
 
+const negativeEmotions = [
+  'Sadness',
+  'Anger',
+  'Fear',
+  'Disgust',
+  'Horror',
+  'Surprise (negative)',
+  'Anxiety',
+  'Confusion',
+  'Disappointment',
+  'Distress',
+  'Pain',
+  'Shame',
+  'Guilt',
+  'Contempt',
+  'Disapproval',
+  'Awkwardness',
+  'Doubt',
+  'Annoyance',
+  'Boredom',
+  'Empathic Pain',
+  'Embarrassment',
+  'Envy',
+  'Tiredness'
+];
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -452,19 +506,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f4f8",
   },
   profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 15,
-    backgroundColor: "rgba(209, 235, 239, 0.7)", // Set to a glassy transparent color
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "rgba(221, 221, 221, 0.5)", // Slightly transparent border for a softer look
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    flexDirection: "row", // Keep the layout as a row
+    alignItems: "center", // Center items vertically
+    justifyContent: "space-between", // Space out items
+    padding: 15, // Padding around the container
+    borderColor: "rgba(209, 235, 239, 0.5)", // Semi-transparent border color
+    backgroundColor: "rgba(240, 249, 249, 0.7)", // Semi-transparent background color for glassy effect
+    backdropFilter: "blur(10px)", // Add blur effect (may need alternative library)
+    borderRadius: 10, // Rounded corners
+    borderWidth: 1, // Border width
+    shadowColor: "#000", // Shadow color
+    shadowOffset: { width: 0, height: 2 }, // Shadow offset
+    shadowOpacity: 0.1, // Light shadow effect
+    shadowRadius: 4, // Soft shadow
+    elevation: 3, // For Android shadow effect
   },
   backButton: {
     flex: 1,
@@ -501,13 +556,44 @@ const styles = StyleSheet.create({
     height: 25,
   },
   typingIndicator: {
-    fontSize: 14,
-    color: "#999",
+    fontSize: 12,
+    color: "#333", // Darker color for better readability
     textAlign: "center",
-    marginVertical: 10,
+    fontWeight: "400", // Slightly bolder font for emphasis
+    marginVertical: 2, // Add some vertical space around the text
   },
+  mainTyping: {
+    position: "relative", // Allows absolute positioning of child elements
+  },
+  typingIndicatorBubble: {
+    position: "absolute", // Change to absolute positioning
+    alignItems: "flex-start", // Align items to the start
+    alignSelf: "flex-start", // Allow the bubble to size to the text
+    borderRadius: 12, // Make the overall bubble more rounded
+    bottom: 0,
+    left: 10,
+    padding: 5, // Increased padding for a more spacious feel
+    borderWidth: 1,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 0,
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
+    borderColor: "rgba(209, 235, 239, 0.5)", // Use a semi-transparent border color
+    backgroundColor: "rgba(240, 249, 249, 0.7)", // Semi-transparent background color for glassy effect
+    backdropFilter: "blur(10px)", // Add blur effect (not supported in all RN versions)
+    shadowColor: "#000", // Shadow color
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2, // Light shadow effect
+    shadowRadius: 2, // Soft shadow
+    elevation: 3, // For Android shadow effect
+  },
+
   messageWrapper: {
     marginVertical: 5,
+    marginHorizontal: 10,
   },
   messageList: {
     marginTop: 20,
@@ -543,12 +629,12 @@ const styles = StyleSheet.create({
     borderBlockColor: "#D1EBEF",
   },
   messageText: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "300",
   },
   myMessageText: {
     textAlign: "left", // Aligns the text to the right
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "300",
   },
   otherMessageText: {
@@ -568,12 +654,13 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     borderWidth: 1,
     borderColor: "#ddd",
-    margin: 10,
+    marginHorizontal: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 3,
+    marginBottom: 5,
   },
   input: {
     flex: 1,
@@ -612,10 +699,11 @@ const styles = StyleSheet.create({
     padding: 5,
     borderTopLeftRadius: 0, // Round the top left corner
     borderBottomLeftRadius: 12, // Round the bottom left corner
-    borderTopRightRadius: 12, // No rounding on the top right corner
-    borderBottomRightRadius: 12, // Round the bottom right corner
+    borderTopRightRadius: 0, // No rounding on the top right corner
+    borderBottomRightRadius: 0, // Round the bottom right corner
     top: -15, // Adjust the vertical position as needed
     right: -10, // Move it to the right side, adjust as needed
+    marginRight: 10,
   },
   otherEmotionContainer: {
     position: "absolute", // Allows it to be positioned absolutely within the parent
@@ -626,12 +714,31 @@ const styles = StyleSheet.create({
     left: 0, // Move it to the right side, adjust as needed
   },
   emotionText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: "bold", // Change to bold for better visibility
     color: "#FFFFFF", // Change text color to white for high contrast
     textShadowColor: "rgba(0, 0, 0, 0.5)", // Softer gray shadow (semi-transparent black)
     textShadowOffset: { width: 1, height: 1 }, // Slight offset for depth
     textShadowRadius: 2, // Increase radius for a softer shadow effect
+  },
+  scheduleButton: {
+    position: 'absolute',
+    right: -65,
+    bottom: 5,
+    backgroundColor: '#A0D7E5',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+    elevation: 2,
+  },
+  scheduleButtonText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
 
