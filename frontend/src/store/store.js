@@ -10,7 +10,7 @@ const useStore = create((set) => ({
   user_banners: [], // State for user's owned banners
   user_stickers: [], // State for user's owned stickers
   active_banner: null, // State for the user's active banner
-
+  
   setUser: (userData) => set({ user: userData, session: userData ? true : false }), // Set user details and update session state
   setAccessToken: (token) => set({ accessToken: token }), // Set access token
   setRefreshToken: (token) => set({ refreshToken: token }), // Set refresh token
