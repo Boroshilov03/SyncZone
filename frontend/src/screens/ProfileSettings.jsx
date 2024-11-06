@@ -80,7 +80,15 @@ const ProfileSettings = ({ navigation, route }) => {
         },
       };
 
-      const { account, error } = await supabase.auth.updateUser({ data: { username: username, first_name: firstName, last_name: lastName } });
+      const { account, error } = await supabase.auth.updateUser({
+        data: {
+          username: username, first_name: firstName,
+          last_name: lastName
+        }
+      });
+      contactInfo.contactUsername = username
+      contactInfo.contactLast = lastName
+      contactInfo.contactFirst = firstName
       if (error) {
         throw error;
       }
