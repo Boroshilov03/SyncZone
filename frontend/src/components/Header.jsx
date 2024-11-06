@@ -6,9 +6,10 @@ import {
   Text,
   Switch,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react"; 
+import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
 import useStore from "../store/store";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { supabase } from "../lib/supabase";
 
 const profilePic = require("../../assets/icons/pfp_icon.png");
 const calendarImage = require("../../assets/icons/add_calendar.png");
@@ -24,7 +25,42 @@ const Header = ({
   switchValue,
 }) => {
   const { user } = useStore();
-  const [form, setForm] = useState({ emailNotifications: false });
+  const [activeBannerData, setActiveBannerData] = useState(null); 
+
+  // Function to fetch the active banner
+  const fetchActiveBanner = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("active_banner")
+      .select("banner_id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching active banner:", error.message);
+      return;
+    }
+
+    const { data: bannerData, error: bannerError } = await supabase
+      .from("banners")
+      .select("image_url")
+      .eq("id", data.banner_id)
+      .single();
+
+    if (bannerError) {
+      console.error("Error fetching banner details:", bannerError.message);
+    } else {
+      setActiveBannerData(bannerData); 
+    }
+  };
+
+  // Use useFocusEffect to refetch active banner on screen focus
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchActiveBanner();
+    }, [user]) // Re-run when user changes
+  );
 
   const handleHeaderPress = () => {
     if (event === "message") {
@@ -48,6 +84,12 @@ const Header = ({
           navigation.navigate("Settings", { profilephoto: avatarUrl })
         }
       >
+        {activeBannerData && (
+          <Image
+            source={{ uri: activeBannerData.image_url }}
+            style={styles.bannerImage} 
+          />
+        )}
         <Image
           accessibilityLabel=""
           source={avatarUrl ? { uri: avatarUrl } : profilePic}
@@ -55,7 +97,6 @@ const Header = ({
         />
       </TouchableOpacity>
 
-      {/* Static Title */}
       <View style={styles.titleContainer}>
         <Text style={styles.title}>{title}</Text>
       </View>
@@ -93,10 +134,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 20,
     marginTop: 30,
-    position: "relative", // Make sure the header has a relative position
+    position: "relative",
   },
   titleContainer: {
-    position: "absolute", // Position the title absolutely
+    position: "absolute",
     left: 0,
     right: 0,
     alignItems: "center",
@@ -110,6 +151,17 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+    position: "relative",
+    zIndex: 0,
+  },
+  bannerImage: {
+    position: "absolute",
+    width: 55, // Adjusted size for banner image
+    height: 55, // Adjusted size for banner image
+    borderRadius: 0, // Keep it circular
+    zIndex: 1,
+    top: -5.5, // Adjust position as needed
+    left: -7.5, // Adjust position as needed
   },
   calendarIcon: {
     width: 35,
