@@ -282,7 +282,7 @@ export default function SignupScreen({ navigation }) {
                     name:
                       label === "Password" || label === "Confirm Password" ? "lock" :
                         (label === "Email" ? "envelope" :
-                          (label === "Location" ? "fighter-jet" :
+                          (label === "Location" ? "globe" :
                             (label === "Confirm" ? "fighter-jet" : "user"))),
                     color: "#616061",
                     size: 20,

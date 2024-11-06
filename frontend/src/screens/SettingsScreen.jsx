@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; // Added useEffect
+import React, { useState, useEffect, useCallback } from "react"; // Added useEffect
 import {
   StyleSheet,
   SafeAreaView,
@@ -22,7 +22,7 @@ import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEff
 
 export default function Example({ navigation }) {
   const { setUser, setAccessToken, setRefreshToken, user } = useStore();
-  const [activeBannerData, setActiveBannerData] = useState(null); 
+  const [activeBannerData, setActiveBannerData] = useState(null);
 
   const route = useRoute();
   const { profilephoto } = route.params; // Ensure this param is passed correctly
@@ -38,6 +38,8 @@ export default function Example({ navigation }) {
     contactFirst: user?.user_metadata?.first_name,
     contactLast: user?.user_metadata?.last_name,
     contactUsername: user?.user_metadata?.username,
+    contactEmail: user?.user_metadata?.email,
+    contactPassword: user?.user_metadata?.password,
   };
 
   const handleLogout = async () => {
@@ -76,7 +78,7 @@ export default function Example({ navigation }) {
     if (bannerError) {
       console.error("Error fetching banner details:", bannerError.message);
     } else {
-      setActiveBannerData(bannerData); 
+      setActiveBannerData(bannerData);
     }
   };
 
@@ -136,7 +138,7 @@ export default function Example({ navigation }) {
                     source={{ uri: activeBannerData.image_url }}
                     style={styles.bannerImage}
                   />
-                )}  
+                )}
                 <Image
                   accessibilityLabel=""
                   source={{
@@ -345,7 +347,7 @@ const styles = StyleSheet.create({
     borderRadius: 20, // Adjust to create a smoother edge
     justifyContent: "center",
     alignItems: "center",
-    
+
   },
   profileAvatar: {
     width: 60,
