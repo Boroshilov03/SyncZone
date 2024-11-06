@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Pressable,
   StyleSheet,
 } from "react-native";
+
 import Input from "../components/Input";
 import * as ImagePicker from "expo-image-picker";
 import { supabase } from "../lib/supabase";
@@ -25,6 +26,7 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import Acon from "react-native-vector-icons/AntDesign";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
+import * as Font from 'expo-font';
 
 export default function SignupScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -45,6 +47,24 @@ export default function SignupScreen({ navigation }) {
   const handleInputChange = useCallback((name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }, []);
+
+  useEffect(() => {
+    const loadFonts = async () => {
+      await Font.loadAsync({
+        "Inter_18pt-Regular": require("./fonts/Inter_18pt-Regular.ttf"),
+        "Inter_18pt-Medium": require("./fonts/Inter_18pt-Medium.ttf"),
+        "Inter_18pt-MediumItalic": require("./fonts/Inter_18pt-MediumItalic.ttf"),
+        "Poppins-Regular": require("./fonts/Poppins-Regular.ttf"),
+        "Poppins-Medium": require("./fonts/Poppins-Medium.ttf"),
+        "Karla-Regular": require("./fonts/Karla-Regular.ttf"),
+        "Karla-Medium": require("./fonts/Karla-Medium.ttf"),
+      });
+      setFontsLoaded(true);
+    };
+
+    loadFonts();
+  }, []);
+
 
   const pickImage = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -203,7 +223,7 @@ export default function SignupScreen({ navigation }) {
           <ScrollView contentContainerStyle={styles.scrollView}>
             <View style={styles.titlebox} flexDirection={"row"}>
               <View style={styles.open}>
-                <Text style={styles.title} fontFamily={"Karla-Medium"}>
+                <Text style={[styles.title, { fontFamily: "Karla-Regular" }]}>
                   Create an <Text style={styles.color}>account</Text>
                 </Text>
               </View>
@@ -262,7 +282,7 @@ export default function SignupScreen({ navigation }) {
                     name:
                       label === "Password" || label === "Confirm Password" ? "lock" :
                         (label === "Email" ? "envelope" :
-                          (label === "Location" ? "fighter-jet" :
+                          (label === "Location" ? "globe" :
                             (label === "Confirm" ? "fighter-jet" : "user"))),
                     color: "#616061",
                     size: 20,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 import {
   StyleSheet,
@@ -26,6 +26,8 @@ import { supabase } from "../lib/supabase";
 import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
 
 const ProfileSettings = ({ navigation, route }) => {
+
+
   const { contactInfo } = route.params; // Access contactInfo correctly
   const [visible, setVisible] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);
@@ -34,15 +36,19 @@ const ProfileSettings = ({ navigation, route }) => {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [ownedBannersVisible, setOwnedBannersVisible] = useState(false);
   const { user } = useStore();
-  const [activeBannerData, setActiveBannerData] = useState(null); 
+  const [activeBannerData, setActiveBannerData] = useState(null);
 
 
   // State for form fields
   const [username, setUsername] = useState(contactInfo.contactUsername || "");
-  const [email, setEmail] = useState(contactInfo.email || ""); // Make sure contactInfo has email property
+  const [email, setEmail] = useState(contactInfo.contactEmail || ""); // Make sure contactInfo has email property
   const [password, setPassword] = useState(""); // Leave this blank for user to enter
   const [firstName, setFirstName] = useState(contactInfo.contactFirst || "");
   const [lastName, setLastName] = useState(contactInfo.contactLast || "");
+
+  const handleInputChange = useCallback((name, value) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  }, []);
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -61,9 +67,43 @@ const ProfileSettings = ({ navigation, route }) => {
     loadFonts();
   }, []);
 
- // Function to fetch the active banner
+  const updateInfo = async () => {
+    console.log('>>>>>>>>>>', email)
+    try {
+      const updateUser = {
+        email,
+        password,
+        user_metadata: {
+          first_name: firstName,
+          last_name: lastName,
+          username,
+        },
+      };
+
+      const { account, error } = await supabase.auth.updateUser({
+        data: {
+          username: username, first_name: firstName,
+          last_name: lastName
+        }
+      });
+      contactInfo.contactUsername = username
+      contactInfo.contactLast = lastName
+      contactInfo.contactFirst = firstName
+      if (error) {
+        throw error;
+      }
+      //console.log('User information updated:', user);
+      alert('Profile updated successfully!');
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert('Error updating profile. Please try again.');
+    }
+  };
+  // Function to fetch the active banner
   const fetchActiveBanner = async () => {
     if (!user) return;
+
+
 
     const { data, error } = await supabase
       .from("active_banner")
@@ -85,7 +125,7 @@ const ProfileSettings = ({ navigation, route }) => {
     if (bannerError) {
       console.error("Error fetching banner details:", bannerError.message);
     } else {
-      setActiveBannerData(bannerData); 
+      setActiveBannerData(bannerData);
     }
   };
 
@@ -98,11 +138,11 @@ const ProfileSettings = ({ navigation, route }) => {
   useEffect(() => {
     fetchActiveBanner(); // Fetch the active banner when the component mounts
   }, [user]); // Dependency on user to refetch when user state changes
- 
-    // Use useFocusEffect to refetch active banner on screen focus
+
+  // Use useFocusEffect to refetch active banner on screen focus
 
 
-  
+
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 
   const panResponder = PanResponder.create({
@@ -119,7 +159,7 @@ const ProfileSettings = ({ navigation, route }) => {
   if (!fontsLoaded) {
     return null; // You can return a loading spinner or similar
   }
-
+  console.log(email)
   return (
     <SafeAreaView
       style={[styles.container, { marginTop: Constants.statusBarHeight }]}
@@ -135,12 +175,12 @@ const ProfileSettings = ({ navigation, route }) => {
         </Pressable>
         <View style={styles.profileContainer}>
           <Pressable style={styles.pic} onPress={() => setModalVisible(true)}>
-           {activeBannerData && (
-            <Image
-              source={{ uri: activeBannerData.image_url }}
-              style={styles.bannerImage} // New style for the banner image
-            />
-          )}
+            {activeBannerData && (
+              <Image
+                source={{ uri: activeBannerData.image_url }}
+                style={styles.bannerImage} // New style for the banner image
+              />
+            )}
             <Image
               source={{ uri: contactInfo.contactPFP }}
               style={styles.placeholderImage}
@@ -241,7 +281,7 @@ const ProfileSettings = ({ navigation, route }) => {
                 <Pressable style={styles.left}>
                   <Text
                     style={styles.lText}
-                    onPress={() => setOwnedBannersVisible(true)}
+
                   >
                     Delete
                   </Text>
@@ -287,8 +327,8 @@ const ProfileSettings = ({ navigation, route }) => {
                     field.label === "Password"
                       ? "lock"
                       : field.label === "Email"
-                      ? "envelope"
-                      : "user",
+                        ? "envelope"
+                        : "user",
                   color: "#616061",
                   size: 20,
                 }}
@@ -316,7 +356,7 @@ const ProfileSettings = ({ navigation, route }) => {
             colors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
             style={styles.gradient}
           >
-            <TouchableOpacity style={styles.button2} borderRadius={20}>
+            <TouchableOpacity style={styles.button2} borderRadius={20} onPress={updateInfo}>
               <Text style={[styles.buttontext]}>Update</Text>
             </TouchableOpacity>
           </LinearGradient>
@@ -460,7 +500,7 @@ const styles = StyleSheet.create({
     borderRadius: 20, // Adjust to create a smoother edge
     justifyContent: "center",
     alignItems: "center",
-    
+
   },
   placeholderImage: {
     width: 150,
