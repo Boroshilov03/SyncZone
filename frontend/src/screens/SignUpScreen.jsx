@@ -231,14 +231,6 @@ export default function SignupScreen({ navigation }) {
 
             <TouchableWithoutFeedback>
               <View style={styles.imageContainer}>
-                {/* <View style={styles.cam}>
-                  <Icon
-                    name="camera"
-                    size={35}
-                    color="#616061"
-                    onPress={pickImage}
-                  ></Icon>
-                </View> */}
                 {profilePhoto ? (
                   <Image source={{ uri: profilePhoto }} style={styles.image} />
                 ) : (
@@ -264,7 +256,7 @@ export default function SignupScreen({ navigation }) {
                 { key: "username", label: "Username", icon: "user" },
                 { key: "firstname", label: "First Name" },
                 { key: "lastname", label: "Last Name" },
-                { key: "email", label: "Email" },
+                { key: "email", label: "Email", },
                 { key: "password1", label: "Password" },
                 { key: "password2", label: "Confirm Password" },
                 { key: "location", label: "Location" },

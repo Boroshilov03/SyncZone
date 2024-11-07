@@ -24,10 +24,14 @@ import OwnedBannersModal from "../components/OwnedBannersModal";
 import useStore from "../store/store";
 import { supabase } from "../lib/supabase";
 import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
+import * as ImagePicker from "expo-image-picker";
+import uuid from "react-native-uuid";
+import { decode } from "base64-arraybuffer";
 
 const ProfileSettings = ({ navigation, route }) => {
 
-
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [base64Photo, setBase64Photo] = useState(null);
   const { contactInfo } = route.params; // Access contactInfo correctly
   const [visible, setVisible] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);
@@ -67,6 +71,7 @@ const ProfileSettings = ({ navigation, route }) => {
     loadFonts();
   }, []);
 
+
   const updateInfo = async () => {
     console.log('>>>>>>>>>>', email)
     try {
@@ -79,6 +84,65 @@ const ProfileSettings = ({ navigation, route }) => {
           username,
         },
       };
+
+      if (base64Photo) {
+        const photoPath = `${user.id}/${uuid.v4()}.png`;
+        console.log("Uploading image to path:", photoPath); // Log photo path
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(photoPath, decode(base64Photo), {
+            contentType: "image/png",
+          });
+
+        console.log("Image Upload Data:", uploadData); // Log upload result
+        console.log("Image Upload Error:", uploadError); // Log any upload errors
+
+        if (uploadError) {
+          Alert.alert(
+            "Error",
+            "Failed to upload profile photo: " + uploadError.message
+          );
+          setLoading(false);
+          return;
+        }
+
+        avatarUrl = supabase.storage.from("avatars").getPublicUrl(photoPath)
+          .data.publicUrl;
+        console.log("Avatar URL:", avatarUrl); // Log avatar URL to see if it's correct
+      }
+
+      // Update the profiles table with the avatar URL
+      const { error: updateProfileError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: avatarUrl })
+        .eq("id", user.id);
+
+      // If an error occurred updating the profile, show error and return
+      if (updateProfileError) {
+        Alert.alert(
+          "Error",
+          "Failed to update avatar URL in profiles table: " +
+          updateProfileError.message
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (avatarUrl) {
+        const { error: updateError } = await supabase.auth.updateUser({
+          data: { avatar_url: avatarUrl },
+        });
+
+        if (updateError) {
+          Alert.alert(
+            "Error",
+            "Failed to update user session: " + updateError.message
+          );
+          setLoading(false);
+          return;
+        }
+      }
 
       const { account, error } = await supabase.auth.updateUser({
         data: {
@@ -99,6 +163,31 @@ const ProfileSettings = ({ navigation, route }) => {
       alert('Error updating profile. Please try again.');
     }
   };
+
+  const pickImage = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission needed",
+        "Sorry, we need camera roll permissions to make this work!"
+      );
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+      base64: true,
+    });
+    console.log(result)
+    if (!result.canceled) {
+      setProfilePhoto(result.assets[0].uri);
+      setBase64Photo(result.assets[0].base64);
+    }
+  }, []);
+
   // Function to fetch the active banner
   const fetchActiveBanner = async () => {
     if (!user) return;
@@ -159,7 +248,8 @@ const ProfileSettings = ({ navigation, route }) => {
   if (!fontsLoaded) {
     return null; // You can return a loading spinner or similar
   }
-  console.log(email)
+
+
   return (
     <SafeAreaView
       style={[styles.container, { marginTop: Constants.statusBarHeight }]}
@@ -177,6 +267,7 @@ const ProfileSettings = ({ navigation, route }) => {
           <Pressable style={styles.pic} onPress={() => setModalVisible(true)}>
             {activeBannerData && (
               <Image
+
                 source={{ uri: activeBannerData.image_url }}
                 style={styles.bannerImage} // New style for the banner image
               />
@@ -240,17 +331,10 @@ const ProfileSettings = ({ navigation, route }) => {
             <View style={styles.pfpContent}>
               <View style={styles.modText}>
                 <Text style={styles.pfText}>Profile Picture</Text>
-                {/* <Ionicons
-                                    name="close"
-                                    size={35}
-                                    color="#555A70"
-                                    style={styles.pfpClose}
-                               
-                                /> */}
               </View>
               <Pressable style={styles.pfpButtons}>
                 <View style={styles.upload}>
-                  <Text style={styles.uploadText}>Upload Image</Text>
+                  <Text style={styles.uploadText} onPress={pickImage}>Upload Image</Text>
                 </View>
                 <View style={styles.banButton}>
                   <TouchableOpacity
@@ -264,7 +348,10 @@ const ProfileSettings = ({ navigation, route }) => {
                   </TouchableOpacity>
                 </View>
                 <View style={styles.right}>
-                  <Text style={styles.removeText}>Remove Image</Text>
+                  <Text style={styles.removeText} onPress={() => {
+                    setProfilePhoto(null);
+                    setBase64Photo(null);
+                  }}>Remove Image</Text>
                 </View>
               </Pressable>
             </View>
@@ -299,7 +386,7 @@ const ProfileSettings = ({ navigation, route }) => {
         <View style={styles.fields}>
           {[
             { label: "Username", value: username, setValue: setUsername },
-            { label: "Email", value: email, setValue: setEmail },
+            { label: "Email", value: email, setValue: setEmail, editable: false, disabled: true },
             {
               label: "Password",
               value: password,
@@ -334,6 +421,8 @@ const ProfileSettings = ({ navigation, route }) => {
                 }}
                 autoCapitalize="none"
                 secureTextEntry={field.secureTextEntry} // Use for password field
+                editable={field.editable}
+                disabled={field.disabled}
                 inputContainerStyle={{
                   borderRadius: 30,
                   borderTopWidth: 2.5,
