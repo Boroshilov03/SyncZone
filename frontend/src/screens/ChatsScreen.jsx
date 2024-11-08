@@ -22,6 +22,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import Profile from "./ProfileScreen";
+import FavoriteUsers from "../components/favoriteUsers";
 
 const ChatsScreen = ({ navigation }) => {
   const [input, setInput] = useState("");
@@ -41,19 +42,6 @@ const ChatsScreen = ({ navigation }) => {
     enabled: !!user.id,
     refetchOnWindowFocus: true,
   });
-  const localAvatar = require("../../assets/icons/pfp2.jpg");
-
-  const [favoriteUsers, setFavoriteUsers] = useState([
-    { id: 1, username: "User1", avatar_url: localAvatar },
-    { id: 2, username: "User2", avatar_url: localAvatar },
-    { id: 3, username: "User3", avatar_url: localAvatar },
-    { id: 4, username: "User1", avatar_url: localAvatar },
-    { id: 5, username: "User2", avatar_url: localAvatar },
-    { id: 6, username: "User3", avatar_url: localAvatar },
-    { id: 7, username: "User1", avatar_url: localAvatar },
-    { id: 8, username: "User2", avatar_url: localAvatar },
-    { id: 9, username: "User3", avatar_url: localAvatar },
-  ]);
 
   async function fetchChats() {
     const { data: chatParticipants, error: chatError } = await supabase
@@ -281,25 +269,17 @@ const ChatsScreen = ({ navigation }) => {
             Favorites
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate("Contact");
+              }}
+            >
               <Image
                 source={require("../../assets/icons/add_favorite.png")}
                 style={styles.favoriteImg}
               />
             </TouchableOpacity>
-            {favoriteUsers.map((user) => (
-              <TouchableOpacity key={user.id}>
-                {user.avatar_url ? (
-                  <Image source={user.avatar_url} style={styles.favoriteImg} />
-                ) : (
-                  <View style={[styles.favoriteImg, styles.cardAvatar]}>
-                    <Text style={styles.cardAvatarText}>
-                      {user.username[0]}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
+            <FavoriteUsers />
           </ScrollView>
         </View>
 
@@ -351,12 +331,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 8,
   },
-  favoriteImg: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
-  },
   searchIcon: {
     position: "absolute",
     top: 0,
@@ -376,9 +350,9 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContainer: {
     flex: 1,
@@ -387,8 +361,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    width: '85%',
-    height: '70%',
+    width: "85%",
+    height: "70%",
     padding: 40,
     paddingTop: 40,
     backgroundColor: "#fff",
@@ -398,6 +372,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+  },
+  favoriteImg: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 5,
   },
   favoritesContainer: {
     width: "100%", // Ensure this takes the full width
@@ -443,7 +423,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     width: "95%", // Set width to 100% to match the container
-    alignSelf: 'center'
+    alignSelf: "center",
   },
   cardBody: {
     flex: 1,
@@ -473,16 +453,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 8,
-  },
-  cardAvatar: {
-    backgroundColor: "#efefef",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardAvatarText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#fff",
   },
   image: {
     width: 24,

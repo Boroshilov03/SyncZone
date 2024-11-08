@@ -6,8 +6,8 @@ import {
   Text,
   Switch,
 } from "react-native";
-import React, { useEffect, useState } from "react"; 
-import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
+import React, { useEffect, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native"; // Import useFocusEffect
 import useStore from "../store/store";
 import { supabase } from "../lib/supabase";
 
@@ -25,7 +25,7 @@ const Header = ({
   switchValue,
 }) => {
   const { user } = useStore();
-  const [activeBannerData, setActiveBannerData] = useState(null); 
+  const [activeBannerData, setActiveBannerData] = useState(null);
 
   // Function to fetch the active banner
   const fetchActiveBanner = async () => {
@@ -51,7 +51,7 @@ const Header = ({
     if (bannerError) {
       console.error("Error fetching banner details:", bannerError.message);
     } else {
-      setActiveBannerData(bannerData); 
+      setActiveBannerData(bannerData);
     }
   };
 
@@ -87,7 +87,7 @@ const Header = ({
         {activeBannerData && (
           <Image
             source={{ uri: activeBannerData.image_url }}
-            style={styles.bannerImage} 
+            style={styles.bannerImage}
           />
         )}
         <Image

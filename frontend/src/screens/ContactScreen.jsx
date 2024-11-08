@@ -42,17 +42,16 @@ const fetchMutualContacts = async ({ queryKey }) => {
   if (error) throw new Error(error.message);
   return data;
 };
-const ContactScreen = ({ navigation, route }) => {
+const ContactScreen = ({ navigation }) => {
   const [profileVisible, setProfileVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
+  const [input, setInput] = useState("");
+  const [favorites, setFavorites] = useState([]);
   const { user } = useStore();
   const queryClient = useQueryClient();
-  const [input, setInput] = useState("");
 
-  const flatListRef = useRef(null); // Add this line at the top of the component
-  const [alphabetWidth, setAlphabetWidth] = useState(0); // State to store alphabet item width
-
+  const flatListRef = useRef(null);
 
   const {
     data: contacts,
@@ -65,7 +64,6 @@ const ContactScreen = ({ navigation, route }) => {
   });
 
   const groupContactsByLetter = (contacts) => {
-
     if (!contacts || contacts.length === 0) return {}; // Return empty object if no contacts
 
     // First, sort contacts alphabetically by their first name
@@ -95,18 +93,22 @@ const ContactScreen = ({ navigation, route }) => {
     <View>
       <Text style={styles.groupHeader}>{item.letter}</Text>
       {item.contacts.map((contact) => (
-        <renderContact key={contact.profiles.id} item={contact} />
+        <RenderContact key={contact.profiles.id} item={contact} />
       ))}
     </View>
   );
 
+  const RenderContact = ({ item }) => (
+    <View style={styles.contactContainer}>
+      <Text>{item.profiles.username}</Text>
+    </View>
+  );
   // Function to scroll to the selected letter section
   const scrollToLetter = (letter) => {
-
-      // Check if groupedData is empty
-      if (!groupedData || groupedData.length === 0) {
-        return; // Do nothing if there are no contacts
-      }
+    // Check if groupedData is empty
+    if (!groupedData || groupedData.length === 0) {
+      return; // Do nothing if there are no contacts
+    }
 
     const index = groupedData.findIndex((item) => item.letter === letter);
 
@@ -158,21 +160,6 @@ const ContactScreen = ({ navigation, route }) => {
     };
   }, [user, queryClient]);
 
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <Text>Error fetching contacts: {error.message}</Text>
-      </View>
-    );
-  }
 
   const handleFavoriteToggle = () => {
     setIsFavorite(!isFavorite);
@@ -182,9 +169,9 @@ const ContactScreen = ({ navigation, route }) => {
   const AlphabetList = ({ onLetterPress, onSwipeLetter, hasContacts }) => {
     const [alphabetWidth, setAlphabetWidth] = useState(0); // State to store alphabet item width
     const alphabetRef = useRef(); // Reference to track the position of the alphabet
-  
+
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split(""); // Alphabet array
-  
+
     // Helper function to calculate which letter corresponds to the Y position
     const getLetterFromPosition = (y) => {
       const letterHeight = alphabetWidth / alphabet.length;
@@ -194,7 +181,7 @@ const ContactScreen = ({ navigation, route }) => {
       }
       return null;
     };
-  
+
     const panResponder = PanResponder.create({
       onMoveShouldSetPanResponder: () => hasContacts, // Only enable pan gesture if there are contacts
       onPanResponderGrant: (evt, gestureState) => {
@@ -260,6 +247,51 @@ const ContactScreen = ({ navigation, route }) => {
 
   // If no search input, show full contact list grouped by letter, otherwise show filtered contacts
   const dataToRender = input.length > 0 ? filteredContacts : groupedData;
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      const { data, error } = await supabase
+        .from("favorites")
+        .select("contact_id")
+        .eq("user_id", user.id);
+      if (!error) {
+        // Store favorite contact IDs
+        setFavorites(data.map((fav) => fav.contact_id));
+      } else {
+        console.error("Error fetching favorites:", error);
+      }
+    };
+
+    fetchFavorites();
+  }, [user]);
+
+  const toggleFavorite = async (contactID) => {
+    if (favorites.includes(contactID)) {
+      // If the contact is already a favorite, remove them
+      const { error } = await supabase
+        .from("favorites")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("contact_id", contactID);
+
+      if (!error) {
+        setFavorites(favorites.filter((id) => id !== contactID));
+      } else {
+        console.error("Error removing favorite:", error);
+      }
+    } else {
+      // If the contact is not a favorite, add them
+      const { error } = await supabase
+        .from("favorites")
+        .insert({ user_id: user.id, contact_id: contactID });
+
+      if (!error) {
+        setFavorites([...favorites, contactID]);
+      } else {
+        console.error("Error adding favorite:", error);
+      }
+    }
+  };
 
   const createChat = async (contactID) => {
     // Check if a 1-on-1 chat already exists between the two users
@@ -375,6 +407,8 @@ const ContactScreen = ({ navigation, route }) => {
       contactUsername: item.profiles.username,
       //setModalVisible: setProfileVisible,
     };
+    const isFavorite = favorites.includes(item.profiles.id);
+
     return (
       <View style={styles.contactItem}>
         <View style={styles.wrapperRow}>
@@ -425,10 +459,14 @@ const ContactScreen = ({ navigation, route }) => {
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.favButton}
-              onPress={() => console.log(item.profiles.id)}
+              onPress={() => toggleFavorite(item.profiles.id)}
             >
               <Image
-                source={require("../../assets/icons/white-heart.png")}
+                source={
+                  isFavorite
+                    ? require("../../assets/icons/red-heart.png") // Red heart if favorite
+                    : require("../../assets/icons/white-heart.png") // White heart if not favorite
+                }
                 style={styles.favoriteIcon}
               />
             </TouchableOpacity>
