@@ -24,10 +24,14 @@ import OwnedBannersModal from "../components/OwnedBannersModal";
 import useStore from "../store/store";
 import { supabase } from "../lib/supabase";
 import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
+import * as ImagePicker from "expo-image-picker";
+import uuid from "react-native-uuid";
+import { decode } from "base64-arraybuffer";
 
 const ProfileSettings = ({ navigation, route }) => {
 
-
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [base64Photo, setBase64Photo] = useState(null);
   const { contactInfo } = route.params; // Access contactInfo correctly
   const [visible, setVisible] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);
@@ -67,9 +71,12 @@ const ProfileSettings = ({ navigation, route }) => {
     loadFonts();
   }, []);
 
+
   const updateInfo = async () => {
-    console.log('>>>>>>>>>>', email)
+    console.log('>>>>>>>>>>', email);
     try {
+      let avatarUrl = null; // Declare avatarUrl here
+
       const updateUser = {
         email,
         password,
@@ -80,25 +87,144 @@ const ProfileSettings = ({ navigation, route }) => {
         },
       };
 
+      if (base64Photo) {
+        const photoPath = `${user.id}/${uuid.v4()}.png`;
+        console.log("Uploading image to path:", photoPath);
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(photoPath, decode(base64Photo), {
+            contentType: "image/png",
+          });
+
+        console.log("Image Upload Data:", uploadData);
+        console.log("Image Upload Error:", uploadError);
+
+        if (uploadError) {
+          Alert.alert("Error", "Failed to upload profile photo: " + uploadError.message);
+          return;
+        }
+
+        avatarUrl = supabase.storage.from("avatars").getPublicUrl(photoPath).data.publicUrl;
+        console.log("Avatar URL:", avatarUrl);
+      }
+
+      // Update the profiles table with the avatar URL if it's set
+      const { error: updateProfileError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: avatarUrl })
+        .eq("id", user.id);
+
+      if (updateProfileError) {
+        Alert.alert("Error", "Failed to update avatar URL in profiles table: " + updateProfileError.message);
+        return;
+      }
+
+      if (avatarUrl) {
+        const { error: updateError } = await supabase.auth.updateUser({
+          data: { avatar_url: avatarUrl },
+        });
+
+        if (updateError) {
+          Alert.alert("Error", "Failed to update user session: " + updateError.message);
+          return;
+        }
+      }
+
       const { account, error } = await supabase.auth.updateUser({
         data: {
-          username: username, first_name: firstName,
+          username: username,
+          first_name: firstName,
           last_name: lastName
         }
       });
-      contactInfo.contactUsername = username
-      contactInfo.contactLast = lastName
-      contactInfo.contactFirst = firstName
+
+      contactInfo.contactUsername = username;
+      contactInfo.contactLast = lastName;
+      contactInfo.contactFirst = firstName;
+
       if (error) {
         throw error;
       }
-      //console.log('User information updated:', user);
+
       alert('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating user:', error);
       alert('Error updating profile. Please try again.');
     }
   };
+
+  const removeImage = async () => {
+    try {
+      // Remove image from local state
+      setProfilePhoto(null);
+      setBase64Photo(null);
+
+      // Remove image from Supabase storage
+      if (contactInfo.contactPFP) {
+        const photoPath = contactInfo.contactPFP.split('/').pop(); // Get the file path from URL
+        const { error: deleteError } = await supabase.storage
+          .from("avatars")
+          .remove([photoPath]);
+
+        if (deleteError) {
+          throw deleteError;
+        }
+
+        // Update profile to remove avatar_url
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({ avatar_url: null })
+          .eq("id", user.id);
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        // Also update user metadata if necessary
+        const { error: updateUserError } = await supabase.auth.updateUser({
+          data: { avatar_url: null },
+        });
+
+        if (updateUserError) {
+          throw updateUserError;
+        }
+
+        // Reset the contact info
+        contactInfo.contactPFP = null;
+
+        alert("Profile image removed successfully!");
+      }
+    } catch (error) {
+      console.error("Error removing image:", error);
+      alert("Failed to remove profile image. Please try again.");
+    }
+  };
+
+  const pickImage = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission needed",
+        "Sorry, we need camera roll permissions to make this work!"
+      );
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+      base64: true,
+    });
+    console.log(result)
+    if (!result.canceled) {
+      setProfilePhoto(result.assets[0].uri);
+      setBase64Photo(result.assets[0].base64);
+    }
+  }, []);
+
   // Function to fetch the active banner
   const fetchActiveBanner = async () => {
     if (!user) return;
@@ -147,19 +273,22 @@ const ProfileSettings = ({ navigation, route }) => {
 
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (evt, gestureState) => {
-      return gestureState.dy > 10; // Start responding to the gesture
+      // Only respond to vertical movements
+      return Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
     },
     onPanResponderRelease: (evt, gestureState) => {
+      // Close modal if swipe down is detected (gesture.dy > 50)
       if (gestureState.dy > 50) {
-        // Swipe down threshold
-        setModalVisible(false); // Close modal
+        setModalVisible(false); // Close modal on swipe down
       }
     },
   });
+
   if (!fontsLoaded) {
     return null; // You can return a loading spinner or similar
   }
-  console.log(email)
+
+
   return (
     <SafeAreaView
       style={[styles.container, { marginTop: Constants.statusBarHeight }]}
@@ -177,6 +306,7 @@ const ProfileSettings = ({ navigation, route }) => {
           <Pressable style={styles.pic} onPress={() => setModalVisible(true)}>
             {activeBannerData && (
               <Image
+
                 source={{ uri: activeBannerData.image_url }}
                 style={styles.bannerImage} // New style for the banner image
               />
@@ -240,17 +370,10 @@ const ProfileSettings = ({ navigation, route }) => {
             <View style={styles.pfpContent}>
               <View style={styles.modText}>
                 <Text style={styles.pfText}>Profile Picture</Text>
-                {/* <Ionicons
-                                    name="close"
-                                    size={35}
-                                    color="#555A70"
-                                    style={styles.pfpClose}
-                               
-                                /> */}
               </View>
               <Pressable style={styles.pfpButtons}>
                 <View style={styles.upload}>
-                  <Text style={styles.uploadText}>Upload Image</Text>
+                  <Text style={styles.uploadText} onPress={pickImage}>Upload Image</Text>
                 </View>
                 <View style={styles.banButton}>
                   <TouchableOpacity
@@ -264,7 +387,7 @@ const ProfileSettings = ({ navigation, route }) => {
                   </TouchableOpacity>
                 </View>
                 <View style={styles.right}>
-                  <Text style={styles.removeText}>Remove Image</Text>
+                  <Text style={styles.removeText} onPress={removeImage}>Remove Image</Text>
                 </View>
               </Pressable>
             </View>
@@ -299,7 +422,7 @@ const ProfileSettings = ({ navigation, route }) => {
         <View style={styles.fields}>
           {[
             { label: "Username", value: username, setValue: setUsername },
-            { label: "Email", value: email, setValue: setEmail },
+            { label: "Email", value: email, setValue: setEmail, editable: false, disabled: true },
             {
               label: "Password",
               value: password,
@@ -334,6 +457,8 @@ const ProfileSettings = ({ navigation, route }) => {
                 }}
                 autoCapitalize="none"
                 secureTextEntry={field.secureTextEntry} // Use for password field
+                editable={field.editable}
+                disabled={field.disabled}
                 inputContainerStyle={{
                   borderRadius: 30,
                   borderTopWidth: 2.5,
