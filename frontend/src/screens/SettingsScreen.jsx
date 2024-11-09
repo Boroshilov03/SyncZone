@@ -57,35 +57,45 @@ export default function Example({ navigation }) {
   // Function to fetch the active banner
   const fetchActiveBanner = async () => {
     if (!user) return;
-
+  
     const { data, error } = await supabase
       .from("active_banner")
       .select("banner_id")
       .eq("user_id", user.id)
       .single();
-
+  
     if (error) {
-      console.error("Error fetching active banner:", error.message);
+      if (error.code === "PGRST116") { // No rows returned for single query
+        setActiveBannerData(null); // Set active banner data to null if no active banner
+      } else {
+        console.error("Error fetching active banner:", error.message);
+      }
       return;
     }
-
-    const { data: bannerData, error: bannerError } = await supabase
-      .from("banners")
-      .select("image_url")
-      .eq("id", data.banner_id)
-      .single();
-
-    if (bannerError) {
-      console.error("Error fetching banner details:", bannerError.message);
+  
+    if (data) {
+      const { data: bannerData, error: bannerError } = await supabase
+        .from("banners")
+        .select("image_url")
+        .eq("id", data.banner_id)
+        .single();
+  
+      if (bannerError) {
+        console.error("Error fetching banner details:", bannerError.message);
+        setActiveBannerData(null); // Fallback to null if there's an error with banner details
+      } else {
+        setActiveBannerData(bannerData); 
+      }
     } else {
-      setActiveBannerData(bannerData);
+      setActiveBannerData(null); // Explicitly set to null if no data returned
     }
   };
+  
 
   useFocusEffect(
     React.useCallback(() => {
       fetchActiveBanner();
-    }, [user]) // Re-run when user changes
+    }, [user, fetchActiveBanner]) // Re-run when user changes
   );
 
   useEffect(() => {
