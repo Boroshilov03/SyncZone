@@ -237,13 +237,13 @@ const ContactScreen = ({ navigation }) => {
     scrollToLetter(letter); // Scroll on swipe
   };
 
-  // Filter contacts based on search input (username, first name, last name)
-  const filteredContacts = contacts.filter(
-    (contact) =>
-      contact.profiles.username.toLowerCase().includes(input.toLowerCase()) ||
-      contact.profiles.first_name.toLowerCase().includes(input.toLowerCase()) ||
-      contact.profiles.last_name.toLowerCase().includes(input.toLowerCase())
-  );
+// Safely access `contacts` when calling `.filter()`
+const filteredContacts = (contacts || []).filter(
+  (contact) =>
+    contact.profiles.username.toLowerCase().includes(input.toLowerCase()) ||
+    contact.profiles.first_name.toLowerCase().includes(input.toLowerCase()) ||
+    contact.profiles.last_name.toLowerCase().includes(input.toLowerCase())
+);
 
   // If no search input, show full contact list grouped by letter, otherwise show filtered contacts
   const dataToRender = input.length > 0 ? filteredContacts : groupedData;
@@ -393,10 +393,12 @@ const ContactScreen = ({ navigation }) => {
     console.log("Creating call with", contactID);
   };
 
-  // Function to handle group chat creation
-  const createGroupChat = () => {
-    console.log("Create Group Chat Pressed");
-  };
+// Function to handle group chat creation
+const createGroupChat = () => {
+  console.log("Create Group Chat Pressed");
+  navigation.navigate("MembersChat"); // Navigate to Members screen
+};
+
 
   const renderContact = ({ item }) => {
     const contactInfo = {
