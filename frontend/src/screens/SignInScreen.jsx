@@ -200,6 +200,7 @@ const styles = StyleSheet.create({
 
     //height: 1000,
     backgroundColor: "rgba(52, 52, 52, alpha)",
+    
     // padding: 12,
     //backgroundColor: '#966dab',
   },
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     flexDirection: "column",
     padding: 42,
-    backgroundColor: "#fffbf5",
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
     borderTopLeftRadius: 40,
     borderTopRightRadius: 90,
     //borderWidth: 3,
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
     padding: 5,
     //margin: 5,
     //justifyContent: 'center',
-    backgroundColor: "#fffbf5",
+    // backgroundColor: "rgba(255, 255, 255, 0.8)",
     //borderWidth: 3,
     //height: '50%',
     rowGap: 5,
@@ -248,7 +249,7 @@ const styles = StyleSheet.create({
   syncbox: {
     flex: 2,
     justifyContent: "center",
-    backgroundColor: "#fffbf5",
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
   },
   verticallySpaced: {
     flex: 1,

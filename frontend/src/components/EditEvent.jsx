@@ -280,7 +280,7 @@ const EditEvent = ({ event, onClose }) => {
         />
       </View>
 
-      {/* <View style={styles.row}>
+      <View style={styles.row}>
         <Text style={styles.label}>Date: </Text>
         <Image
           source={require("../../assets/icons/date_icon.png")} // Adjust the path to your date icon
@@ -298,24 +298,8 @@ const EditEvent = ({ event, onClose }) => {
           onChange={onDateChange} // Handles date changes
         />
         )}
-      </View> */}
-
-      <View style={styles.row}>
-        <Text style={styles.label}>Date: </Text>
-        <TouchableOpacity onPress={showDatePicker}>
-          <Image
-            source={require("../../assets/icons/date_icon.png")} // Adjust the path to your date icon
-            style={styles.dateIcon} // Add styling for the icon
-          />
-        </TouchableOpacity>
-        <DateTimePicker
-          testID="dateTimePicker"
-          value={date}
-          mode="date"
-          display="calendar" // Opens directly in calendar view
-          onChange={onDateChange} // Handles date changes
-        />
       </View>
+
 
       {/* Start Time */}
       <View style={styles.column}>
@@ -460,9 +444,10 @@ const EditEvent = ({ event, onClose }) => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: [{ translateX: -155 }, { translateY: -175 }],
+    top: "22%",
+    // left: "50%",
+    // transform: [{ translateX: -155 }, { translateY: -175 }],
+    alignSelf: 'center',
     width: "80%",
     maxWidth: 400,
     backgroundColor: "white",
@@ -606,6 +591,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginLeft: 5,
+    marginRight: 5,
   },
   timeContainer: {
     flexDirection: "row",
@@ -631,8 +617,8 @@ const styles = StyleSheet.create({
   addPersonIcon: {
     width: 20,
     height: 20,
-    marginRight: -5,
     marginLeft: 15,
+    marginRight: 0,
     zIndex: 0,
     alignSelf: "center",
   },

@@ -160,19 +160,22 @@ const AddEvent = ({ onClose }) => {
 
       <View style={styles.row}>
         <Text style={styles.label}>Date: </Text>
-        <TouchableOpacity onPress={showDatePicker}>
-          <Image
-            source={require("../../assets/icons/date_icon.png")} // Adjust the path to your date icon
-            style={styles.dateIcon} // Add styling for the icon
-          />
+        <Image
+          source={require("../../assets/icons/date_icon.png")} // Adjust the path to your date icon
+          style={styles.dateIcon} // Add styling for the icon
+        />
+        <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+          <Text>{date.toLocaleDateString()}</Text> 
         </TouchableOpacity>
+        {showDatePicker && (
         <DateTimePicker
           testID="dateTimePicker"
-          value={date}
+          value={date} // Use the date state
           mode="date"
-          display="calendar" // Opens directly in calendar view
+          display="calendar"
           onChange={onDateChange} // Handles date changes
         />
+        )}
       </View>
 
       {/* Start Time */}
@@ -316,9 +319,10 @@ const AddEvent = ({ onClose }) => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: [{ translateX: -155 }, { translateY: -175 }],
+    top: "22%",
+    // left: "50%",
+    // transform: [{ translateX: -155 }, { translateY: -175 }],
+    alignSelf: 'center',
     width: "80%",
     maxWidth: 400,
     backgroundColor: "white",
@@ -436,6 +440,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginLeft: 5,
+    marginRight: 5,
   },
   timeContainer: {
     flexDirection: "row",
@@ -461,7 +466,7 @@ const styles = StyleSheet.create({
   addPersonIcon: {
     width: 20,
     height: 20,
-    marginRight: -5,
+    marginRight: 0,
     marginLeft: 15,
     zIndex: 0,
     alignSelf: "center",
