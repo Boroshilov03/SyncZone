@@ -35,7 +35,7 @@ function Input({ title, value, error, setValue, secureTextEntry, leftIcon }) {
           autoComplete="off"
           secureTextEntry={secureTextEntry}
           style={{
-            backgroundColor: "#fffbf5",
+            backgroundColor: "rgba(255, 255, 255, 0.7)",
             borderWidth: 2.5,
             borderColor: error ? "#ff5555" : "#8e9091",
             borderRadius: 40,
