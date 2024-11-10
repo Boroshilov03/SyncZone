@@ -50,7 +50,7 @@ const ContactScreen = ({ navigation }) => {
   const [favorites, setFavorites] = useState([]);
   const { user } = useStore();
   const queryClient = useQueryClient();
-
+  const [members, setMembers] = useState();
   const flatListRef = useRef(null);
 
   const {
@@ -160,7 +160,6 @@ const ContactScreen = ({ navigation }) => {
     };
   }, [user, queryClient]);
 
-
   const handleFavoriteToggle = () => {
     setIsFavorite(!isFavorite);
     toggleFavorite(item.profiles.id); // Call the function to handle favorite toggling
@@ -237,17 +236,16 @@ const ContactScreen = ({ navigation }) => {
     scrollToLetter(letter); // Scroll on swipe
   };
 
-// Safely access `contacts` when calling `.filter()`
-const filteredContacts = (contacts || []).filter(
-  (contact) =>
-    contact.profiles.username.toLowerCase().includes(input.toLowerCase()) ||
-    contact.profiles.first_name.toLowerCase().includes(input.toLowerCase()) ||
-    contact.profiles.last_name.toLowerCase().includes(input.toLowerCase())
-);
+  // Safely access `contacts` when calling `.filter()`
+  const filteredContacts = (contacts || []).filter(
+    (contact) =>
+      contact.profiles.username.toLowerCase().includes(input.toLowerCase()) ||
+      contact.profiles.first_name.toLowerCase().includes(input.toLowerCase()) ||
+      contact.profiles.last_name.toLowerCase().includes(input.toLowerCase())
+  );
 
   // If no search input, show full contact list grouped by letter, otherwise show filtered contacts
   const dataToRender = input.length > 0 ? filteredContacts : groupedData;
-
   useEffect(() => {
     const fetchFavorites = async () => {
       const { data, error } = await supabase
@@ -393,12 +391,11 @@ const filteredContacts = (contacts || []).filter(
     console.log("Creating call with", contactID);
   };
 
-// Function to handle group chat creation
-const createGroupChat = () => {
-  console.log("Create Group Chat Pressed");
-  navigation.navigate("MembersChat"); // Navigate to Members screen
-};
-
+  // Function to handle group chat creation
+  const createGroupChat = () => {
+    console.log("Create Group Chat Pressed");
+    navigation.navigate("MembersChat", { contacts }); // Navigate to Members screen
+  };
 
   const renderContact = ({ item }) => {
     const contactInfo = {

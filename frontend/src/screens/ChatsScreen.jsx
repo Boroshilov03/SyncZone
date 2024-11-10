@@ -57,7 +57,7 @@ const ChatsScreen = ({ navigation }) => {
     const { data, error } = await supabase
       .from("chats")
       .select(
-        `id, created_at, chat_participants!inner (
+        `id, group_title, created_at, group_photo, is_group, chat_participants!inner (
             user_id,
             profiles (
               id,
@@ -107,19 +107,21 @@ const ChatsScreen = ({ navigation }) => {
 
   const filteredChats = useMemo(() => {
     return chats.filter((chat) => {
+      // Check if chat is a group chat or has other participants
       const participants = chat.chat_participants;
       return (
-        participants.length > 1 &&
-        participants.some((participant) => {
-          return (
-            participant.profiles &&
-            participant.profiles.username &&
-            participant.user_id !== user.id &&
-            participant.profiles.username
-              .toLowerCase()
-              .includes(input.toLowerCase())
-          );
-        })
+        chat.is_group ||
+        (participants.length > 1 &&
+          participants.some((participant) => {
+            return (
+              participant.profiles &&
+              participant.profiles.username &&
+              participant.user_id !== user.id &&
+              participant.profiles.username
+                .toLowerCase()
+                .includes(input.toLowerCase())
+            );
+          }))
       );
     });
   }, [input, chats, user.id]);
@@ -130,100 +132,94 @@ const ChatsScreen = ({ navigation }) => {
       (participant) => participant.user_id !== user.id
     );
 
-    if (otherParticipants.length > 0) {
-      const participant = otherParticipants[0];
-      const profile = participant.profiles;
+    const isGroupChat = item.is_group;
+    const isLastItem = index === filteredChats.length - 1;
 
-      if (!profile) return null;
+    let displayName = isGroupChat ? item.group_title : otherParticipants[0]?.profiles?.username;
+    let displayPhoto = isGroupChat ? item.group_photo : otherParticipants[0]?.profiles?.avatar_url;
 
-      const contactInfo = {
-        contactID: participant.profiles.id,
-        contactPFP: participant.profiles.avatar_url,
-        contactFirst: participant.profiles.first_name,
-        contactLast: participant.profiles.last_name,
-        contactUsername: participant.profiles.username,
-      };
-      // Determine if it's the last item by comparing index with chats.length - 1
-      const isLastItem = index === filteredChats.length - 1;
+    if (!displayName) return null;
 
-      return (
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate("ChatDetail", {
-              chatId: item.id,
-              username: profile.username,
-              otherPFP: profile.avatar_url,
-            })
-          }
+    return (
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("ChatDetail", {
+            chatId: item.id,
+            username: displayName,
+            otherPFP: displayPhoto,
+          })
+        }
+      >
+        <View
+          style={[
+            styles.card,
+            isLastItem && { marginBottom: 70 },
+          ]}
         >
-          <View
-            style={[
-              styles.card,
-              isLastItem && { marginBottom: 70 }, // Add extra margin if it's the last item
-            ]}
+          <TouchableOpacity
+            onPress={() => {
+              setProfileVisible(true);
+              setSelectedContact({
+                contactID: otherParticipants[0]?.profiles?.id,
+                contactPFP: displayPhoto,
+                contactUsername: displayName,
+              });
+            }}
           >
-            <TouchableOpacity
-              onPress={() => {
-                setProfileVisible(true);
-                setSelectedContact(contactInfo);
-              }}
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={profileVisible}
+              onRequestClose={() => setProfileVisible(false)}
             >
-              <Modal
-                animationType="fade"
-                transparent={true}
-                visible={profileVisible}
-                onRequestClose={() => setProfileVisible(false)}
-              >
-                <View style={styles.modalOverlay}>
-                  <View style={styles.modalContent}>
-                    <Pressable onPress={() => setProfileVisible(false)}>
-                      <Ionicons
-                        name="close"
-                        size={35}
-                        color="#616061"
-                        style={styles.close}
-                      />
-                    </Pressable>
-                    <Profile
-                      {...selectedContact}
-                      setProfileVisible={setProfileVisible}
-                      navigation={navigation}
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Pressable onPress={() => setProfileVisible(false)}>
+                    <Ionicons
+                      name="close"
+                      size={35}
+                      color="#616061"
+                      style={styles.close}
                     />
-                  </View>
+                  </Pressable>
+                  <Profile
+                    {...selectedContact}
+                    setProfileVisible={setProfileVisible}
+                    navigation={navigation}
+                  />
                 </View>
-              </Modal>
-              {profile.avatar_url ? (
-                <Image
-                  alt="Avatar"
-                  resizeMode="cover"
-                  source={{ uri: profile.avatar_url }}
-                  style={styles.cardImg}
-                />
-              ) : (
-                <View style={[styles.cardImg, styles.cardAvatar]}>
-                  <Text style={styles.cardAvatarText}>
-                    {profile.username[0]}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-            <View style={styles.cardBody}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>{profile.username}</Text>
-                <Text style={styles.cardTimestamp}>
-                  {new Date(item.created_at).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+              </View>
+            </Modal>
+            {displayPhoto ? (
+              <Image
+                alt="Avatar"
+                resizeMode="cover"
+                source={{ uri: displayPhoto }}
+                style={styles.cardImg}
+              />
+            ) : (
+              <View style={[styles.cardImg, styles.cardAvatar]}>
+                <Text style={styles.cardAvatarText}>
+                  {displayName[0]}
                 </Text>
               </View>
-              <Text style={styles.cardMessage}>lorem ipsum dolor</Text>
+            )}
+          </TouchableOpacity>
+          <View style={styles.cardBody}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>{displayName}</Text>
+              <Text style={styles.cardTimestamp}>
+                {new Date(item.created_at).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
             </View>
+            <Text style={styles.cardMessage}>lorem ipsum dolor</Text>
           </View>
-        </TouchableOpacity>
-      );
-    }
-    return null;
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   if (isLoading) {
@@ -258,22 +254,9 @@ const ChatsScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.favoritesContainer}>
-          <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "semibold",
-              marginBottom: 10,
-              fontWeight: "300",
-            }}
-          >
-            Favorites
-          </Text>
+          <Text style={styles.favoritesTitle}>Favorites</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate("Contact");
-              }}
-            >
+            <TouchableOpacity onPress={() => navigation.navigate("Contact")}>
               <Image
                 source={require("../../assets/icons/add_favorite.png")}
                 style={styles.favoriteImg}

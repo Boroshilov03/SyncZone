@@ -1,51 +1,74 @@
-import { StyleSheet, Text, View, SafeAreaView, Image, FlatList, TextInput, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  Image,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
 import React, { useState } from "react";
 import FeatherIcon from "react-native-vector-icons/Feather";
+import { useRoute } from "@react-navigation/native";
 
 const MembersChatScreen = ({ navigation }) => {
+  const route = useRoute();
+  const { contacts } = route.params;
   const [input, setInput] = useState("");
-  const [selectedIds, setSelectedIds] = useState([]); // Track selected contact IDs in an array
-  
-  const handleCheckboxToggle = (id) => {
-    // Toggle selection for this contact by adding/removing from selectedIds array
-    setSelectedIds(prevSelectedIds => {
-      if (prevSelectedIds.includes(id)) {
-        return prevSelectedIds.filter(selectedId => selectedId !== id); // Remove from array
+  const [selectedPeople, setSelectedPeople] = useState([]); // Track selected contact IDs
+  const [selectedUsers, setSelectedUsers] = useState([]); // Track selected full user objects
+
+  const handleCheckboxToggle = (person) => {
+    // Toggle selection for this contact by ID and add/remove full user object
+    setSelectedPeople((prevSelectedPeople) => {
+      if (prevSelectedPeople.includes(person.id)) {
+        return prevSelectedPeople.filter((id) => id !== person.id); // Remove ID from array
       } else {
-        return [...prevSelectedIds, id]; // Add to array
+        return [...prevSelectedPeople, person.id]; // Add ID to array
+      }
+    });
+
+    setSelectedUsers((prevSelectedUsers) => {
+      if (prevSelectedUsers.find((user) => user.id === person.id)) {
+        return prevSelectedUsers.filter((user) => user.id !== person.id); // Remove user object from array
+      } else {
+        return [...prevSelectedUsers, person]; // Add user object to array
       }
     });
   };
 
-  // Sample data for contacts
-  const contacts = [
-    { id: '1', name: 'Alice Johnson', username: '@alicej' },
-    { id: '2', name: 'Bob Smith', username: '@bobsmith' },
-    { id: '3', name: 'Carol White', username: '@carolwhite' },
-  ];
-
   const renderContactItem = ({ item }) => (
     <View style={styles.contactItem}>
       <Image
-        source={require("../../assets/icons/pfp2.jpg")}
+        source={{ uri: item.profiles.avatar_url }}
         style={styles.profileImage}
       />
       <View style={styles.wrapperCol}>
-        <Text style={styles.contactText}>{item.name}</Text>
-        <Text style={styles.contactUsername}>{item.username}</Text>
+        <View style={styles.wrapperRow}>
+          <Text style={styles.contactText}>{item.profiles.first_name}</Text>
+          <Text style={styles.contactText}>{item.profiles.last_name}</Text>
+        </View>
+        <Text style={styles.contactUsername}>{item.profiles.username}</Text>
       </View>
       {/* Checkbox */}
       <TouchableOpacity
         style={styles.checkboxContainer}
-        onPress={() => handleCheckboxToggle(item.id)}  // Pass the contact's id to toggle
+        onPress={() => handleCheckboxToggle(item.profiles)} // Pass the contact's profile
       >
         <View
           style={[
             styles.checkboxWrapper,
-            { backgroundColor: selectedIds.includes(item.id) ? "#B0D8FF" : "#ccc" },  // Check if this contact is selected
+            {
+              backgroundColor: selectedPeople.includes(item.profiles.id)
+                ? "#B0D8FF"
+                : "#ccc",
+            },
           ]}
         >
-          {selectedIds.includes(item.id) && <View style={styles.checkmark} />}  
+          {selectedPeople.includes(item.profiles.id) && (
+            <View style={styles.checkmark} />
+          )}
         </View>
       </TouchableOpacity>
     </View>
@@ -70,11 +93,17 @@ const MembersChatScreen = ({ navigation }) => {
         {/* Right Arrow Button */}
         <TouchableOpacity
           style={styles.rightArrowButton}
-          onPress={() => navigation.navigate("GroupDetails")} // Change this to your desired screen
+          onPress={() =>
+            navigation.navigate("GroupDetails", {
+              contacts,
+              selectedUsers,
+              selectedPeople,
+            })
+          } // Pass selectedUsers to next screen
         >
           <Image
-            source={require("../../assets/icons/back_arrow.webp")} // Reuse the same image
-            style={[styles.backArrow, { transform: [{ rotate: "180deg" }] }]} // Rotate 180 degrees to point right
+            source={require("../../assets/icons/back_arrow.webp")}
+            style={[styles.backArrow, { transform: [{ rotate: "180deg" }] }]}
           />
         </TouchableOpacity>
       </View>
@@ -103,13 +132,12 @@ const MembersChatScreen = ({ navigation }) => {
       <FlatList
         data={contacts}
         renderItem={renderContactItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.profiles.id.toString()}
         contentContainerStyle={{ paddingBottom: 20 }}
       />
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -205,6 +233,9 @@ const styles = StyleSheet.create({
   },
   wrapperCol: {
     flex: 1,
+  },
+  wrapperRow: {
+    flexDirection: "row",
   },
   contactText: {
     fontSize: 16,
