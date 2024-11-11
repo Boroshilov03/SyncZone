@@ -9,9 +9,10 @@ import {
 } from 'react-native-agora';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 
+// .env needed
 const config = {
-  appId: "8d403cacccf34fb9aee2fa46cb1b17ac",
-  token: "007eJxTYLC0/3HY3+UH64E6o5iph1M2Hnu5WEeb+8zZZVUi4laLtAIUGCxSTAyMkxOTk5PTjE3SkiwTU1ON0hJNzJKTDJMMzROT/94xTG8IZGRw1NzMzMgAgSA+C0NJanEJAwMAZHkgKA==",
+  appId: "AppID",
+  token: "Token",
   channelName: "test",
 };
 
