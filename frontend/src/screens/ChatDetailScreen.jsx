@@ -20,13 +20,13 @@ import { initializeWebSocket, saveMessageToSupabase } from "../../emotion/api";
 import { processMessageWithEmotion } from "../../emotion/emotionAnalysisService";
 const noProfilePic = require("../../assets/icons/pfp_icon.png");
 import { LinearGradient } from "expo-linear-gradient";
-import ScheduleButton from '../../emotion/ScheduleButton';
+import ScheduleButton from "../../emotion/ScheduleButton";
 
 const ChatDetailScreen = () => {
   const { user } = useStore();
   const route = useRoute();
   const navigation = useNavigation();
-  const { chatId, username, otherPFP } = route.params;
+  const { chatId, username, otherPFP, groupTitle } = route.params;
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -348,25 +348,28 @@ const ChatDetailScreen = () => {
             })}
           </Text>
           {/* Schedule button */}
-          {!isMyMessage && 
-           item.senderEmotion && 
-           negativeEmotions.includes(item.senderEmotion.name) && (
-            <TouchableOpacity
-              style={styles.scheduleButton}
-              onPress={() => {
-                navigation.navigate('MainTabs', {
-                  screen: 'Calendar',
-                  params: {
-                    showAddEvent: true,
-                    defaultTitle: `Follow-up: ${item.content.substring(0, 30)}...`,
-                    relatedMessageId: item.id
-                  }
-                });
-              }}
-            >
-              <Text style={styles.scheduleButtonText}>Schedule</Text>
-            </TouchableOpacity>
-          )}
+          {!isMyMessage &&
+            item.senderEmotion &&
+            negativeEmotions.includes(item.senderEmotion.name) && (
+              <TouchableOpacity
+                style={styles.scheduleButton}
+                onPress={() => {
+                  navigation.navigate("MainTabs", {
+                    screen: "Calendar",
+                    params: {
+                      showAddEvent: true,
+                      defaultTitle: `Follow-up: ${item.content.substring(
+                        0,
+                        30
+                      )}...`,
+                      relatedMessageId: item.id,
+                    },
+                  });
+                }}
+              >
+                <Text style={styles.scheduleButtonText}>Schedule</Text>
+              </TouchableOpacity>
+            )}
         </View>
       </View>
     );
@@ -399,7 +402,9 @@ const ChatDetailScreen = () => {
               />
             </TouchableOpacity>
 
-            <Text style={styles.title}>{username}</Text>
+            <Text style={styles.title}>
+              {groupTitle ? groupTitle : username}
+            </Text>
           </View>
 
           <TouchableOpacity style={styles.callIconContainer}>
@@ -471,29 +476,29 @@ const ChatDetailScreen = () => {
 };
 
 const negativeEmotions = [
-  'Sadness',
-  'Anger',
-  'Fear',
-  'Disgust',
-  'Horror',
-  'Surprise (negative)',
-  'Anxiety',
-  'Confusion',
-  'Disappointment',
-  'Distress',
-  'Pain',
-  'Shame',
-  'Guilt',
-  'Contempt',
-  'Disapproval',
-  'Awkwardness',
-  'Doubt',
-  'Annoyance',
-  'Boredom',
-  'Empathic Pain',
-  'Embarrassment',
-  'Envy',
-  'Tiredness'
+  "Sadness",
+  "Anger",
+  "Fear",
+  "Disgust",
+  "Horror",
+  "Surprise (negative)",
+  "Anxiety",
+  "Confusion",
+  "Disappointment",
+  "Distress",
+  "Pain",
+  "Shame",
+  "Guilt",
+  "Contempt",
+  "Disapproval",
+  "Awkwardness",
+  "Doubt",
+  "Annoyance",
+  "Boredom",
+  "Empathic Pain",
+  "Embarrassment",
+  "Envy",
+  "Tiredness",
 ];
 
 const styles = StyleSheet.create({
@@ -722,23 +727,23 @@ const styles = StyleSheet.create({
     textShadowRadius: 2, // Increase radius for a softer shadow effect
   },
   scheduleButton: {
-    position: 'absolute',
+    position: "absolute",
     right: -65,
     bottom: 5,
-    backgroundColor: '#A0D7E5',
+    backgroundColor: "#A0D7E5",
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1,
     elevation: 2,
   },
   scheduleButtonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });
 

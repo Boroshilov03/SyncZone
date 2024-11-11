@@ -16,6 +16,8 @@ import Header from "../components/Header";
 import ContactScreen from "../screens/ContactScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import ProfileSettings from "../screens/ProfileSettings";
+import MembersChatScreen from "../screens/MembersChatScreen";
+import GroupDetailsScreen from "../screens/GroupDetailsScreen";
 
 const Stack = createStackNavigator();
 const ModalStack = createStackNavigator();
@@ -38,6 +40,8 @@ export function AppNavigator() {
           <Stack.Screen name="Contact" component={ContactScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen name="ProfileSettings" component={ProfileSettings} />
+          <Stack.Screen name="MembersChat" component={MembersChatScreen} />
+          <Stack.Screen name="GroupDetails" component={GroupDetailsScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} options={{
             presentation: 'modal'
           }} />
