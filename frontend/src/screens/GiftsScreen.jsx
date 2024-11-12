@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  SafeAreaView,
   Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
@@ -201,14 +202,10 @@ const GiftsScreen = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <Header
-        event="shop" // Pass event prop for identifying shop context
-        navigation={navigation} // Pass navigation prop for navigation
-        title="Shop" // Set static title for the Header
+      <Header event="shop" navigation={navigation} title="Shop" // Set static title for the Header
         toggleSwitch={toggleSwitch} // Pass toggleSwitch function for handling switch
         switchValue={showOwned} // Pass switch value to Header
       />
-
       <ScrollView contentContainerStyle={styles.container}>
         {/* Banners Category Box */}
         <View style={styles.categoryContainer}>
@@ -318,8 +315,8 @@ const GiftsScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    // Main container fir GiftSCreen component
-    // padding: 10, //Providing some space between container's border and its content
+    backgroundColor: "#fff",
+
   },
   categoryContainer: {
     //Style for boxes for Banners and Stickers
