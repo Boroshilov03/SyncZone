@@ -867,12 +867,13 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
     marginRight: 15,
-    width: "30%",
+    width: "40%",
     alignSelf: "center",
   },
   closeButtonText: {
     fontSize: 20,
-    color: "#333",
+    color: 'white',
+    fontWeight: 'bold',
   },
   searchWrapper: {
     marginVertical: 15,
@@ -978,9 +979,12 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 18, // Adjust font size as needed
-    color: "#fff", // White text color
+    color: "white", // White text color
     fontWeight: "bold", // Bold text for emphasis
-    shadowColor: "#000",
+    textShadowColor: "#848484", // Grey outline color
+    textShadowOffset: { width: 1, height: 1 }, // Controls the position of the shadow
+    textShadowRadius: 3, // Controls the blur of the shadow
+    shadowColor: "#000", // Black shadow for depth
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 2, // Adds depth and shadow

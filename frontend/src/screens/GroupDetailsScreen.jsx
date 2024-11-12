@@ -399,11 +399,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1.5 },
+    textShadowColor: "#848484", // Grey outline color
+    textShadowOffset: { width: 1, height: 1 }, // Controls the position of the shadow
+    textShadowRadius: 2, // Controls the blur of the shadow
+    shadowColor: "#000", // Black shadow for depth
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.5,
-    shadowRadius: 1, // Adds depth and shadow
-    elevation: 2, // For Android shadow
+    shadowRadius: 2,
+    elevation: 1,
   },
 });
 
