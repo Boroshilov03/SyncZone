@@ -450,7 +450,7 @@ const ContactScreen = ({ navigation }) => {
             ) : (
               <View style={[styles.cardImg, styles.cardAvatar]}>
                 <Text style={styles.cardAvatarText}>
-                  {item.profiles.first_name[0]}
+                  {item.profiles.first_name[0].toUpperCase()}
                 </Text>
               </View>
             )}

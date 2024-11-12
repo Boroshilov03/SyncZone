@@ -168,7 +168,7 @@ const FavoriteUsers = ({ navigation }) => {
             />
           ) : (
             <View style={[styles.favoriteImg, styles.cardAvatar]}>
-              <Text style={styles.cardAvatarText}>{user.first_name[0]}</Text>
+              <Text style={styles.cardAvatarText}>{user.first_name[0].toUpperCase()}</Text>
             </View>
           )}
         </TouchableOpacity>

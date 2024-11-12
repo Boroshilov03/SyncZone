@@ -54,29 +54,71 @@ const ChatsScreen = ({ navigation }) => {
     }
 
     const chatIds = chatParticipants.map((chat) => chat.chat_id);
+
     const { data, error } = await supabase
       .from("chats")
       .select(
-        `id, group_title, created_at, group_photo, is_group, chat_participants!inner (
-            user_id,
-            profiles (
-              id,
-              username,
-              first_name,
-              last_name,
-              avatar_url
-            )
-          )`
+        `id, group_title, created_at, group_photo, is_group,
+        chat_participants!inner (
+          user_id,
+          profiles (
+            id,
+            username,
+            first_name,
+            last_name,
+            avatar_url
+          )
+        ),
+        messages (
+          content, created_at, is_read, sender_id, id
+        )`
       )
       .in("id", chatIds)
-      .order("created_at", { ascending: false })
       .limit(20);
 
     if (error) {
       throw new Error("Error fetching chats: " + error.message);
     }
 
-    return data;
+    return data.map((chat) => {
+      const messages = chat.messages || [];
+
+      // Sort messages by creation date and pick the most recent one
+      const lastMessage =
+        messages.length > 0
+          ? messages.sort(
+              (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            )[0]
+          : null;
+
+      const unreadMessagesCount = messages.filter(
+        (message) => !message.is_read && message.sender_id !== user.id
+      ).length;
+
+      return {
+        ...chat,
+        lastMessageContent: lastMessage?.content || "No messages yet",
+        lastMessageSender: lastMessage?.sender_id,
+        lastMessageTime: lastMessage?.created_at, // Get the last message time
+        unreadMessagesCount,
+      };
+    });
+  }
+
+  // Function to mark all messages as read in a chat
+  async function markMessagesAsRead(chatId) {
+    const { error } = await supabase
+      .from("messages")
+      .update({ is_read: true })
+      .match({ chat_id: chatId })
+      .neq("sender_id", user.id); // Only mark messages from the other user as read
+
+    if (error) {
+      console.error("Error marking messages as read:", error.message);
+    }
+
+    // Refetch recent chats to update unread count
+    queryClient.invalidateQueries(["recentChats", user.id]);
   }
 
   useEffect(() => {
@@ -148,13 +190,14 @@ const ChatsScreen = ({ navigation }) => {
 
     return (
       <TouchableOpacity
-        onPress={() =>
+        onPress={() => {
           navigation.navigate("ChatDetail", {
             chatId: item.id,
             username: displayName,
             otherPFP: displayPhoto,
-          })
-        }
+          });
+          markMessagesAsRead(item.id); // Mark messages as read upon opening
+        }}
       >
         <View style={[styles.card, isLastItem && { marginBottom: 70 }]}>
           <TouchableOpacity
@@ -200,21 +243,34 @@ const ChatsScreen = ({ navigation }) => {
               />
             ) : (
               <View style={[styles.cardImg, styles.cardAvatar]}>
-                <Text style={styles.cardAvatarText}>{displayName[0]}</Text>
+                <Text style={styles.cardAvatarText}>
+                  {displayName[0].toUpperCase()}
+                </Text>
               </View>
             )}
           </TouchableOpacity>
           <View style={styles.cardBody}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>{displayName}</Text>
+              {item.unreadMessagesCount > 0 && (
+                <View style={styles.unreadBadge}>
+                  <Text style={styles.unreadBadgeText}>
+                    {item.unreadMessagesCount}
+                  </Text>
+                </View>
+              )}
               <Text style={styles.cardTimestamp}>
-                {new Date(item.created_at).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {item.lastMessageTime
+                  ? new Date(item.lastMessageTime).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : ""}
               </Text>
             </View>
-            <Text style={styles.cardMessage}>lorem ipsum dolor</Text>
+            <Text style={styles.cardMessage}>
+              {item.lastMessageContent || "No messages yet"}
+            </Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -261,7 +317,7 @@ const ChatsScreen = ({ navigation }) => {
                 style={styles.favoriteImg}
               />
             </TouchableOpacity>
-            <FavoriteUsers navigation={navigation}/>
+            <FavoriteUsers navigation={navigation} />
           </ScrollView>
         </View>
 
@@ -313,7 +369,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 8,
   },
-
+  unreadBadge: {
+    backgroundColor: "pink",
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  unreadBadgeText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
   searchIcon: {
     position: "absolute",
     top: 0,
