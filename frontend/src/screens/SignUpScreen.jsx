@@ -1,4 +1,9 @@
 import React, { useState, useCallback, useEffect } from "react";
+
+import axios from "axios";
+import RNPickerSelect from "react-native-picker-select";
+import Dropdown from "../components/DropdownComponent";
+
 import {
   View,
   Text,
@@ -284,8 +289,10 @@ export default function SignupScreen({ navigation }) {
                   }}
 
                 />
+
               ))}
             </View>
+            <Dropdown />
             <View style={styles.buttonbox}>
               <LinearGradient
                 start={{ x: 0, y: 0 }}
