@@ -62,6 +62,8 @@ const ChatsScreen = ({ navigation }) => {
             profiles (
               id,
               username,
+              first_name,
+              last_name,
               avatar_url
             )
           )`
@@ -135,8 +137,12 @@ const ChatsScreen = ({ navigation }) => {
     const isGroupChat = item.is_group;
     const isLastItem = index === filteredChats.length - 1;
 
-    let displayName = isGroupChat ? item.group_title : otherParticipants[0]?.profiles?.username;
-    let displayPhoto = isGroupChat ? item.group_photo : otherParticipants[0]?.profiles?.avatar_url;
+    let displayName = isGroupChat
+      ? item.group_title
+      : `${otherParticipants[0]?.profiles?.first_name} ${otherParticipants[0]?.profiles?.last_name}`;
+    let displayPhoto = isGroupChat
+      ? item.group_photo
+      : otherParticipants[0]?.profiles?.avatar_url;
 
     if (!displayName) return null;
 
@@ -150,12 +156,7 @@ const ChatsScreen = ({ navigation }) => {
           })
         }
       >
-        <View
-          style={[
-            styles.card,
-            isLastItem && { marginBottom: 70 },
-          ]}
-        >
+        <View style={[styles.card, isLastItem && { marginBottom: 70 }]}>
           <TouchableOpacity
             onPress={() => {
               setProfileVisible(true);
@@ -199,9 +200,7 @@ const ChatsScreen = ({ navigation }) => {
               />
             ) : (
               <View style={[styles.cardImg, styles.cardAvatar]}>
-                <Text style={styles.cardAvatarText}>
-                  {displayName[0]}
-                </Text>
+                <Text style={styles.cardAvatarText}>{displayName[0]}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -262,7 +261,7 @@ const ChatsScreen = ({ navigation }) => {
                 style={styles.favoriteImg}
               />
             </TouchableOpacity>
-            <FavoriteUsers />
+            <FavoriteUsers navigation={navigation}/>
           </ScrollView>
         </View>
 
@@ -314,6 +313,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 8,
   },
+
   searchIcon: {
     position: "absolute",
     top: 0,
@@ -389,7 +389,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#9ca3af",
   },
-
   card: {
     flexDirection: "row",
     padding: 12,
@@ -434,8 +433,16 @@ const styles = StyleSheet.create({
   cardImg: {
     width: 40,
     height: 40,
-    borderRadius: 20,
     marginRight: 8,
+    backgroundColor: "#FFADAD", // soft coral to complement pastel blue
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF", // keeping the text white for readability
   },
   image: {
     width: 24,

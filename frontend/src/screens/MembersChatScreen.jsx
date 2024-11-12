@@ -49,7 +49,7 @@ const MembersChatScreen = ({ navigation }) => {
           <Text style={styles.contactText}>{item.profiles.first_name}</Text>
           <Text style={styles.contactText}>{item.profiles.last_name}</Text>
         </View>
-        <Text style={styles.contactUsername}>{item.profiles.username}</Text>
+        <Text style={styles.contactUsername}>@{item.profiles.username}</Text>
       </View>
       {/* Checkbox */}
       <TouchableOpacity

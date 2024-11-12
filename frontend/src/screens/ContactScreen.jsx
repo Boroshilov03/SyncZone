@@ -442,10 +442,18 @@ const ContactScreen = ({ navigation }) => {
                 </View>
               </View>
             </Modal>
-            <Image
-              source={{ uri: item.profiles.avatar_url }} // Use avatar_url to load the image
-              style={styles.profileImage}
-            />
+            {item.profiles.avatar_url ? (
+              <Image
+                source={{ uri: item.profiles.avatar_url }} // Use avatar_url to load the image
+                style={styles.profileImage}
+              />
+            ) : (
+              <View style={[styles.cardImg, styles.cardAvatar]}>
+                <Text style={styles.cardAvatarText}>
+                  {item.profiles.first_name[0]}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
           <View style={styles.wrapperCol}>
             <Text style={styles.contactText}>
@@ -653,6 +661,20 @@ const styles = StyleSheet.create({
     borderRadius: 25, // Make it circular
     marginRight: 10, // Space between image and text
   },
+  cardImg: {
+    width: 50,
+    height: 50,
+    marginRight: 8,
+    backgroundColor: "#FFADAD", // soft coral to complement pastel blue
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 25,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF", // keeping the text white for readability
+  },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -742,7 +764,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   favButton: {
-    backgroundColor: "rgba(195, 217, 246, 0.85)", // Soft pastel blue (same as the original)
+    backgroundColor: "#FFC5D3",
     borderRadius: 25, // Circular shape
     // padding: 10,
     elevation: 10, // Depth effect
@@ -751,7 +773,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3,
     borderWidth: 1,
-    borderColor: "rgba(195, 217, 246, 0.85)", // Matching pastel blue border
+    borderColor: "#FFC5D3", // Matching pastel blue border
     width: 35, // Reduced button width
     height: 35, // Reduced button height
     justifyContent: "center",

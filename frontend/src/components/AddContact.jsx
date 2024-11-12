@@ -164,7 +164,7 @@ const renderProfile = ({ item }) => (
       <Text style={styles.profileName}>
         {item.first_name} {item.last_name}
       </Text>
-      <Text style={styles.profileUsername}>{item.username}</Text>
+      <Text style={styles.profileUsername}>@{item.username}</Text>
     </View>
     <TouchableOpacity
       style={styles.addButton}

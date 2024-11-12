@@ -135,7 +135,7 @@ const GroupDetailsScreen = ({ navigation }) => {
           <Text style={styles.contactText}>{item.last_name}</Text>
         </View>
 
-        <Text style={styles.contactUsername}>{item.username}</Text>
+        <Text style={styles.contactUsername}>@{item.username}</Text>
       </View>
       {/* Checkbox */}
       <TouchableOpacity
