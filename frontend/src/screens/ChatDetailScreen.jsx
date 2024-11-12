@@ -20,13 +20,13 @@ import { initializeWebSocket, saveMessageToSupabase } from "../../emotion/api";
 import { processMessageWithEmotion } from "../../emotion/emotionAnalysisService";
 const noProfilePic = require("../../assets/icons/pfp_icon.png");
 import { LinearGradient } from "expo-linear-gradient";
-import ScheduleButton from '../../emotion/ScheduleButton';
+import ScheduleButton from "../../emotion/ScheduleButton";
 
 const ChatDetailScreen = () => {
   const { user } = useStore();
   const route = useRoute();
   const navigation = useNavigation();
-  const { chatId, username, otherPFP } = route.params;
+  const { chatId, username, otherPFP, groupTitle } = route.params;
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,9 +34,27 @@ const ChatDetailScreen = () => {
   const [newMessage, setNewMessage] = useState("");
   const [typingUser, setTypingUser] = useState(null);
   const [participants, setParticipants] = useState(null);
+  const [profilePics, setProfilePics] = useState({});
   const typingTimeoutRef = useRef(null);
   const wsRef = useRef(null);
   const flatListRef = useRef(null);
+
+  const fetchProfilePicture = async (senderId) => {
+    if (profilePics[senderId]) return; // Skip if already fetched
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", senderId)
+        .single();
+
+      if (!error && data) {
+        setProfilePics((prev) => ({ ...prev, [senderId]: data.avatar_url }));
+      }
+    } catch (error) {
+      console.error("Error fetching profile picture:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchParticipants = async () => {
@@ -57,8 +75,10 @@ const ChatDetailScreen = () => {
     const channel = supabase.channel(`chat-room-${chatId}`);
 
     channel
-      .on("broadcast", { event: "new-message" }, (payload) => {
+      .on("broadcast", { event: "new-message" }, async (payload) => {
         const receivedMessage = payload.payload;
+        await fetchProfilePicture(receivedMessage.sender_id);
+
         setMessages((prevMessages) => {
           if (prevMessages.find((msg) => msg.id === receivedMessage.id)) {
             return prevMessages;
@@ -66,32 +86,26 @@ const ChatDetailScreen = () => {
           return [receivedMessage, ...prevMessages];
         });
       })
-      .on("broadcast", { event: "emotion-analysis" }, (payload) => {
-        const { messageId, emotion, senderId, receiverId } = payload.payload;
-
-        // Update message with emotion data for both users
-        setMessages((prevMessages) =>
-          prevMessages.map((msg) =>
-            msg.id === messageId
-              ? {
-                  ...msg,
-                  emotion: emotion,
-                  senderEmotion: senderId === user.id ? emotion : null,
-                  receiverEmotion: receiverId === user.id ? emotion : null,
-                }
-              : msg
-          )
-        );
-      })
-      .on("broadcast", { event: "typing" }, (payload) => {
+      .on("broadcast", { event: "typing" }, async (payload) => {
         const { userId, isTyping } = payload.payload;
         if (userId !== user.id) {
-          setTypingUser(isTyping ? username : null);
+          try {
+            const { data, error } = await supabase
+              .from("profiles")
+              .select("username")
+              .eq("id", userId)
+              .single();
+
+            if (!error) {
+              setTypingUser(isTyping ? data.username : null);
+            }
+          } catch (error) {
+            console.error("Error fetching typing user:", error);
+          }
         }
       })
       .subscribe();
 
-    // Initialize WebSocket for emotion analysis
     wsRef.current = initializeWebSocket();
 
     return () => {
@@ -133,6 +147,8 @@ const ChatDetailScreen = () => {
             (e) => e.sender_id !== message.sender_id
           );
 
+          fetchProfilePicture(message.sender_id); // Fetch profile picture for each message
+
           return {
             ...message,
             senderEmotion: senderEmotion
@@ -167,7 +183,7 @@ const ChatDetailScreen = () => {
     supabase.channel(`chat-room-${chatId}`).send({
       type: "broadcast",
       event: "typing",
-      payload: { userId: user.id, isTyping: true },
+      payload: { userId: user.id, username: user.username, isTyping: true },
     });
 
     clearTimeout(typingTimeoutRef.current);
@@ -175,7 +191,7 @@ const ChatDetailScreen = () => {
       supabase.channel(`chat-room-${chatId}`).send({
         type: "broadcast",
         event: "typing",
-        payload: { userId: user.id, isTyping: false },
+        payload: { userId: user.id, username: user.username, isTyping: false },
       });
     }, 2000);
   };
@@ -304,6 +320,7 @@ const ChatDetailScreen = () => {
 
   const renderMessage = ({ item }) => {
     const isMyMessage = item.sender_id === user.id;
+    const senderPFP = profilePics[item.sender_id] || noProfilePic;
 
     return (
       <View style={styles.messageWrapper}>
@@ -315,58 +332,54 @@ const ChatDetailScreen = () => {
               : styles.otherMessageContainer,
           ]}
         >
-          {item.senderEmotion && (
-            <View
-              style={[
-                styles.emotionContainer,
-                {
-                  backgroundColor:
-                    emotionColorMap[item.senderEmotion.name] || "gray",
-                },
-                isMyMessage
-                  ? styles.myEmotionContainer
-                  : styles.otherEmotionContainer,
-              ]}
-            >
-              <Text style={styles.emotionText}>
-                {`${item.senderEmotion.name}`}
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            {!isMyMessage && (
+              <Image
+                source={{ uri: senderPFP }}
+                style={[styles.profileImage, styles.otherProfileContainer]}
+              />
+            )}
+            {item.senderEmotion && (
+              <View
+                style={[
+                  styles.emotionContainer,
+                  {
+                    backgroundColor:
+                      emotionColorMap[item.senderEmotion.name] || "gray",
+                  },
+                  isMyMessage
+                    ? styles.myEmotionContainer
+                    : styles.otherEmotionContainer,
+                ]}
+              >
+                <Text style={styles.emotionText}>
+                  {`${item.senderEmotion.name}`}
+                </Text>
+              </View>
+            )}
+            <View style={{ display: "flex" }}>
+              <Text
+                style={[
+                  styles.messageText,
+                  isMyMessage ? styles.myMessageText : styles.otherMessageText,
+                ]}
+              >
+                {item.content}
+              </Text>
+              <Text style={styles.messageTimestamp}>
+                {new Date(item.created_at).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </Text>
             </View>
-          )}
-          <Text
-            style={[
-              styles.messageText,
-              isMyMessage ? styles.myMessageText : styles.otherMessageText,
-            ]}
-          >
-            {item.content}
-          </Text>
-          <Text style={styles.messageTimestamp}>
-            {new Date(item.created_at).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Text>
-          {/* Schedule button */}
-          {!isMyMessage && 
-           item.senderEmotion && 
-           negativeEmotions.includes(item.senderEmotion.name) && (
-            <TouchableOpacity
-              style={styles.scheduleButton}
-              onPress={() => {
-                navigation.navigate('MainTabs', {
-                  screen: 'Calendar',
-                  params: {
-                    showAddEvent: true,
-                    defaultTitle: `Follow-up: ${item.content.substring(0, 30)}...`,
-                    relatedMessageId: item.id
-                  }
-                });
-              }}
-            >
-              <Text style={styles.scheduleButtonText}>Schedule</Text>
-            </TouchableOpacity>
-          )}
+          </View>
         </View>
       </View>
     );
@@ -399,7 +412,9 @@ const ChatDetailScreen = () => {
               />
             </TouchableOpacity>
 
-            <Text style={styles.title}>{username}</Text>
+            <Text style={styles.title}>
+              {groupTitle ? groupTitle : username}
+            </Text>
           </View>
 
           <TouchableOpacity style={styles.callIconContainer}>
@@ -471,29 +486,29 @@ const ChatDetailScreen = () => {
 };
 
 const negativeEmotions = [
-  'Sadness',
-  'Anger',
-  'Fear',
-  'Disgust',
-  'Horror',
-  'Surprise (negative)',
-  'Anxiety',
-  'Confusion',
-  'Disappointment',
-  'Distress',
-  'Pain',
-  'Shame',
-  'Guilt',
-  'Contempt',
-  'Disapproval',
-  'Awkwardness',
-  'Doubt',
-  'Annoyance',
-  'Boredom',
-  'Empathic Pain',
-  'Embarrassment',
-  'Envy',
-  'Tiredness'
+  "Sadness",
+  "Anger",
+  "Fear",
+  "Disgust",
+  "Horror",
+  "Surprise (negative)",
+  "Anxiety",
+  "Confusion",
+  "Disappointment",
+  "Distress",
+  "Pain",
+  "Shame",
+  "Guilt",
+  "Contempt",
+  "Disapproval",
+  "Awkwardness",
+  "Doubt",
+  "Annoyance",
+  "Boredom",
+  "Empathic Pain",
+  "Embarrassment",
+  "Envy",
+  "Tiredness",
 ];
 
 const styles = StyleSheet.create({
@@ -536,10 +551,11 @@ const styles = StyleSheet.create({
     flex: 2,
   },
   profileImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 50,
-    marginBottom: 5,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   title: {
     fontSize: 24,
@@ -596,12 +612,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   messageList: {
-    marginTop: 20,
+    marginTop: 10,
   },
   messageContainer: {
     paddingHorizontal: 10,
     paddingVertical: 2,
     borderRadius: 8,
+    backgroundColor: "white",
+    borderWidth: 2, // Border width
+    borderColor: "#D1EBEF",
     maxWidth: "80%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -609,10 +628,9 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
     marginBottom: 20,
-  },
+  },  
   myMessageContainer: {
     alignSelf: "flex-end",
-    paddingTop: 10,
     paddingLeft: 20,
     fontWeight: "semibold",
     borderBottomWidth: 1,
@@ -621,7 +639,6 @@ const styles = StyleSheet.create({
   otherMessageContainer: {
     alignSelf: "flex-start",
     borderRadius: 10,
-    paddingTop: 10,
     paddingRight: 20,
     paddingLeft: 10,
     fontWeight: "semibold",
@@ -633,7 +650,7 @@ const styles = StyleSheet.create({
     fontWeight: "300",
   },
   myMessageText: {
-    textAlign: "left", // Aligns the text to the right
+    textAlign: "right", // Aligns the text to the right
     fontSize: 20,
     fontWeight: "300",
   },
@@ -644,7 +661,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#999",
     textAlign: "right",
-    marginVertical: 5,
   },
   inputContainer: {
     flexDirection: "row",
@@ -697,21 +713,25 @@ const styles = StyleSheet.create({
   myEmotionContainer: {
     position: "absolute", // Allows it to be positioned absolutely within the parent
     padding: 5,
-    borderTopLeftRadius: 0, // Round the top left corner
+    borderTopLeftRadius: 12, // Round the top left corner
     borderBottomLeftRadius: 12, // Round the bottom left corner
-    borderTopRightRadius: 0, // No rounding on the top right corner
+    borderTopRightRadius: 12, // No rounding on the top right corner
     borderBottomRightRadius: 0, // Round the bottom right corner
     top: -15, // Adjust the vertical position as needed
     right: -10, // Move it to the right side, adjust as needed
-    marginRight: 10,
+    borderWidth: 1,
   },
   otherEmotionContainer: {
     position: "absolute", // Allows it to be positioned absolutely within the parent
-    padding: 5,
-    borderTopLeftRadius: 0, // Round the top left corner
-    borderTopRightRadius: 0, // No rounding on the top right corner
+    padding: 4,
+    borderTopLeftRadius: 12, // Round the top left corner
+    borderTopRightRadius: 12, // No rounding on the top right corner
+    borderBottomLeftRadius: 0, // Round the bottom left corner
     top: -15, // Adjust the vertical position as needed
-    left: 0, // Move it to the right side, adjust as needed
+    left: -10, // Move it to the right side, adjust as needed
+  },
+  otherProfileContainer: {
+    marginRight: 4, // Adds space between the profile image and message for other users
   },
   emotionText: {
     fontSize: 12,
@@ -722,23 +742,23 @@ const styles = StyleSheet.create({
     textShadowRadius: 2, // Increase radius for a softer shadow effect
   },
   scheduleButton: {
-    position: 'absolute',
+    position: "absolute",
     right: -65,
     bottom: 5,
-    backgroundColor: '#A0D7E5',
+    backgroundColor: "#A0D7E5",
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1,
     elevation: 2,
   },
   scheduleButtonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });
 

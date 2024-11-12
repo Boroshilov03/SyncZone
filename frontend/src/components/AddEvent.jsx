@@ -9,10 +9,12 @@ import {
   Image,
   Button,
   Platform,
+  Modal,
 } from "react-native";
 import { supabase } from "../lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import useStore from "../store/store";
+import AddParticipants from "./AddParticipants";
 
 const getMoodColor = (mood) => {
   switch (mood) {
@@ -45,6 +47,8 @@ const AddEvent = ({ onClose }) => {
   const [participants, setparticipants] = useState([user.id]); // Selected participants
   const [newMember, setNewMember] = useState(""); // Input for new member
   const [mood, setMood] = useState(null); // Selected mood
+  const [modalVisible, setModalVisible] = useState(false);
+
 
   const handleAddEvent = async () => {
     const formatTime = (date) => {
@@ -126,19 +130,13 @@ const AddEvent = ({ onClose }) => {
   };
 
   const onDateChange = (event, selectedDate) => {
-    console.log(selectedDate);
-    // Check if a valid date is selected
-    if (selectedDate) {
-      // Create a new Date object and prevent timezone changes
-      const localDate = new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate()
-      );
-      setDate(localDate); // Set the date without any timezone adjustments
+    // Close the picker when a date is selected or if dismissed
+    if (event.type === 'set' && selectedDate) {
+      setDate(selectedDate); // Update the date
     }
-    setShowPicker(false); // Close the picker after selecting
+    setShowDatePicker(false); // Close the picker in all cases
   };
+  
 
   const predefinedPFPs = [
     require("../../assets/icons/pfp1.png"),
@@ -160,19 +158,22 @@ const AddEvent = ({ onClose }) => {
 
       <View style={styles.row}>
         <Text style={styles.label}>Date: </Text>
-        <TouchableOpacity onPress={showDatePicker}>
-          <Image
-            source={require("../../assets/icons/date_icon.png")} // Adjust the path to your date icon
-            style={styles.dateIcon} // Add styling for the icon
-          />
-        </TouchableOpacity>
-        <DateTimePicker
-          testID="dateTimePicker"
-          value={date}
-          mode="date"
-          display="calendar" // Opens directly in calendar view
-          onChange={onDateChange} // Handles date changes
+        <Image
+          source={require("../../assets/icons/date_icon.png")}
+          style={styles.dateIcon}
         />
+        <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+          <Text>{date.toLocaleDateString()}</Text> 
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            testID="dateTimePicker"
+            value={date}
+            mode="date"
+            display="calendar"
+            onChange={onDateChange}
+          />
+        )}
       </View>
 
       {/* Start Time */}
@@ -261,22 +262,49 @@ const AddEvent = ({ onClose }) => {
           <FlatList
             data={predefinedPFPs}
             renderItem={({ item }) => {
-              const isAddPersonIcon =
-                item === require("../../assets/icons/add_person.png");
+              const isAddPersonIcon = item === require("../../assets/icons/add_person.png");
 
               return (
-                <Image
-                  source={item}
-                  style={[
-                    styles.pfpImage,
-                    isAddPersonIcon && styles.addPersonIcon, // Apply specific styling for 'add_person.png'
-                  ]}
-                />
+                <TouchableOpacity
+                  onPress={() => {
+                    if (isAddPersonIcon) {
+                      setModalVisible(true); // Show the modal when "add_person.png" is clicked
+                    }
+                  }}
+                >
+                  <Image
+                    source={item}
+                    style={[
+                      styles.pfpImage,
+                      isAddPersonIcon && styles.addPersonIcon,
+                    ]}
+                  />
+                </TouchableOpacity>
               );
             }}
             keyExtractor={(item, index) => index.toString()}
             horizontal
           />
+
+          <Modal
+            animationType="none"  
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <View style={styles.modalBackground}>
+              <View style={styles.modalContainer}>
+                <AddParticipants /> 
+
+                <TouchableOpacity
+                  style={styles.closeButtonBottom}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.closeButtonText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
       </View>
 
@@ -316,9 +344,10 @@ const AddEvent = ({ onClose }) => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: [{ translateX: -155 }, { translateY: -175 }],
+    top: "22%",
+    // left: "50%",
+    // transform: [{ translateX: -155 }, { translateY: -175 }],
+    alignSelf: 'center',
     width: "80%",
     maxWidth: 400,
     backgroundColor: "white",
@@ -392,7 +421,6 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 20,
   },
-
   cancelButton: {
     backgroundColor: "#FFABAB",
     borderRadius: 25,
@@ -436,6 +464,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginLeft: 5,
+    marginRight: 5,
   },
   timeContainer: {
     flexDirection: "row",
@@ -461,10 +490,50 @@ const styles = StyleSheet.create({
   addPersonIcon: {
     width: 20,
     height: 20,
-    marginRight: -5,
+    marginRight: 0,
     marginLeft: 15,
-    zIndex: 0,
-    alignSelf: "center",
+    // zIndex: 0,
+    marginTop: 5,
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '80%',
+    height: '66%', // Increase the modal height
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    // justifyContent: 'space-between', // Space out content and button
+  },
+  closeButtonBottom: {
+    backgroundColor: '#A9A9A9', 
+    padding: 10,
+    borderRadius: 5,
+    width: '30%',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 20, // Position at the bottom with some padding
+    borderRadius: 25,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+    marginRight: 15,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

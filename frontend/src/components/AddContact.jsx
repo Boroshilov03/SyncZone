@@ -164,7 +164,7 @@ const renderProfile = ({ item }) => (
       <Text style={styles.profileName}>
         {item.first_name} {item.last_name}
       </Text>
-      <Text style={styles.profileUsername}>{item.username}</Text>
+      <Text style={styles.profileUsername}>@{item.username}</Text>
     </View>
     <TouchableOpacity
       style={styles.addButton}
@@ -227,7 +227,6 @@ const renderProfile = ({ item }) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
   },
   title: {
     fontSize: 23,
@@ -249,7 +248,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 5,
     elevation: 3,
-    width: "95%",
+    width: "100%",
     alignSelf: "center",
     marginBottom: 5,
   },

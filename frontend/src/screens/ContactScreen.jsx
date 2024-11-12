@@ -50,7 +50,7 @@ const ContactScreen = ({ navigation }) => {
   const [favorites, setFavorites] = useState([]);
   const { user } = useStore();
   const queryClient = useQueryClient();
-
+  const [members, setMembers] = useState();
   const flatListRef = useRef(null);
 
   const {
@@ -160,7 +160,6 @@ const ContactScreen = ({ navigation }) => {
     };
   }, [user, queryClient]);
 
-
   const handleFavoriteToggle = () => {
     setIsFavorite(!isFavorite);
     toggleFavorite(item.profiles.id); // Call the function to handle favorite toggling
@@ -237,17 +236,16 @@ const ContactScreen = ({ navigation }) => {
     scrollToLetter(letter); // Scroll on swipe
   };
 
-// Safely access `contacts` when calling `.filter()`
-const filteredContacts = (contacts || []).filter(
-  (contact) =>
-    contact.profiles.username.toLowerCase().includes(input.toLowerCase()) ||
-    contact.profiles.first_name.toLowerCase().includes(input.toLowerCase()) ||
-    contact.profiles.last_name.toLowerCase().includes(input.toLowerCase())
-);
+  // Safely access `contacts` when calling `.filter()`
+  const filteredContacts = (contacts || []).filter(
+    (contact) =>
+      contact.profiles.username.toLowerCase().includes(input.toLowerCase()) ||
+      contact.profiles.first_name.toLowerCase().includes(input.toLowerCase()) ||
+      contact.profiles.last_name.toLowerCase().includes(input.toLowerCase())
+  );
 
   // If no search input, show full contact list grouped by letter, otherwise show filtered contacts
   const dataToRender = input.length > 0 ? filteredContacts : groupedData;
-
   useEffect(() => {
     const fetchFavorites = async () => {
       const { data, error } = await supabase
@@ -393,12 +391,11 @@ const filteredContacts = (contacts || []).filter(
     console.log("Creating call with", contactID);
   };
 
-// Function to handle group chat creation
-const createGroupChat = () => {
-  console.log("Create Group Chat Pressed");
-  navigation.navigate("MembersChat"); // Navigate to Members screen
-};
-
+  // Function to handle group chat creation
+  const createGroupChat = () => {
+    console.log("Create Group Chat Pressed");
+    navigation.navigate("MembersChat", { contacts }); // Navigate to Members screen
+  };
 
   const renderContact = ({ item }) => {
     const contactInfo = {
@@ -445,10 +442,18 @@ const createGroupChat = () => {
                 </View>
               </View>
             </Modal>
-            <Image
-              source={{ uri: item.profiles.avatar_url }} // Use avatar_url to load the image
-              style={styles.profileImage}
-            />
+            {item.profiles.avatar_url ? (
+              <Image
+                source={{ uri: item.profiles.avatar_url }} // Use avatar_url to load the image
+                style={styles.profileImage}
+              />
+            ) : (
+              <View style={[styles.cardImg, styles.cardAvatar]}>
+                <Text style={styles.cardAvatarText}>
+                  {item.profiles.first_name[0].toUpperCase()}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
           <View style={styles.wrapperCol}>
             <Text style={styles.contactText}>
@@ -656,6 +661,20 @@ const styles = StyleSheet.create({
     borderRadius: 25, // Make it circular
     marginRight: 10, // Space between image and text
   },
+  cardImg: {
+    width: 50,
+    height: 50,
+    marginRight: 8,
+    backgroundColor: "#FFADAD", // soft coral to complement pastel blue
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 25,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF", // keeping the text white for readability
+  },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -745,7 +764,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   favButton: {
-    backgroundColor: "rgba(195, 217, 246, 0.85)", // Soft pastel blue (same as the original)
+    backgroundColor: "#FFC5D3",
     borderRadius: 25, // Circular shape
     // padding: 10,
     elevation: 10, // Depth effect
@@ -754,7 +773,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3,
     borderWidth: 1,
-    borderColor: "rgba(195, 217, 246, 0.85)", // Matching pastel blue border
+    borderColor: "#FFC5D3", // Matching pastel blue border
     width: 35, // Reduced button width
     height: 35, // Reduced button height
     justifyContent: "center",
@@ -848,12 +867,13 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
     marginRight: 15,
-    width: "30%",
+    width: "40%",
     alignSelf: "center",
   },
   closeButtonText: {
     fontSize: 20,
-    color: "#333",
+    color: 'white',
+    fontWeight: 'bold',
   },
   searchWrapper: {
     marginVertical: 15,
@@ -959,9 +979,12 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 18, // Adjust font size as needed
-    color: "#fff", // White text color
+    color: "white", // White text color
     fontWeight: "bold", // Bold text for emphasis
-    shadowColor: "#000",
+    textShadowColor: "#848484", // Grey outline color
+    textShadowOffset: { width: 1, height: 1 }, // Controls the position of the shadow
+    textShadowRadius: 3, // Controls the blur of the shadow
+    shadowColor: "#000", // Black shadow for depth
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 2, // Adds depth and shadow

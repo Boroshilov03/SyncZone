@@ -54,27 +54,71 @@ const ChatsScreen = ({ navigation }) => {
     }
 
     const chatIds = chatParticipants.map((chat) => chat.chat_id);
+
     const { data, error } = await supabase
       .from("chats")
       .select(
-        `id, created_at, chat_participants!inner (
-            user_id,
-            profiles (
-              id,
-              username,
-              avatar_url
-            )
-          )`
+        `id, group_title, created_at, group_photo, is_group,
+        chat_participants!inner (
+          user_id,
+          profiles (
+            id,
+            username,
+            first_name,
+            last_name,
+            avatar_url
+          )
+        ),
+        messages (
+          content, created_at, is_read, sender_id, id
+        )`
       )
       .in("id", chatIds)
-      .order("created_at", { ascending: false })
       .limit(20);
 
     if (error) {
       throw new Error("Error fetching chats: " + error.message);
     }
 
-    return data;
+    return data.map((chat) => {
+      const messages = chat.messages || [];
+
+      // Sort messages by creation date and pick the most recent one
+      const lastMessage =
+        messages.length > 0
+          ? messages.sort(
+              (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            )[0]
+          : null;
+
+      const unreadMessagesCount = messages.filter(
+        (message) => !message.is_read && message.sender_id !== user.id
+      ).length;
+
+      return {
+        ...chat,
+        lastMessageContent: lastMessage?.content || "No messages yet",
+        lastMessageSender: lastMessage?.sender_id,
+        lastMessageTime: lastMessage?.created_at, // Get the last message time
+        unreadMessagesCount,
+      };
+    });
+  }
+
+  // Function to mark all messages as read in a chat
+  async function markMessagesAsRead(chatId) {
+    const { error } = await supabase
+      .from("messages")
+      .update({ is_read: true })
+      .match({ chat_id: chatId })
+      .neq("sender_id", user.id); // Only mark messages from the other user as read
+
+    if (error) {
+      console.error("Error marking messages as read:", error.message);
+    }
+
+    // Refetch recent chats to update unread count
+    queryClient.invalidateQueries(["recentChats", user.id]);
   }
 
   useEffect(() => {
@@ -107,19 +151,21 @@ const ChatsScreen = ({ navigation }) => {
 
   const filteredChats = useMemo(() => {
     return chats.filter((chat) => {
+      // Check if chat is a group chat or has other participants
       const participants = chat.chat_participants;
       return (
-        participants.length > 1 &&
-        participants.some((participant) => {
-          return (
-            participant.profiles &&
-            participant.profiles.username &&
-            participant.user_id !== user.id &&
-            participant.profiles.username
-              .toLowerCase()
-              .includes(input.toLowerCase())
-          );
-        })
+        chat.is_group ||
+        (participants.length > 1 &&
+          participants.some((participant) => {
+            return (
+              participant.profiles &&
+              participant.profiles.username &&
+              participant.user_id !== user.id &&
+              participant.profiles.username
+                .toLowerCase()
+                .includes(input.toLowerCase())
+            );
+          }))
       );
     });
   }, [input, chats, user.id]);
@@ -130,100 +176,105 @@ const ChatsScreen = ({ navigation }) => {
       (participant) => participant.user_id !== user.id
     );
 
-    if (otherParticipants.length > 0) {
-      const participant = otherParticipants[0];
-      const profile = participant.profiles;
+    const isGroupChat = item.is_group;
+    const isLastItem = index === filteredChats.length - 1;
 
-      if (!profile) return null;
+    let displayName = isGroupChat
+      ? item.group_title
+      : `${otherParticipants[0]?.profiles?.first_name} ${otherParticipants[0]?.profiles?.last_name}`;
+    let displayPhoto = isGroupChat
+      ? item.group_photo
+      : otherParticipants[0]?.profiles?.avatar_url;
 
-      const contactInfo = {
-        contactID: participant.profiles.id,
-        contactPFP: participant.profiles.avatar_url,
-        contactFirst: participant.profiles.first_name,
-        contactLast: participant.profiles.last_name,
-        contactUsername: participant.profiles.username,
-      };
-      // Determine if it's the last item by comparing index with chats.length - 1
-      const isLastItem = index === filteredChats.length - 1;
+    if (!displayName) return null;
 
-      return (
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate("ChatDetail", {
-              chatId: item.id,
-              username: profile.username,
-              otherPFP: profile.avatar_url,
-            })
-          }
-        >
-          <View
-            style={[
-              styles.card,
-              isLastItem && { marginBottom: 70 }, // Add extra margin if it's the last item
-            ]}
+    return (
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate("ChatDetail", {
+            chatId: item.id,
+            username: displayName,
+            otherPFP: displayPhoto,
+          });
+          markMessagesAsRead(item.id); // Mark messages as read upon opening
+        }}
+      >
+        <View style={[styles.card, isLastItem && { marginBottom: 70 }]}>
+          <TouchableOpacity
+            onPress={() => {
+              setProfileVisible(true);
+              setSelectedContact({
+                contactID: otherParticipants[0]?.profiles?.id,
+                contactPFP: displayPhoto,
+                contactUsername: displayName,
+              });
+            }}
           >
-            <TouchableOpacity
-              onPress={() => {
-                setProfileVisible(true);
-                setSelectedContact(contactInfo);
-              }}
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={profileVisible}
+              onRequestClose={() => setProfileVisible(false)}
             >
-              <Modal
-                animationType="fade"
-                transparent={true}
-                visible={profileVisible}
-                onRequestClose={() => setProfileVisible(false)}
-              >
-                <View style={styles.modalOverlay}>
-                  <View style={styles.modalContent}>
-                    <Pressable onPress={() => setProfileVisible(false)}>
-                      <Ionicons
-                        name="close"
-                        size={35}
-                        color="#616061"
-                        style={styles.close}
-                      />
-                    </Pressable>
-                    <Profile
-                      {...selectedContact}
-                      setProfileVisible={setProfileVisible}
-                      navigation={navigation}
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Pressable onPress={() => setProfileVisible(false)}>
+                    <Ionicons
+                      name="close"
+                      size={35}
+                      color="#616061"
+                      style={styles.close}
                     />
-                  </View>
+                  </Pressable>
+                  <Profile
+                    {...selectedContact}
+                    setProfileVisible={setProfileVisible}
+                    navigation={navigation}
+                  />
                 </View>
-              </Modal>
-              {profile.avatar_url ? (
-                <Image
-                  alt="Avatar"
-                  resizeMode="cover"
-                  source={{ uri: profile.avatar_url }}
-                  style={styles.cardImg}
-                />
-              ) : (
-                <View style={[styles.cardImg, styles.cardAvatar]}>
-                  <Text style={styles.cardAvatarText}>
-                    {profile.username[0]}
+              </View>
+            </Modal>
+            {displayPhoto ? (
+              <Image
+                alt="Avatar"
+                resizeMode="cover"
+                source={{ uri: displayPhoto }}
+                style={styles.cardImg}
+              />
+            ) : (
+              <View style={[styles.cardImg, styles.cardAvatar]}>
+                <Text style={styles.cardAvatarText}>
+                  {displayName[0].toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <View style={styles.cardBody}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>{displayName}</Text>
+              {item.unreadMessagesCount > 0 && (
+                <View style={styles.unreadBadge}>
+                  <Text style={styles.unreadBadgeText}>
+                    {item.unreadMessagesCount}
                   </Text>
                 </View>
               )}
-            </TouchableOpacity>
-            <View style={styles.cardBody}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>{profile.username}</Text>
-                <Text style={styles.cardTimestamp}>
-                  {new Date(item.created_at).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </Text>
-              </View>
-              <Text style={styles.cardMessage}>lorem ipsum dolor</Text>
+              <Text style={styles.cardTimestamp}>
+                {item.lastMessageTime
+                  ? new Date(item.lastMessageTime).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : ""}
+              </Text>
             </View>
+            <Text style={styles.cardMessage}>
+              {item.lastMessageContent || "No messages yet"}
+            </Text>
           </View>
-        </TouchableOpacity>
-      );
-    }
-    return null;
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   if (isLoading) {
@@ -258,28 +309,15 @@ const ChatsScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.favoritesContainer}>
-          <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "semibold",
-              marginBottom: 10,
-              fontWeight: "300",
-            }}
-          >
-            Favorites
-          </Text>
+          <Text style={styles.favoritesTitle}>Favorites</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate("Contact");
-              }}
-            >
+            <TouchableOpacity onPress={() => navigation.navigate("Contact")}>
               <Image
                 source={require("../../assets/icons/add_favorite.png")}
                 style={styles.favoriteImg}
               />
             </TouchableOpacity>
-            <FavoriteUsers />
+            <FavoriteUsers navigation={navigation} />
           </ScrollView>
         </View>
 
@@ -330,6 +368,17 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 18,
     marginBottom: 8,
+  },
+  unreadBadge: {
+    backgroundColor: "pink",
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  unreadBadgeText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
   },
   searchIcon: {
     position: "absolute",
@@ -406,7 +455,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#9ca3af",
   },
-
   card: {
     flexDirection: "row",
     padding: 12,
@@ -451,8 +499,16 @@ const styles = StyleSheet.create({
   cardImg: {
     width: 40,
     height: 40,
-    borderRadius: 20,
     marginRight: 8,
+    backgroundColor: "#FFADAD", // soft coral to complement pastel blue
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF", // keeping the text white for readability
   },
   image: {
     width: 24,

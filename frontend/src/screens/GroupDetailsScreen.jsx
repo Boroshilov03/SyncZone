@@ -1,53 +1,160 @@
-import { StyleSheet, Text, View, SafeAreaView, Image, FlatList, TextInput, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  Image,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
 import React, { useState } from "react";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import { LinearGradient } from "expo-linear-gradient";
-
+import { useRoute } from "@react-navigation/native";
+import useStore from "../store/store";
+import { supabase } from "../lib/supabase";
 
 const GroupDetailsScreen = ({ navigation }) => {
+  const route = useRoute();
+  const { user } = useStore();
+  const { contacts, selectedUsers, selectedPeople } = route.params;
   const [input, setInput] = useState("");
-  const [selectedIds, setSelectedIds] = useState([]); // Track selected contact IDs in an array
-  
+  const [selectedPeopleData, setSelectedPeopleData] = useState(selectedPeople); // Track selected contact IDs in an array
+
+  const createChat = async (selectedPeopleData) => {
+    try {
+      // Combine user ID with selected participants to form the group participants
+      const allParticipants = [user.id, ...selectedPeopleData];
+
+      // Step 1: Check if there's an existing chat with the same participants
+      const { data: userChats, error: userChatsError } = await supabase
+        .from("chat_participants")
+        .select("chat_id")
+        .eq("user_id", user.id);
+
+      if (userChatsError) throw new Error("Error fetching user's chats.");
+
+      const userChatIds = userChats.map((chat) => chat.chat_id);
+
+      // Get chat IDs for each participant and find common chats among them
+      const commonChatIds = await Promise.all(
+        allParticipants.map(async (participantId) => {
+          const { data } = await supabase
+            .from("chat_participants")
+            .select("chat_id")
+            .eq("user_id", participantId);
+          return data ? data.map((chat) => chat.chat_id) : [];
+        })
+      ).then((chatsArray) =>
+        chatsArray.reduce((acc, chatIds) =>
+          acc.filter((id) => chatIds.includes(id))
+        )
+      );
+
+      const existingChatId = commonChatIds.find((id) =>
+        userChatIds.includes(id)
+      );
+
+      // Step 2: If an existing chat is found, navigate to it
+      if (existingChatId) {
+        const { data: contactData, error: contactError } = await supabase
+          .from("profiles")
+          .select("username, avatar_url")
+          .eq("id", selectedPeopleData[0]) // Using the first participant as the contact
+          .single();
+
+        if (contactError) throw new Error("Error fetching contact data.");
+
+        navigation.navigate("ChatDetail", {
+          chatId: existingChatId,
+          username: contactData.username,
+          otherPFP: contactData.avatar_url,
+        });
+        return;
+      }
+
+      // Step 3: If no existing chat, create a new one
+      const { data: newChat, error: newChatError } = await supabase
+        .from("chats")
+        .insert([{ is_group: true, group_title: input }])
+        .select();
+
+      if (newChatError) throw new Error("Error creating new chat.");
+
+      // Add all participants (including the user) to the new chat
+      const participants = allParticipants.map((participantId) => ({
+        chat_id: newChat[0].id,
+        user_id: participantId,
+      }));
+
+      const { error: participantsError } = await supabase
+        .from("chat_participants")
+        .insert(participants);
+
+      if (participantsError) throw new Error("Error adding participants.");
+
+      // Fetch contact data for navigation
+      const { data: contactData, error: contactError } = await supabase
+        .from("profiles")
+        .select("username, avatar_url")
+        .eq("id", selectedPeopleData[0]) // Using the first participant as the contact
+        .single();
+
+      if (contactError) throw new Error("Error fetching contact data.");
+
+      navigation.navigate("ChatDetail", {
+        chatId: newChat[0].id,
+        username: contactData.username,
+        otherPFP: contactData.avatar_url,
+        groupTitle: input,
+      });
+    } catch (error) {
+      console.error("Error in createChat:", error.message);
+    }
+  };
+
   const handleCheckboxToggle = (id) => {
-    // Toggle selection for this contact by adding/removing from selectedIds array
-    setSelectedIds(prevSelectedIds => {
+    // Toggle selection for this contact by adding/removing from setSelectedPeopleData array
+    setSelectedPeopleData((prevSelectedIds) => {
       if (prevSelectedIds.includes(id)) {
-        return prevSelectedIds.filter(selectedId => selectedId !== id); // Remove from array
+        return prevSelectedIds.filter((selectedId) => selectedId !== id); // Remove from array
       } else {
         return [...prevSelectedIds, id]; // Add to array
       }
     });
   };
 
-  // Sample data for contacts
-  const contacts = [
-    { id: '1', name: 'Alice Johnson', username: '@alicej' },
-    { id: '2', name: 'Bob Smith', username: '@bobsmith' },
-    { id: '3', name: 'Carol White', username: '@carolwhite' },
-  ];
-
   const renderContactItem = ({ item }) => (
     <View style={styles.contactItem}>
-      <Image
-        source={require("../../assets/icons/pfp2.jpg")}
-        style={styles.profileImage}
-      />
+      <Image source={{ uri: item.avatar_url }} style={styles.profileImage} />
       <View style={styles.wrapperCol}>
-        <Text style={styles.contactText}>{item.name}</Text>
-        <Text style={styles.contactUsername}>{item.username}</Text>
+        <View style={styles.wrapperRow}>
+          <Text style={styles.contactText}>{item.first_name}</Text>
+          <Text>{}</Text>
+          <Text style={styles.contactText}>{item.last_name}</Text>
+        </View>
+
+        <Text style={styles.contactUsername}>@{item.username}</Text>
       </View>
       {/* Checkbox */}
       <TouchableOpacity
         style={styles.checkboxContainer}
-        onPress={() => handleCheckboxToggle(item.id)}  // Pass the contact's id to toggle
+        onPress={() => handleCheckboxToggle(item.id)} // Pass the contact's id to toggle
       >
         <View
           style={[
             styles.checkboxWrapper,
-            { backgroundColor: selectedIds.includes(item.id) ? "#B0D8FF" : "#ccc" },  // Check if this contact is selected
+            {
+              backgroundColor: selectedPeopleData.includes(item.id)
+                ? "#B0D8FF"
+                : "#ccc",
+            }, // Check if this contact is selected
           ]}
         >
-          {selectedIds.includes(item.id) && <View style={styles.checkmark} />}  
+          {selectedPeopleData.includes(item.id) && (
+            <View style={styles.checkmark} />
+          )}
         </View>
       </TouchableOpacity>
     </View>
@@ -59,7 +166,7 @@ const GroupDetailsScreen = ({ navigation }) => {
         {/* Back Arrow Button */}
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.navigate("MembersChat")}
+          onPress={() => navigation.navigate("MembersChat", { contacts })}
         >
           <Image
             source={require("../../assets/icons/back_arrow.webp")}
@@ -76,16 +183,16 @@ const GroupDetailsScreen = ({ navigation }) => {
             style={[
               styles.backArrow,
               { transform: [{ rotate: "180deg" }] }, // Rotate 180 degrees to point right
-              { tintColor: 'white' }, // Set the color to white
+              { tintColor: "white" }, // Set the color to white
             ]}
           />
-        </View> 
+        </View>
       </View>
 
       <View style={styles.groupchatContainer}>
         {/* Group Chat Picture */}
         <Image
-          source={require("../../assets/icons/group_chat.png")}  // Replace with the actual image path
+          source={require("../../assets/icons/group_chat.png")} // Replace with the actual image path
           style={styles.groupChatImage}
         />
 
@@ -99,29 +206,30 @@ const GroupDetailsScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.membersTitleContainer}>
-        <Text style={styles.membersTitle}>Members ({contacts.length + 1})</Text>
+        <Text style={styles.membersTitle}>
+          Members ({selectedUsers.length + 1})
+        </Text>
       </View>
 
-    {/* List of Contact Cards */}
-    <FlatList
-      data={contacts}
-      renderItem={renderContactItem}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={{ paddingBottom: 20 }}
-    />
+      {/* List of Contact Cards */}
+      <FlatList
+        data={selectedUsers}
+        renderItem={renderContactItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      />
 
-    {/* Save Button */}
-    <LinearGradient
-      colors={["#FFDDF7", "#C5ECFF", "#DEE9FF", "#FFDCF8"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.gradientContainer}
-    >
-      <TouchableOpacity onPress={() => console.log("Save button pressed")}>
-        <Text style={styles.saveButtonText}>Create</Text>
-      </TouchableOpacity>
-    </LinearGradient>
-
+      {/* Save Button */}
+      <LinearGradient
+        colors={["#FFDDF7", "#C5ECFF", "#DEE9FF", "#FFDCF8"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientContainer}
+      >
+        <TouchableOpacity onPress={() => createChat(selectedPeopleData)}>
+          <Text style={styles.saveButtonText}>Create</Text>
+        </TouchableOpacity>
+      </LinearGradient>
     </SafeAreaView>
   );
 };
@@ -151,10 +259,10 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 2, 
-    elevation: 5, 
-    height: 80, 
-    width: 350, 
+    shadowRadius: 2,
+    elevation: 5,
+    height: 80,
+    width: 350,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f0f0f0",
@@ -164,25 +272,25 @@ const styles = StyleSheet.create({
     flexDirection: "row", // Arrange image and text input horizontally
     paddingHorizontal: 15, // Space around content
   },
-  
+
   groupChatImage: {
     width: 60,
     height: 60,
     borderRadius: 20, // Circular shape for the image
     marginRight: 10, // Space between image and text input
   },
-  
+
   groupNameInput: {
     flex: 1, // Make the input take available space
-    height: 40, 
-    borderRadius: 20, 
+    height: 40,
+    borderRadius: 20,
     // backgroundColor: "#fff",
     paddingHorizontal: 15,
     fontSize: 22,
     color: "#333",
     // borderWidth: 1,
     borderColor: "#ccc",
-  },  
+  },
   backButton: {
     paddingLeft: 10,
   },
@@ -211,7 +319,7 @@ const styles = StyleSheet.create({
     marginBottom: 10, // Space between the title and the list
     paddingHorizontal: 20, // Optional: add horizontal padding if needed
   },
-  
+
   membersTitle: {
     fontSize: 20,
     fontWeight: "bold",
@@ -219,7 +327,7 @@ const styles = StyleSheet.create({
     textAlign: "left", // Center the title
     marginTop: 10,
   },
-  
+
   contactItem: {
     marginTop: 8,
     backgroundColor: "#D1EBEF",
@@ -239,6 +347,9 @@ const styles = StyleSheet.create({
   },
   wrapperCol: {
     flex: 1,
+  },
+  wrapperRow: {
+    flexDirection: "row",
   },
   contactText: {
     fontSize: 16,
@@ -288,11 +399,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1.5 },
+    textShadowColor: "#848484", // Grey outline color
+    textShadowOffset: { width: 1, height: 1 }, // Controls the position of the shadow
+    textShadowRadius: 2, // Controls the blur of the shadow
+    shadowColor: "#000", // Black shadow for depth
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.5,
-    shadowRadius: 1, // Adds depth and shadow
-    elevation: 2, // For Android shadow
+    shadowRadius: 2,
+    elevation: 1,
   },
 });
 

@@ -8,11 +8,14 @@ import {
   FlatList,
   Image,
   Button,
+  Modal,
 } from "react-native";
 import { supabase } from "../lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import useStore from "../store/store";
 import DeleteEvent from "../components/DeleteEvent";
+import AddParticipants from "./AddParticipants";
+
 
 const getMoodColor = (mood) => {
   switch (mood) {
@@ -173,17 +176,11 @@ const EditEvent = ({ event, onClose }) => {
   };
 
   const onDateChange = (event, selectedDate) => {
-    // Check if a valid date is selected
-    if (selectedDate) {
-      // Create a new Date object and prevent timezone changes
-      const localDate = new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate()
-      );
-      setDate(localDate); // Set the date without any timezone adjustments
+    // Close the picker when a date is selected or if dismissed
+    if (event.type === 'set' && selectedDate) {
+      setDate(selectedDate); // Update the date
     }
-    setShowDatePicker(false); // Close the picker after selecting
+    setShowDatePicker(false); // Close the picker in all cases
   };
 
   const EditEventParticipants = async () => {
@@ -280,11 +277,11 @@ const EditEvent = ({ event, onClose }) => {
         />
       </View>
 
-      {/* <View style={styles.row}>
+      <View style={styles.row}>
         <Text style={styles.label}>Date: </Text>
         <Image
-          source={require("../../assets/icons/date_icon.png")} // Adjust the path to your date icon
-          style={styles.dateIcon} // Add styling for the icon
+          source={require("../../assets/icons/date_icon.png")} 
+          style={styles.dateIcon} 
         />
         <TouchableOpacity onPress={() => setShowDatePicker(true)}>
           <Text>{date.toLocaleDateString()}</Text> 
@@ -298,24 +295,8 @@ const EditEvent = ({ event, onClose }) => {
           onChange={onDateChange} // Handles date changes
         />
         )}
-      </View> */}
-
-      <View style={styles.row}>
-        <Text style={styles.label}>Date: </Text>
-        <TouchableOpacity onPress={showDatePicker}>
-          <Image
-            source={require("../../assets/icons/date_icon.png")} // Adjust the path to your date icon
-            style={styles.dateIcon} // Add styling for the icon
-          />
-        </TouchableOpacity>
-        <DateTimePicker
-          testID="dateTimePicker"
-          value={date}
-          mode="date"
-          display="calendar" // Opens directly in calendar view
-          onChange={onDateChange} // Handles date changes
-        />
       </View>
+
 
       {/* Start Time */}
       <View style={styles.column}>
@@ -460,9 +441,8 @@ const EditEvent = ({ event, onClose }) => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: [{ translateX: -155 }, { translateY: -175 }],
+    top: "22%",
+    alignSelf: 'center',
     width: "80%",
     maxWidth: 400,
     backgroundColor: "white",
@@ -473,6 +453,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 5,
+    zIndex: 5,
   },
   headerContainer: {
     width: "100%",
@@ -480,6 +461,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+    zIndex: 5,
+
   },
 
   titleContainer: {
@@ -606,6 +589,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginLeft: 5,
+    marginRight: 5,
   },
   timeContainer: {
     flexDirection: "row",
@@ -631,8 +615,8 @@ const styles = StyleSheet.create({
   addPersonIcon: {
     width: 20,
     height: 20,
-    marginRight: -5,
     marginLeft: 15,
+    marginRight: 0,
     zIndex: 0,
     alignSelf: "center",
   },

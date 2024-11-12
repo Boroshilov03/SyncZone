@@ -1,4 +1,9 @@
 import React, { useState, useCallback, useEffect } from "react";
+
+import axios from "axios";
+import RNPickerSelect from "react-native-picker-select";
+import Dropdown from "../components/DropdownComponent";
+
 import {
   View,
   Text,
@@ -268,7 +273,10 @@ export default function SignupScreen({ navigation }) {
                   error={errors[key]}
                   setValue={(value) => handleInputChange(key, value)}
                   secureTextEntry={key === "password1" || key === "password2"}
-                  backgroundColor='#fffbf5'
+                  // backgroundColor='#fffbf5'
+                  backgroundColor= "red"
+
+
 
                   leftIcon={{
                     name:
@@ -281,8 +289,10 @@ export default function SignupScreen({ navigation }) {
                   }}
 
                 />
+
               ))}
             </View>
+            <Dropdown />
             <View style={styles.buttonbox}>
               <LinearGradient
                 start={{ x: 0, y: 0 }}
@@ -334,7 +344,7 @@ export default function SignupScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fffbf5',
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
   },
   scrollView: {
     flexGrow: 1,
@@ -391,7 +401,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-
   },
   buttonbox: {
     flex: 0,
