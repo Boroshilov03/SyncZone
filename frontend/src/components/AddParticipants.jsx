@@ -1,21 +1,25 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet, Button } from 'react-native';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { Feather as FeatherIcon } from "@expo/vector-icons"; 
+
 
 const AddParticipants = ({ modalVisible, onClose }) => {
-    return (
-      <View style={styles.modalContainer}>
-        <Text style={styles.title}>Participants</Text>
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Participants</Text>
 
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by name"
-            placeholderTextColor="#A9A9A9"  // Adjust placeholder color
-          />
-        </View>
+      <View style={styles.searchContainer}>
+      <View style={styles.searchIcon}>
+        <FeatherIcon color="#848484" name="search" size={17} />
       </View>
-    );
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by name"
+          placeholderTextColor="#A9A9A9"  // Adjust placeholder color
+        />
+      </View>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -23,40 +27,23 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: "5%",
     alignSelf: 'center',
-    width: "80%",
-    maxWidth: 400,
-    backgroundColor: "red",
-  },
-  headerContainer: {
     width: "100%",
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-  },
-  titleContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "absolute",
-    left: 0,
-    right: 0,
+    maxWidth: 400,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 15,
     textAlign: "center",
-    flex: 1,
   },
 
   // Search Bar Styles
   searchContainer: {
-    flexDirection: "row", // Align items in a row
-    alignItems: "center", // Center vertically
-    backgroundColor: "rgb(240, 240, 240)", // Same background as search input
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgb(240, 240, 240)",
     borderRadius: 25,
-    paddingHorizontal: 10, // Padding around the container
+    paddingHorizontal: 10,
     borderWidth: 1,
     borderColor: "#d1d1d1",
     shadowColor: "#000",
@@ -66,18 +53,15 @@ const styles = StyleSheet.create({
     elevation: 3,
     width: "100%",
     alignSelf: "center",
-    marginBottom: 5,
   },
   searchInput: {
     height: 42,
-    flexDirection: "row",
+    flex: 1,
     borderRadius: 25,
-    paddingHorizontal: 5,
-    paddingVertical: 5,
-    width: '100%',
+    paddingHorizontal: 10,
+    color: "#000",
   },
   searchIcon: {
-    paddingRight: 2,
     justifyContent: 'center', // Center vertically within the icon container
   },
 });
