@@ -27,6 +27,7 @@ import FavoriteUsers from "../components/favoriteUsers";
 const ChatsScreen = ({ navigation }) => {
   const [input, setInput] = useState("");
   const [profileVisible, setProfileVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
   const { user } = useStore();
   const queryClient = useQueryClient();
@@ -86,8 +87,8 @@ const ChatsScreen = ({ navigation }) => {
       const lastMessage =
         messages.length > 0
           ? messages.sort(
-            (a, b) => new Date(b.created_at) - new Date(a.created_at)
-          )[0]
+              (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            )[0]
           : null;
 
       const unreadMessagesCount = messages.filter(
@@ -261,9 +262,9 @@ const ChatsScreen = ({ navigation }) => {
               <Text style={styles.cardTimestamp}>
                 {item.lastMessageTime
                   ? new Date(item.lastMessageTime).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                   : ""}
               </Text>
             </View>
@@ -317,6 +318,7 @@ const ChatsScreen = ({ navigation }) => {
               />
             </TouchableOpacity>
             <FavoriteUsers navigation={navigation} />
+          </ScrollView>
         </View>
 
         {filteredChats.length ? (
@@ -397,7 +399,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
