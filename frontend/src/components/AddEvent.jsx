@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -44,11 +44,34 @@ const AddEvent = ({ onClose }) => {
   const [showStartTimePicker, setShowStartTimePicker] = useState(false); // State to show start time picker
   const [showEndTimePicker, setShowEndTimePicker] = useState(false); // State to show end time picker
   const [description, setDescription] = useState(""); // Description
-  const [participants, setparticipants] = useState([user.id]); // Selected participants
+  const [selectedContacts, setSelectedContacts] = useState(); // Initialize as an empty array
   const [newMember, setNewMember] = useState(""); // Input for new member
   const [mood, setMood] = useState(null); // Selected mood
   const [modalVisible, setModalVisible] = useState(false);
+  const [contacts, setContacts] = useState([]);
 
+  useEffect(() => {
+    const fetchContacts = async () => {
+      if (selectedContacts.length === 0) return;
+      try {
+        // Fetch contacts from "profiles" table by user_id
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, first_name, avatar_url")
+          .in("id", selectedContacts);
+
+        if (error) {
+          console.error("Error fetching contacts:", error.message);
+        } else {
+          setContacts(data); // Store the contacts with avatar_url
+        }
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
+      }
+    };
+
+    fetchContacts();
+  }, [selectedContacts]); // Trigger whenever selectedContacts changes
 
   const handleAddEvent = async () => {
     const formatTime = (date) => {
@@ -69,7 +92,7 @@ const AddEvent = ({ onClose }) => {
       startTime: formattedStartTime,
       endTime: formattedEndTime,
       description,
-      participants,
+      selectedContacts,
       mood,
     });
 
@@ -97,7 +120,7 @@ const AddEvent = ({ onClose }) => {
         onClose();
         console.log(data);
 
-        // Get the event ID from the inserted data and add participants
+        // Get the event ID from the inserted data and add selectedContacts
         const eventID = data[0].id;
         await addEventParticipants(eventID);
       }
@@ -108,8 +131,8 @@ const AddEvent = ({ onClose }) => {
 
   const addEventParticipants = async (eventID) => {
     try {
-      // Iterate over the participants array
-      for (let participantId of participants) {
+      // Iterate over the selectedContacts array
+      for (let participantId of selectedContacts) {
         const { data, error } = await supabase
           .from("event_participants")
           .insert({ user_id: participantId, event_id: eventID })
@@ -125,29 +148,28 @@ const AddEvent = ({ onClose }) => {
         }
       }
     } catch (error) {
-      console.error("Error adding participants:", error);
+      console.error("Error adding selectedContacts:", error);
     }
   };
 
   const onDateChange = (event, selectedDate) => {
     // Close the picker when a date is selected or if dismissed
-    if (event.type === 'set' && selectedDate) {
+    if (event.type === "set" && selectedDate) {
       setDate(selectedDate); // Update the date
     }
     setShowDatePicker(false); // Close the picker in all cases
   };
-  
 
-  const predefinedPFPs = [
-    require("../../assets/icons/pfp1.png"),
-    require("../../assets/icons/pfp2.jpg"),
-    require("../../assets/icons/pfp3.webp"),
-    require("../../assets/icons/add_person.png"),
-  ];
+  const predefinedPFPs = [require("../../assets/icons/add_person.png")];
+
+  const handleModalClose = (contacts) => {
+    setSelectedContacts(contacts); // Save the selected contacts
+    setModalVisible(false); // Close the modal
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add Event</Text>
+      <Text style={styles.title}>New Event</Text>
 
       <TextInput
         style={styles.input}
@@ -163,7 +185,7 @@ const AddEvent = ({ onClose }) => {
           style={styles.dateIcon}
         />
         <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-          <Text>{date.toLocaleDateString()}</Text> 
+          <Text>{date.toLocaleDateString()}</Text>
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
@@ -254,54 +276,59 @@ const AddEvent = ({ onClose }) => {
         value={description}
         onChangeText={setDescription}
       />
-
+      <TouchableOpacity
+        onPress={() => setModalVisible(true)}
+        style={styles.addParticipantsButton}
+      >
+        <Text style={styles.addText}>Add Guests</Text>
+      </TouchableOpacity>
       <View style={styles.row}>
-        <Text style={styles.label}>Participants:</Text>
-
+        <Text style={styles.label}>Guests: </Text>
         <View style={styles.pfpContainer}>
-          <FlatList
-            data={predefinedPFPs}
-            renderItem={({ item }) => {
-              const isAddPersonIcon = item === require("../../assets/icons/add_person.png");
-
-              return (
-                <TouchableOpacity
-                  onPress={() => {
-                    if (isAddPersonIcon) {
-                      setModalVisible(true); // Show the modal when "add_person.png" is clicked
-                    }
-                  }}
-                >
-                  <Image
-                    source={item}
-                    style={[
-                      styles.pfpImage,
-                      isAddPersonIcon && styles.addPersonIcon,
-                    ]}
-                  />
-                </TouchableOpacity>
-              );
-            }}
-            keyExtractor={(item, index) => index.toString()}
-            horizontal
-          />
+          {contacts && contacts.length > 0 ? (
+            <FlatList
+              data={contacts}
+              renderItem={({ item }) => {
+                return (
+                  <TouchableOpacity>
+                    {!item.avatar_url ? (
+                      <View style={[styles.cardImg]}>
+                        <Text style={styles.cardAvatarText}>
+                          {item.first_name[0].toUpperCase()}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Image
+                        alt="Avatar"
+                        resizeMode="cover"
+                        source={{ uri: item.avatar_url }}
+                        style={styles.profileImage}
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
+              keyExtractor={(item, index) => index.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            />
+          ) : (
+            <Text style={styles.none}>None</Text>
+          )}
 
           <Modal
-            animationType="none"  
+            animationType="none"
             transparent={true}
             visible={modalVisible}
             onRequestClose={() => setModalVisible(false)}
           >
             <View style={styles.modalBackground}>
               <View style={styles.modalContainer}>
-                <AddParticipants /> 
-
-                <TouchableOpacity
-                  style={styles.closeButtonBottom}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.closeButtonText}>Close</Text>
-                </TouchableOpacity>
+                <AddParticipants
+                  onClose={() => setModalVisible(false)}
+                  selectedContacts={selectedContacts || []} // Pass down the selected contacts
+                  setSelectedContacts={setSelectedContacts} // Allow child to update selected contacts
+                />
               </View>
             </View>
           </Modal>
@@ -334,7 +361,7 @@ const AddEvent = ({ onClose }) => {
           <Text style={styles.buttonText}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleAddEvent} style={styles.addButton}>
-          <Text style={styles.buttonText}>Add</Text>
+          <Text style={styles.buttonText}>Create</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -347,7 +374,7 @@ const styles = StyleSheet.create({
     top: "22%",
     // left: "50%",
     // transform: [{ translateX: -155 }, { translateY: -175 }],
-    alignSelf: 'center',
+    alignSelf: "center",
     width: "80%",
     maxWidth: 400,
     backgroundColor: "white",
@@ -364,14 +391,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
-    marginBottom: 20,
   },
   input: {
     height: 40,
     borderColor: "grey",
     borderWidth: 1,
     paddingLeft: 10,
-    marginBottom: 20,
+    marginBottom: 10,
     borderRadius: 5,
     backgroundColor: "#fff",
     width: "100%",
@@ -383,7 +409,6 @@ const styles = StyleSheet.create({
   },
   participantsContainer: {
     flexDirection: "row",
-    marginBottom: 20,
   },
   memberImage: {
     width: 40,
@@ -452,9 +477,25 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
   },
+  addParticipantsButton: {
+    backgroundColor: "#17D7", // Stronger contrast for visibility
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addText: {
+    color: "white",
+    textAlign: "center",
+  },
   label: {
     fontSize: 18,
     fontWeight: "bold",
+  },
+  none: {
+    color: "#696969",
+    fontSize: 16,
   },
   value: {
     fontSize: 16,
@@ -476,64 +517,49 @@ const styles = StyleSheet.create({
     height: 20,
   },
   pfpContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 10,
-  },
-  pfpImage: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: -10,
-    zIndex: 1,
+    width: "80%",
+    overflow: "hidden", // Ensure content stays within the container
   },
   addPersonIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 0,
-    marginLeft: 15,
-    // zIndex: 0,
-    marginTop: 5,
+    borderWidth: 2,
+    borderColor: "#007BFF", // Border color for the add icon
+    padding: 10,
+    backgroundColor: "#F1F1F1", // Background for add icon to make it more visible
+  },
+  profileImage: {
+    width: 30, // or whatever size you want
+    height: 30,
+    borderRadius: 15, // circular image
+    marginRight: 2,
+  },
+  cardImg: {
+    width: 30,
+    height: 30,
+    backgroundColor: "#FFADAD",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 15,
+    marginRight: 2,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF",
   },
   modalBackground: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContainer: {
-    width: '80%',
-    height: '66%', // Increase the modal height
-    backgroundColor: 'white',
+    width: "80%",
+    height: "66%", // Increase the modal height
+    backgroundColor: "white",
     padding: 20,
     borderRadius: 10,
-    alignItems: 'center',
-    // justifyContent: 'space-between', // Space out content and button
-  },
-  closeButtonBottom: {
-    backgroundColor: '#A9A9A9', 
-    padding: 10,
-    borderRadius: 5,
-    width: '30%',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 20, // Position at the bottom with some padding
-    borderRadius: 25,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
     alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
-    marginRight: 15,
-  },
-  closeButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+    // justifyContent: 'space-between', // Space out content and button
   },
 });
 

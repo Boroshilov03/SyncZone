@@ -242,7 +242,7 @@ const ChatsScreen = ({ navigation }) => {
                 style={styles.cardImg}
               />
             ) : (
-              <View style={[styles.cardImg, styles.cardAvatar]}>
+              <View style={[styles.cardImg]}>
                 <Text style={styles.cardAvatarText}>
                   {displayName[0].toUpperCase()}
                 </Text>
