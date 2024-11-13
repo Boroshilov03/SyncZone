@@ -49,6 +49,12 @@ const ProfileSettings = ({ navigation, route }) => {
   const [password, setPassword] = useState(""); // Leave this blank for user to enter
   const [firstName, setFirstName] = useState(contactInfo.contactFirst || "");
   const [lastName, setLastName] = useState(contactInfo.contactLast || "");
+  const [location, setLocation] = useState(contactInfo.location || "");
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
 
   const handleInputChange = useCallback((name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -58,95 +64,97 @@ const ProfileSettings = ({ navigation, route }) => {
     const loadFonts = async () => {
       await Font.loadAsync({
         "Inter_18pt-Regular": require("./fonts/Inter_18pt-Regular.ttf"),
-        "Inter_18pt-Medium": require("./fonts/Inter_18pt-Medium.ttf"),
-        "Inter_18pt-MediumItalic": require("./fonts/Inter_18pt-MediumItalic.ttf"),
         "Poppins-Regular": require("./fonts/Poppins-Regular.ttf"),
-        "Poppins-Medium": require("./fonts/Poppins-Medium.ttf"),
-        "Karla-Regular": require("./fonts/Karla-Regular.ttf"),
-        "Karla-Medium": require("./fonts/Karla-Medium.ttf"),
       });
       setFontsLoaded(true);
     };
-
     loadFonts();
   }, []);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchLatestUserData = async () => {
+        const { data, error } = await supabase.auth.getUser();
+        if (data) setUser(data);
+        if (error) console.error("Error fetching latest user data:", error.message);
+      };
+      fetchLatestUserData();
+    }, [])
+  );
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.user_metadata?.first_name || "",
+        lastName: user.user_metadata?.last_name || "",
+        email: user.email || "",
+      });
+    }
+  }, [user]);
+
+  const saveProfileUpdates = async () => {
+    const updatedProfileData = {
+      user_metadata: {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+      },
+      email: formData.email,
+    };
+
+    const { data, error } = await supabase
+      .from("users")
+      .update(updatedProfileData)
+      .eq("id", user.id);
+
+    if (error) {
+      console.error("Error updating profile:", error.message);
+    } else {
+      // Update `useStore` with new data after Supabase update
+      setUser({ ...user, ...updatedProfileData });
+      console.log("Profile updated successfully");
+    }
+  };
 
   const updateInfo = async () => {
-    console.log('>>>>>>>>>>', email);
     try {
-      let avatarUrl = null; // Declare avatarUrl here
-
-      const updateUser = {
-        email,
-        password,
-        user_metadata: {
-          first_name: firstName,
-          last_name: lastName,
-          username,
-        },
-      };
+      let avatarUrl = null;
 
       if (base64Photo) {
         const photoPath = `${user.id}/${uuid.v4()}.png`;
-        console.log("Uploading image to path:", photoPath);
-
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("avatars")
-          .upload(photoPath, decode(base64Photo), {
-            contentType: "image/png",
-          });
-
-        console.log("Image Upload Data:", uploadData);
-        console.log("Image Upload Error:", uploadError);
+          .upload(photoPath, decode(base64Photo), { contentType: "image/png" });
 
         if (uploadError) {
           Alert.alert("Error", "Failed to upload profile photo: " + uploadError.message);
           return;
         }
-
         avatarUrl = supabase.storage.from("avatars").getPublicUrl(photoPath).data.publicUrl;
-        console.log("Avatar URL:", avatarUrl);
       }
 
-      // Update the profiles table with the avatar URL if it's set
       const { error: updateProfileError } = await supabase
         .from("profiles")
-        .update({ avatar_url: avatarUrl })
+        .update({
+          username,
+          first_name: firstName,
+          last_name: lastName,
+          location,
+          avatar_url: avatarUrl || profilePhoto,
+        })
         .eq("id", user.id);
 
       if (updateProfileError) {
-        Alert.alert("Error", "Failed to update avatar URL in profiles table: " + updateProfileError.message);
+        Alert.alert("Error", "Failed to update profile: " + updateProfileError.message);
         return;
       }
 
-      if (avatarUrl) {
-        const { error: updateError } = await supabase.auth.updateUser({
-          data: { avatar_url: avatarUrl },
-        });
-
-        if (updateError) {
-          Alert.alert("Error", "Failed to update user session: " + updateError.message);
-          return;
-        }
-      }
-
-      const { account, error } = await supabase.auth.updateUser({
-        data: {
-          username: username,
-          first_name: firstName,
-          last_name: lastName
-        }
-      });
-
       contactInfo.contactUsername = username;
-      contactInfo.contactLast = lastName;
       contactInfo.contactFirst = firstName;
+      contactInfo.contactLast = lastName;
+      contactInfo.location = location;
+      if (avatarUrl) contactInfo.contactPFP = avatarUrl;
 
-      if (error) {
-        throw error;
-      }
-
+      await fetchProfileData();
       alert('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating user:', error);
@@ -226,13 +234,13 @@ const ProfileSettings = ({ navigation, route }) => {
   // Function to fetch the active banner
   const fetchActiveBanner = async () => {
     if (!user) return;
-  
+
     const { data, error } = await supabase
       .from("active_banner")
       .select("banner_id")
       .eq("user_id", user.id)
       .single();
-  
+
     if (error) {
       if (error.code === "PGRST116") { // No rows returned for single query
         setActiveBannerData(null); // Set active banner data to null if no active banner
@@ -241,30 +249,54 @@ const ProfileSettings = ({ navigation, route }) => {
       }
       return;
     }
-  
+
     if (data) {
       const { data: bannerData, error: bannerError } = await supabase
         .from("banners")
         .select("image_url")
         .eq("id", data.banner_id)
         .single();
-  
+
       if (bannerError) {
         console.error("Error fetching banner details:", bannerError.message);
         setActiveBannerData(null); // Fallback to null if there's an error with banner details
       } else {
-        setActiveBannerData(bannerData); 
+        setActiveBannerData(bannerData);
       }
     } else {
       setActiveBannerData(null); // Explicitly set to null if no data returned
     }
   };
-  
+
+  const fetchProfileData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("username, first_name, last_name, location, avatar_url")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching profile data:", error);
+        return;
+      }
+
+      // Update your state with the fetched data
+      setUsername(data.username || "");
+      setFirstName(data.first_name || "");
+      setLastName(data.last_name || "");
+      setLocation(data.location || "");
+      setProfilePhoto(data.avatar_url || null);
+    } catch (error) {
+      console.error("Error in fetchProfileData:", error);
+    }
+  };
 
   useFocusEffect(
     React.useCallback(() => {
-      fetchActiveBanner();
-    }, [user, fetchActiveBanner]) // Re-run when user changes
+      // Re-fetch user profile data here
+      fetchProfileData();
+    }, [])
   );
 
   useEffect(() => {
@@ -437,6 +469,7 @@ const ProfileSettings = ({ navigation, route }) => {
             },
             { label: "First Name", value: firstName, setValue: setFirstName },
             { label: "Last Name", value: lastName, setValue: setLastName },
+            { label: "Location", value: location, setValue: setLocation },
             // Add more fields as needed
           ].map((field, index) => (
             <View key={index} style={styles.verticallySpaced}>

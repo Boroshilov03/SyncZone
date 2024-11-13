@@ -3,11 +3,14 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import { API_KEY, API_URL } from '@env';
+import Icon from "react-native-vector-icons/FontAwesome";
+import Icon2 from "react-native-vector-icons/FontAwesome5";
 
 const DropdownComponent = ({ setCity, location }) => {
     const [countryData, setCountryData] = useState([]);
     const [cityData, setCityData] = useState([]);
     const [country, setCountry] = useState(null);
+    const [state, setState] = useState(null);
     const [isFocus, setIsFocus] = useState(false);
 
     useEffect(() => {
@@ -61,7 +64,7 @@ const DropdownComponent = ({ setCity, location }) => {
     return (
         <View style={styles.container}>
             <Dropdown
-                style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+                style={[styles.dropdown, isFocus && { borderColor: '#7fc7c9' }]}
                 placeholderStyle={styles.placeholderStyle}
                 selectedTextStyle={styles.selectedTextStyle}
                 inputSearchStyle={styles.inputSearchStyle}
@@ -71,11 +74,19 @@ const DropdownComponent = ({ setCity, location }) => {
                 maxHeight={300}
                 labelField="label"
                 valueField="value"
-                placeholder={!isFocus ? 'Select countries' : '...'}
+                placeholder={!isFocus ? 'Select country' : '...'}
                 searchPlaceholder="Search..."
                 value={country}
                 onFocus={() => setIsFocus(true)}
                 onBlur={() => setIsFocus(false)}
+                renderLeftIcon={() =>
+                    <Icon
+                        style={styles.icon}
+                        color={isFocus ? '#9ae1e3' : '#616061'}
+                        name="globe"
+                        size={24}
+                    />
+                }
                 onChange={item => {
                     setCountry(item.value);
                     handleCity(item.value);
@@ -83,7 +94,7 @@ const DropdownComponent = ({ setCity, location }) => {
                 }}
             />
             <Dropdown
-                style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+                style={[styles.dropdown, isFocus && { borderColor: '#7fc7c9' }]}
                 placeholderStyle={styles.placeholderStyle}
                 selectedTextStyle={styles.selectedTextStyle}
                 inputSearchStyle={styles.inputSearchStyle}
@@ -93,11 +104,19 @@ const DropdownComponent = ({ setCity, location }) => {
                 maxHeight={300}
                 labelField="label"
                 valueField="value"
-                placeholder={!isFocus ? 'Select cities' : '...'}
+                placeholder={!isFocus ? 'Select city' : '...'}
                 searchPlaceholder="Search..."
                 value={location}
                 onFocus={() => setIsFocus(true)}
                 onBlur={() => setIsFocus(false)}
+                renderLeftIcon={() =>
+                    <Icon2
+                        style={styles.icon}
+                        color={isFocus ? '#9ae1e3' : '#616061'}
+                        name="city"
+                        size={18}
+                    />
+                }
                 onChange={item => {
                     console.log("Selected item:", item);
                     setCity(item.label);
@@ -124,7 +143,7 @@ const styles = StyleSheet.create({
         margin: 18,
     },
     icon: {
-        marginRight: 5,
+        marginRight: 8,
     },
     label: {
         position: 'absolute',
@@ -136,10 +155,21 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     placeholderStyle: {
-        fontSize: 16,
+        fontSize: 14,
+
+        color: "#70747a",
+        marginVertical: 6,
+        paddingHorizontal: 16,
+        fontWeight: 'bold'
+
     },
     selectedTextStyle: {
-        fontSize: 16,
+        fontSize: 14,
+
+        color: "#70747a",
+        marginVertical: 6,
+        paddingHorizontal: 16,
+        fontWeight: 'bold'
     },
     inputSearchStyle: {
         height: 40,

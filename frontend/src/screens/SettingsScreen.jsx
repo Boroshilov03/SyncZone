@@ -40,6 +40,7 @@ export default function Example({ navigation }) {
     contactUsername: user?.user_metadata?.username,
     contactEmail: user?.user_metadata?.email,
     contactPassword: user?.user_metadata?.password,
+    contactLocation: user?.user_metadata?.location,
   };
 
   const handleLogout = async () => {
@@ -57,13 +58,13 @@ export default function Example({ navigation }) {
   // Function to fetch the active banner
   const fetchActiveBanner = async () => {
     if (!user) return;
-  
+
     const { data, error } = await supabase
       .from("active_banner")
       .select("banner_id")
       .eq("user_id", user.id)
       .single();
-  
+
     if (error) {
       if (error.code === "PGRST116") { // No rows returned for single query
         setActiveBannerData(null); // Set active banner data to null if no active banner
@@ -72,25 +73,25 @@ export default function Example({ navigation }) {
       }
       return;
     }
-  
+
     if (data) {
       const { data: bannerData, error: bannerError } = await supabase
         .from("banners")
         .select("image_url")
         .eq("id", data.banner_id)
         .single();
-  
+
       if (bannerError) {
         console.error("Error fetching banner details:", bannerError.message);
         setActiveBannerData(null); // Fallback to null if there's an error with banner details
       } else {
-        setActiveBannerData(bannerData); 
+        setActiveBannerData(bannerData);
       }
     } else {
       setActiveBannerData(null); // Explicitly set to null if no data returned
     }
   };
-  
+
 
   useFocusEffect(
     React.useCallback(() => {
