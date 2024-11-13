@@ -28,8 +28,6 @@ import * as ImagePicker from "expo-image-picker";
 import uuid from "react-native-uuid";
 import { decode } from "base64-arraybuffer";
 
-import OwnedStickersModal from "../components/OwnedStickersModal";
-
 const ProfileSettings = ({ navigation, route }) => {
 
   const [profilePhoto, setProfilePhoto] = useState(null);
@@ -43,7 +41,6 @@ const ProfileSettings = ({ navigation, route }) => {
   const [ownedBannersVisible, setOwnedBannersVisible] = useState(false);
   const { user } = useStore();
   const [activeBannerData, setActiveBannerData] = useState(null);
-  const [ownedStickersVisible, setOwnedStickersVisible] = useState(false);
 
 
   // State for form fields
@@ -52,10 +49,6 @@ const ProfileSettings = ({ navigation, route }) => {
   const [password, setPassword] = useState(""); // Leave this blank for user to enter
   const [firstName, setFirstName] = useState(contactInfo.contactFirst || "");
   const [lastName, setLastName] = useState(contactInfo.contactLast || "");
-
-  const toggleOwnedStickersModal = () => {
-    setOwnedStickersVisible(!ownedStickersVisible);
-  };
 
   const handleInputChange = useCallback((name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -188,6 +181,7 @@ const ProfileSettings = ({ navigation, route }) => {
           throw updateError;
         }
 
+        // Also update user metadata if necessary
         const { error: updateUserError } = await supabase.auth.updateUser({
           data: { avatar_url: null },
         });
@@ -196,6 +190,7 @@ const ProfileSettings = ({ navigation, route }) => {
           throw updateUserError;
         }
 
+        // Reset the contact info
         contactInfo.contactPFP = null;
 
         alert("Profile image removed successfully!");
@@ -327,7 +322,7 @@ const ProfileSettings = ({ navigation, route }) => {
             <Image
               source={{ uri: contactInfo.contactPFP }}
               style={styles.placeholderImage}
-              onPress={() => toggleOwnedStickersModal(true)}
+              onPress={() => setOwnedBannersVisible(true)}
             ></Image>
           </Pressable>
           {/* <Icon
@@ -363,7 +358,7 @@ const ProfileSettings = ({ navigation, route }) => {
                 <Text
                   style={styles.rText}
                   onPress={() => {
-                    toggleOwnedStickersModal(true);
+                    setOwnedBannersVisible(true);
                     setVisible(false);
                   }}
                 >
@@ -393,7 +388,7 @@ const ProfileSettings = ({ navigation, route }) => {
                     style={styles.banButton}
                     onPress={() => {
                       setModalVisible(false); // Close the current modal
-                      toggleOwnedStickersModal(true); // Open the OwnedBannersModal
+                      setOwnedBannersVisible(true); // Open the OwnedBannersModal
                     }}
                   >
                     <Text style={styles.banText}>Change Banner</Text>
@@ -544,9 +539,9 @@ const ProfileSettings = ({ navigation, route }) => {
         </TouchableOpacity>
 
         {/* Owned Banners Modal */}
-        <OwnedStickersModal
-          visible={ownedStickersVisible}
-          onClose={() => setOwnedStickersVisible(false)}
+        <OwnedBannersModal
+          visible={ownedBannersVisible}
+          onClose={() => setOwnedBannersVisible(false)}
         />
       </ScrollView>
     </SafeAreaView>
