@@ -189,6 +189,7 @@ const ProfileSettings = ({ navigation, route }) => {
           throw updateError;
         }
 
+        // Also update user metadata if necessary
         const { error: updateUserError } = await supabase.auth.updateUser({
           data: { avatar_url: null },
         });
@@ -197,6 +198,7 @@ const ProfileSettings = ({ navigation, route }) => {
           throw updateUserError;
         }
 
+        // Reset the contact info
         contactInfo.contactPFP = null;
 
         alert("Profile image removed successfully!");

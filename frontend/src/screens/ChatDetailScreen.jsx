@@ -21,6 +21,8 @@ import { processMessageWithEmotion } from "../../emotion/emotionAnalysisService"
 const noProfilePic = require("../../assets/icons/pfp_icon.png");
 import { LinearGradient } from "expo-linear-gradient";
 import ScheduleButton from "../../emotion/ScheduleButton";
+import OwnedStickersModal from "../components/OwnedStickersModal";
+
 
 const ChatDetailScreen = () => {
   const { user } = useStore();
@@ -38,6 +40,12 @@ const ChatDetailScreen = () => {
   const typingTimeoutRef = useRef(null);
   const wsRef = useRef(null);
   const flatListRef = useRef(null);
+
+  const [ownedStickersVisible, setOwnedStickersVisible] = useState(false);
+
+  const toggleOwnedStickersModal = () => {
+    setOwnedStickersVisible(!ownedStickersVisible);
+  };
 
   const fetchProfilePicture = async (senderId) => {
     if (profilePics[senderId]) return; // Skip if already fetched
@@ -459,7 +467,23 @@ const ChatDetailScreen = () => {
               handleTyping();
             }}
           />
+            {/* Secondary Button */}
+            <TouchableOpacity
+              style={styles.secondaryButtonContainer}
+              onPress={toggleOwnedStickersModal}
+            >           
+              <Image
+              source={require("../../assets/icons/gift-icon.png")}
+              style={styles.secondaryButtonIcon} // Add a style to control size and position
+                />    
+            <Text style={styles.secondaryButtonText}></Text>
 
+            {/* Owned Stickers Modal */}
+            <OwnedStickersModal
+              visible={ownedStickersVisible}
+              onClose={() => setOwnedStickersVisible(false)}
+            />
+          </TouchableOpacity>
           <TouchableOpacity onPress={handleSendMessage}>
             <LinearGradient
               colors={["#A0D7E5", "#D1EBEF"]}
@@ -479,6 +503,7 @@ const ChatDetailScreen = () => {
               />
             </LinearGradient>
           </TouchableOpacity>
+
         </View>
       </SafeAreaView>
     </KeyboardAvoidingView>
@@ -683,7 +708,7 @@ const styles = StyleSheet.create({
     padding: 5,
     fontSize: 16,
   },
-  sendButtonContainer: {
+   sendButtonContainer: {
     borderRadius: "50%",
     padding: 8,
     alignItems: "center", // Center horizontally
@@ -692,6 +717,24 @@ const styles = StyleSheet.create({
   sendButton: {
     width: 40,
     height: 40,
+    alignItems: "center", // Center horizontally
+    justifyContent: "center", // Center vertically
+  },
+  secondaryButtonContainer: {
+    flexDirection: "row",
+    padding: 8,
+    marginRight: 10, // Added space between secondary button and send button
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  //secondaryButtonText: {
+    //fontSize: 16,
+    //left: -20,
+  //},
+  secondaryButtonIcon: {
+    width: 25,
+    height: 25,
+    marginRight: 5, // Space between icon and text
     alignItems: "center", // Center horizontally
     justifyContent: "center", // Center vertically
   },

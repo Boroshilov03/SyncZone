@@ -128,7 +128,7 @@ const Header = ({
           </Text>
           <Switch
             onValueChange={toggleSwitch}
-            style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
+            style={{ transform: [{ scaleX: 0.80 }, { scaleY: 0.80 }] }}
             value={switchValue}
           />
         </View>
@@ -188,9 +188,10 @@ const styles = StyleSheet.create({
   switchContainer: {
     flexDirection: "row",
     alignItems: "center",
+    bottom: 0,
   },
   switchLabel: {
-    marginRight: 8,
+    marginRight: -4,
   },
 });
 
