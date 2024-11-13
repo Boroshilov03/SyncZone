@@ -316,17 +316,7 @@ const ChatsScreen = ({ navigation }) => {
                 style={styles.favoriteImg}
               />
             </TouchableOpacity>
-            <FavoriteUsers
-              navigation={navigation}
-              onPress={() => {
-                setProfileVisible(true);
-                setSelectedContact({
-                  contactID: otherParticipants[0]?.profiles?.id,
-                  contactPFP: displayPhoto,
-                  contactUsername: displayName,
-                });
-              }} />
-          </ScrollView>
+            <FavoriteUsers navigation={navigation} />
         </View>
 
         {filteredChats.length ? (
