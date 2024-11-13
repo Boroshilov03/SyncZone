@@ -48,12 +48,21 @@ export default function SignupScreen({ navigation }) {
   const [base64Photo, setBase64Photo] = useState(null);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-
+  const [city, setCity] = useState(null);
   const handleInputChange = useCallback((name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
+  const handleCitySelection = (cityCode) => {
+    console.log("Selected city code:", cityCode);
+    setFormData(prevData => ({
+      ...prevData,
+      location: cityCode,
+    }));
+  };
+
   useEffect(() => {
+    console.log("Location is now:", formData.location);
     const loadFonts = async () => {
       await Font.loadAsync({
         "Inter_18pt-Regular": require("./fonts/Inter_18pt-Regular.ttf"),
@@ -114,7 +123,7 @@ export default function SignupScreen({ navigation }) {
         {}
       );
       setErrors(formattedErrors);
-      console.log("Validation Errors:", formattedErrors); // Log formatted validation errors
+      console.log("Validation Errors:", formattedErrors);
       setLoading(false);
       return;
     }
@@ -134,8 +143,8 @@ export default function SignupScreen({ navigation }) {
       });
 
       // Log Supabase response to see if signup was successful or not
-      console.log("Supabase SignUp Data:", data);
-      console.log("Supabase SignUp Error:", error);
+      // console.log("Supabase SignUp Data:", data);
+      // console.log("Supabase SignUp Error:", error);
 
       if (error) {
         Alert.alert("Error", error.message);
@@ -264,7 +273,7 @@ export default function SignupScreen({ navigation }) {
                 { key: "email", label: "Email", },
                 { key: "password1", label: "Password" },
                 { key: "password2", label: "Confirm Password" },
-                { key: "location", label: "Location" },
+
               ].map(({ key, label }) => (
                 <Input
                   key={key}
@@ -274,7 +283,7 @@ export default function SignupScreen({ navigation }) {
                   setValue={(value) => handleInputChange(key, value)}
                   secureTextEntry={key === "password1" || key === "password2"}
                   // backgroundColor='#fffbf5'
-                  backgroundColor= "red"
+                  backgroundColor="red"
 
 
 
@@ -292,7 +301,9 @@ export default function SignupScreen({ navigation }) {
 
               ))}
             </View>
-            <Dropdown />
+            <Dropdown
+              location={formData.location}
+              setCity={handleCitySelection} />
             <View style={styles.buttonbox}>
               <LinearGradient
                 start={{ x: 0, y: 0 }}

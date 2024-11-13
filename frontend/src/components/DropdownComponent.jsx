@@ -4,15 +4,12 @@ import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import { API_KEY, API_URL } from '@env';
 
-const DropdownComponent = () => {
+const DropdownComponent = ({ setCity, location }) => {
     const [countryData, setCountryData] = useState([]);
     const [cityData, setCityData] = useState([]);
     const [country, setCountry] = useState(null);
-    const [city, setCity] = useState(null);
     const [isFocus, setIsFocus] = useState(false);
 
-    console.log(API_KEY);  // Should log your API key
-    console.log(API_URL);
     useEffect(() => {
         var config = {
             method: 'get',
@@ -23,8 +20,7 @@ const DropdownComponent = () => {
         };
         axios(config)
             .then(response => {
-                console.log(JSON.stringify(response.data));
-                var count = Object.keys(response.data).length
+                var count = Object.keys(response.data).length;
                 let countryArray = [];
                 for (var i = 0; i < count; i++) {
                     countryArray.push({
@@ -39,34 +35,27 @@ const DropdownComponent = () => {
             });
     }, []);
 
-    const handleCity = (countryCode) => {
-        const url = `${API_URL}/${countryCode}/cities`;
-        var config = {
-            method: 'get',
-            url: url,
-            headers: {
-                'X-CSCAPI-KEY': API_KEY
-            }
-        };
-
-        axios(config)
-            .then(function (response) {
-                const cities = response.data;
-
-                const uniqueCities = Array.from(
-                    new Map(cities.map((city) => [city.name, city])).values()
-                );
-
-                const cityArray = uniqueCities.map((city) => ({
-                    value: city.iso2,
-                    label: city.name,
-                }));
-
-                setCityData(cityArray);
-            })
-            .catch(function (error) {
-                console.log(error);
+    const handleCity = async (countryCode) => {
+        try {
+            const response = await axios.get(`${API_URL}/${countryCode}/cities`, {
+                headers: { 'X-CSCAPI-KEY': API_KEY }
             });
+
+            console.log("City response:", response.data);
+            const uniqueCities = Array.from(
+                new Map(response.data.map(city => [city.name, city])).values()
+            );
+
+            const cityArray = uniqueCities.map(city => ({
+                value: city.iso2,
+                label: city.name,
+            }));
+
+            console.log("Mapped city data:", cityArray);
+            setCityData(cityArray);
+        } catch (error) {
+            console.error("Error fetching cities:", error);
+        }
     };
 
     return (
@@ -92,7 +81,6 @@ const DropdownComponent = () => {
                     handleCity(item.value);
                     setIsFocus(false);
                 }}
-
             />
             <Dropdown
                 style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
@@ -107,15 +95,14 @@ const DropdownComponent = () => {
                 valueField="value"
                 placeholder={!isFocus ? 'Select cities' : '...'}
                 searchPlaceholder="Search..."
-                value={city}
+                value={location}
                 onFocus={() => setIsFocus(true)}
                 onBlur={() => setIsFocus(false)}
                 onChange={item => {
-                    setCity(item.value);
-
+                    console.log("Selected item:", item);
+                    setCity(item.label);
                     setIsFocus(false);
                 }}
-
             />
         </View>
     );
