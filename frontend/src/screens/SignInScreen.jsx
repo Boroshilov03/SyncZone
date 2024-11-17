@@ -35,7 +35,6 @@ export default function SignInScreen({ navigation }) {
         "Poppins-Regular": require("./fonts/Poppins-Regular.ttf"),
         "Poppins-Medium": require("./fonts/Poppins-Medium.ttf"),
         "Karla-Regular": require("./fonts/Karla-Regular.ttf"),
-        "Karla-Medium": require("./fonts/Karla-Medium.ttf"),
       });
       setFontsLoaded(true);
     };

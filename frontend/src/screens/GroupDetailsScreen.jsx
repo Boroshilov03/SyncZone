@@ -21,7 +21,6 @@ const GroupDetailsScreen = ({ navigation }) => {
   const { contacts, selectedUsers, selectedPeople } = route.params;
   const [input, setInput] = useState("");
   const [selectedPeopleData, setSelectedPeopleData] = useState(selectedPeople); // Track selected contact IDs in an array
-
   const createChat = async (selectedPeopleData) => {
     try {
       // Combine user ID with selected participants to form the group participants
@@ -58,19 +57,20 @@ const GroupDetailsScreen = ({ navigation }) => {
 
       // Step 2: If an existing chat is found, navigate to it
       if (existingChatId) {
-        const { data: contactData, error: contactError } = await supabase
-          .from("profiles")
-          .select("username, avatar_url")
-          .eq("id", selectedPeopleData[0]) // Using the first participant as the contact
+        const { data: chatData, error: chatDataError } = await supabase
+          .from("chats")
+          .select("id, group_title, group_photo, is_group")
+          .eq("id", existingChatId)
           .single();
 
-        if (contactError) throw new Error("Error fetching contact data.");
-
+        if (chatDataError) throw new Error("Error fetching chat data.");
+        console.log(existingChatId, chatData.group_title, chatData.group_photo);
         navigation.navigate("ChatDetail", {
           chatId: existingChatId,
-          username: contactData.username,
-          otherPFP: contactData.avatar_url,
+          groupTitle: chatData.group_title,
+          otherPFP: chatData.group_photo,
         });
+
         return;
       }
 
@@ -94,19 +94,9 @@ const GroupDetailsScreen = ({ navigation }) => {
 
       if (participantsError) throw new Error("Error adding participants.");
 
-      // Fetch contact data for navigation
-      const { data: contactData, error: contactError } = await supabase
-        .from("profiles")
-        .select("username, avatar_url")
-        .eq("id", selectedPeopleData[0]) // Using the first participant as the contact
-        .single();
-
-      if (contactError) throw new Error("Error fetching contact data.");
-
       navigation.navigate("ChatDetail", {
         chatId: newChat[0].id,
-        username: contactData.username,
-        otherPFP: contactData.avatar_url,
+        otherPFP: null,
         groupTitle: input,
       });
     } catch (error) {
