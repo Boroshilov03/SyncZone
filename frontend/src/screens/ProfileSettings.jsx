@@ -296,9 +296,8 @@ const ProfileSettings = ({ navigation, route }) => {
 
   useFocusEffect(
     React.useCallback(() => {
-      // Re-fetch user profile data here
-      fetchProfileData();
-    }, [])
+      fetchActiveBanner();
+    }, [user, fetchActiveBanner]) 
   );
 
   useEffect(() => {
@@ -889,3 +888,4 @@ const styles = StyleSheet.create({
     left: 30,
   },
 });
+
