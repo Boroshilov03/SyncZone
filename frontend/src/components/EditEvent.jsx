@@ -9,6 +9,7 @@ import {
   Image,
   Button,
   Modal,
+  Platform,
 } from "react-native";
 import { supabase } from "../lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -113,11 +114,62 @@ const EditEvent = ({ event, onClose }) => {
   const [showStartTimePicker, setShowStartTimePicker] = useState(false); // State to show start time picker
   const [showEndTimePicker, setShowEndTimePicker] = useState(false); // State to show end time picker
   const [description, setDescription] = useState(event.description); // Description
-  const [participants, setparticipants] = useState([]); // Selected participants
-  const [newMember, setNewMember] = useState(""); // Input for new member
+
+  const [selectedContacts, setSelectedContacts] = useState([]); // Initialize as an empty array
+  const [modalVisible, setModalVisible] = useState(false);
+  const [contacts, setContacts] = useState([]);
+  const [users, setUsers] = useState([])
+
   const [mood, setMood] = useState(event.mood); // Selected mood
   const [deletePopupVisible, setDeletePopupVisible] = useState(false); // Controls visibility of DeleteEvent
 
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch user IDs from the "event_participants" table
+        const { data: userIds, error: userError } = await supabase
+          .from("event_participants")
+          .select("user_id")
+          .eq("event_id", event.id);
+  
+        if (userError) {
+          console.error("Error fetching user IDs:", userError.message);
+          return;
+        }
+  
+        if (userIds) {
+          // Map userIds to extract user_id array
+          const ids = userIds.map((item) => item.user_id);
+          setUsers(ids);
+  
+          // Fetch contacts from "profiles" table based on user IDs
+          const { data: contactsData, error: contactsError } = await supabase
+            .from("profiles")
+            .select("id, first_name, avatar_url")
+            .in("id", ids)
+            .neq("id", user.id)  
+  
+          if (contactsError) {
+            console.error("Error fetching contacts:", contactsError.message);
+          } else {
+            setContacts(contactsData);
+            const contactIds = userIds.map((item) => item.user_id);
+            setSelectedContacts(contactIds);
+          }
+      
+        }
+      } catch (error) {
+        console.error("Unexpected error:", error);
+      }
+    };
+  
+    // Fetch data only when `selectedContacts` changes
+    fetchData();
+    
+  }, [event.id]); // Dependency on event.id
+  
+  
   const handleEditEvent = async () => {
     // Function to format date as YYYY-MM-DD
     const formatDateForSubmission = (date) => {
@@ -169,11 +221,16 @@ const EditEvent = ({ event, onClose }) => {
       } else {
         console.log("Event updated successfully:", data);
         onClose();
+
+        // Get the event ID from the inserted data and add selectedContacts
+        const eventID = data[0].id;
+        await EditEventParticipants(eventID);
       }
     } catch (error) {
       console.error("Error updating event:", error);
     }
   };
+
 
   const onDateChange = (event, selectedDate) => {
     // Close the picker when a date is selected or if dismissed
@@ -183,24 +240,22 @@ const EditEvent = ({ event, onClose }) => {
     setShowDatePicker(false); // Close the picker in all cases
   };
 
-  const EditEventParticipants = async () => {
+  const predefinedPFPs = [require("../../assets/icons/add_person.png")];
+
+  const handleModalClose = (contacts) => {
+    setSelectedContacts(contacts); // Save the selected contacts
+    setModalVisible(false); // Close the modal
+  };
+
+
+  const EditEventParticipants = async (eventID) => {
     try {
-      // First, delete all existing participants for the event
-      const { error: deleteError } = await supabase
-        .from("event_participants")
-        .delete()
-        .eq("event_id", event.id);
-
-      if (deleteError) {
-        console.error("Error deleting old participants:", deleteError.message);
-        return;
-      }
-
-      // Then, add the new participants
-      for (let participantId of participants) {
+      // Iterate over the selectedContacts array
+      for (let participantId of selectedContacts) {
         const { data, error } = await supabase
           .from("event_participants")
-          .insert({ user_id: participantId, event_id: event.id });
+          .insert({ user_id: participantId, event_id: eventID })
+          .select();
 
         if (error) {
           console.error(
@@ -212,16 +267,10 @@ const EditEvent = ({ event, onClose }) => {
         }
       }
     } catch (error) {
-      console.error("Error updating participants:", error);
+      console.error("Error adding selectedContacts:", error);
     }
   };
 
-  const predefinedPFPs = [
-    require("../../assets/icons/pfp1.png"),
-    require("../../assets/icons/pfp2.jpg"),
-    require("../../assets/icons/pfp3.webp"),
-    require("../../assets/icons/add_person.png"),
-  ];
 
   const handleTrashIconPress = () => {
     setDeletePopupVisible(true); // Show DeleteEvent popup
@@ -327,9 +376,13 @@ const EditEvent = ({ event, onClose }) => {
             is24Hour={false}
             display="spinner"
             onChange={(event, selectedTime) => {
-              const currentTime = selectedTime || startTime;
+              if (selectedTime) {
+                // Adjusting for proper AM/PM handling
+                const parsedTime = new Date(startTime);
+                parsedTime.setHours(selectedTime.getHours(), selectedTime.getMinutes());
+                setStartTime(parsedTime);
+              }
               setShowStartTimePicker(false);
-              setStartTime(currentTime);
             }}
           />
         )}
@@ -364,9 +417,13 @@ const EditEvent = ({ event, onClose }) => {
             is24Hour={false}
             display="spinner"
             onChange={(event, selectedTime) => {
-              const currentTime = selectedTime || endTime;
+              if (selectedTime) {
+                // Adjusting for proper AM/PM handling
+                const parsedTime = new Date(endTime);
+                parsedTime.setHours(selectedTime.getHours(), selectedTime.getMinutes());
+                setEndTime(parsedTime);
+              }
               setShowEndTimePicker(false);
-              setEndTime(currentTime);
             }}
           />
         )}
@@ -379,29 +436,62 @@ const EditEvent = ({ event, onClose }) => {
         onChangeText={setDescription}
       />
 
+<TouchableOpacity
+        onPress={() => setModalVisible(true)}
+        style={styles.addParticipantsButton}
+      >
+        <Text style={styles.addText}>Edit Guests</Text>
+      </TouchableOpacity>
       <View style={styles.row}>
-        <Text style={styles.label}>Participants:</Text>
-
+        <Text style={styles.label}>Guests:  </Text>
         <View style={styles.pfpContainer}>
-          <FlatList
-            data={predefinedPFPs}
-            renderItem={({ item }) => {
-              const isAddPersonIcon =
-                item === require("../../assets/icons/add_person.png");
+          {contacts && contacts.length > 0 ? (
+            <FlatList
+              data={contacts}
+              renderItem={({ item }) => {
+                return (
+                  <TouchableOpacity>
+                    {!item.avatar_url ? (
+                      <View style={[styles.cardImg]}>
+                        <Text style={styles.cardAvatarText}>
+                          {item.first_name[0].toUpperCase()}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Image
+                        alt="Avatar"
+                        resizeMode="cover"
+                        source={{ uri: item.avatar_url }}
+                        style={styles.profileImage}
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
+              keyExtractor={(item, index) => index.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            />
+          ) : (
+            <Text style={styles.none}>None</Text>
+          )}
 
-              return (
-                <Image
-                  source={item}
-                  style={[
-                    styles.pfpImage,
-                    isAddPersonIcon && styles.addPersonIcon, // Apply specific styling for 'add_person.png'
-                  ]}
+          <Modal
+            animationType="none"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <View style={styles.modalBackground}>
+              <View style={styles.modalContainer}>
+                <AddParticipants
+                  onClose={() => setModalVisible(false)}
+                  selectedContacts={selectedContacts || []} // Pass down the selected contacts
+                  setSelectedContacts={setSelectedContacts} // Allow child to update selected contacts
                 />
-              );
-            }}
-            keyExtractor={(item, index) => index.toString()}
-            horizontal
-          />
+              </View>
+            </View>
+          </Modal>
         </View>
       </View>
 
@@ -577,6 +667,27 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
   },
+
+  addParticipantsButton: {
+    backgroundColor: "#17D7", // Stronger contrast for visibility
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addText: {
+    color: "white",
+    textAlign: "center",
+  },
+  label: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  none: {
+    color: "#696969",
+    fontSize: 16,
+  },
   label: {
     fontSize: 18,
     fontWeight: "bold",
@@ -601,24 +712,49 @@ const styles = StyleSheet.create({
     height: 20,
   },
   pfpContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 10,
-  },
-  pfpImage: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: -10,
-    zIndex: 1,
+    width: "80%",
+    overflow: "hidden", // Ensure content stays within the container
   },
   addPersonIcon: {
-    width: 20,
-    height: 20,
-    marginLeft: 15,
-    marginRight: 0,
-    zIndex: 0,
-    alignSelf: "center",
+    borderWidth: 2,
+    borderColor: "#007BFF", // Border color for the add icon
+    padding: 10,
+    backgroundColor: "#F1F1F1", // Background for add icon to make it more visible
+  },
+  profileImage: {
+    width: 30, // or whatever size you want
+    height: 30,
+    borderRadius: 15, // circular image
+    marginRight: 2,
+  },
+  cardImg: {
+    width: 30,
+    height: 30,
+    backgroundColor: "#FFADAD",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 15,
+    marginRight: 2,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "80%",
+    height: "66%", // Increase the modal height
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    // justifyContent: 'space-between', // Space out content and button
   },
 });
 
