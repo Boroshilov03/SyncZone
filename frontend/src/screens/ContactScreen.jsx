@@ -914,8 +914,7 @@ const styles = StyleSheet.create({
   alphabetIndex: {
     position: "absolute",
     right: 0,
-    top: 250,
-    paddingVertical: 10,
+    top: 200,
     paddingHorizontal: 5,
     zIndex: 100,
   },
@@ -925,16 +924,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   alphabetText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "bold",
     color: "#000",
   },
   alphabetItem: {
     fontSize: 10, // Smaller text size
     color: "#555", // Lighter text color
-    paddingVertical: 5, // Space between letters
   },
-
   letterHeader: {
     fontSize: 24,
     fontWeight: "semibold",

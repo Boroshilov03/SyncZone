@@ -117,9 +117,9 @@ const ChatsScreen = ({ navigation }) => {
       participant.activeBanner = null; // Explicitly set to null if no banner found
     }
   
-    console.log(
-      `Participant User ID: ${participant.user_id}, Active Banner: ${participant.activeBanner}`
-    );
+   // console.log(
+     // `Participant User ID: ${participant.user_id}, Active Banner: ${participant.activeBanner}`
+    //);
   }
   
   
@@ -471,12 +471,23 @@ const styles = StyleSheet.create({
   search: {
     position: "relative",
     backgroundColor: "#efefef",
-    borderRadius: 10,
-    alignItems: "center",
     justifyContent: "center",
-    flexDirection: "row",
-    minHeight: "7%",
     marginHorizontal: 12,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgb(240, 240, 240)",
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: "#d1d1d1",
+    width: "90%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 3,
   },
   favorites: {
     display: "flex",
