@@ -44,16 +44,75 @@ export default function SignupScreen({ navigation }) {
     location: "",
   });
 
+  const [timezone, setTimezone] = useState(null);
+  const [lat, setLat] = useState(null);
+  const [lon, setLon] = useState(null);
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [base64Photo, setBase64Photo] = useState(null);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-
   const handleInputChange = useCallback((name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
+  const fetchTimeZone = useCallback(async (lat, lon) => {
+    try {
+      const response = await axios.get(
+        `http://api.geonames.org/timezoneJSON?lat=${lat}&lng=${lon}&username=synczone`
+      );
+
+      if (response.data && response.data.timezoneId) {
+        const timezone = response.data.timezoneId;
+        setTimezone(timezone);
+        console.log("Timezone:", timezone);
+        Alert.alert("Timezone", `Timezone for the location is ${timezone}`);
+      } else {
+        Alert.alert("Error", "Timezone not found.");
+      }
+    } catch (error) {
+      console.error("Error fetching timezone:", error);
+      Alert.alert("Error", "Failed to fetch timezone.");
+    }
+  }, []);
+
+  const fetchCoordinates = useCallback(async (city) => {
+    try {
+      const response = await axios.get(
+        `http://api.geonames.org/searchJSON?q=${city}&username=synczone&maxRows=1`
+      );
+
+      if (response.data.geonames && response.data.geonames.length > 0) {
+        const { lat, lng } = response.data.geonames[0];
+        setLat(lat);
+        setLon(lng);
+        console.log("Latitude:", lat, "Longitude:", lng);
+      } else {
+        Alert.alert("Error", "City not found or invalid.");
+      }
+    } catch (error) {
+      console.error("Error fetching coordinates:", error);
+      Alert.alert("Error", "Failed to fetch coordinates.");
+    }
+  }, []);
+
+  const handleCitySelection = (cityCode) => {
+    console.log("Selected city code:", cityCode);
+    setFormData((prevData) => ({
+      ...prevData,
+      location: cityCode,
+    }));
+
+    fetchCoordinates(cityCode);
+  };
+
   useEffect(() => {
+    if (lat && lon) {
+      fetchTimeZone(lat, lon);
+    }
+  }, [lat, lon, fetchTimeZone]);
+
+  useEffect(() => {
+    console.log("Location is now:", formData.location);
     const loadFonts = async () => {
       await Font.loadAsync({
         "Inter_18pt-Regular": require("./fonts/Inter_18pt-Regular.ttf"),
@@ -114,7 +173,7 @@ export default function SignupScreen({ navigation }) {
         {}
       );
       setErrors(formattedErrors);
-      console.log("Validation Errors:", formattedErrors); // Log formatted validation errors
+      console.log("Validation Errors:", formattedErrors);
       setLoading(false);
       return;
     }
@@ -129,13 +188,15 @@ export default function SignupScreen({ navigation }) {
             first_name: formData.firstname,
             last_name: formData.lastname,
             location: formData.location,
+            latitude: lat,  // Include lat
+            longitude: lon, // Include lon
           },
         },
       });
 
       // Log Supabase response to see if signup was successful or not
-      console.log("Supabase SignUp Data:", data);
-      console.log("Supabase SignUp Error:", error);
+      // console.log("Supabase SignUp Data:", data);
+      // console.log("Supabase SignUp Error:", error);
 
       if (error) {
         Alert.alert("Error", error.message);
@@ -219,7 +280,7 @@ export default function SignupScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
-  }, [formData, base64Photo, navigation]);
+  }, [formData, lat, lon, base64Photo, navigation]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -264,7 +325,7 @@ export default function SignupScreen({ navigation }) {
                 { key: "email", label: "Email", },
                 { key: "password1", label: "Password" },
                 { key: "password2", label: "Confirm Password" },
-                { key: "location", label: "Location" },
+
               ].map(({ key, label }) => (
                 <Input
                   key={key}
@@ -274,7 +335,7 @@ export default function SignupScreen({ navigation }) {
                   setValue={(value) => handleInputChange(key, value)}
                   secureTextEntry={key === "password1" || key === "password2"}
                   // backgroundColor='#fffbf5'
-                  backgroundColor= "red"
+                  backgroundColor="red"
 
 
 
@@ -292,7 +353,30 @@ export default function SignupScreen({ navigation }) {
 
               ))}
             </View>
-            <Dropdown />
+            {/* <Text>Latitude: {lat ? lat : "Not available"}</Text>
+            <Text>Longitude: {lon ? lon : "Not available"}</Text> */}
+
+            <Dropdown
+              location={formData.location}
+              setCity={handleCitySelection} />
+            <View style={styles.tz_container}>
+              <View style={styles.tz}>
+                <Icon
+                  name="clock-o"
+                  size={22}
+                  style={{ marginHorizontal: 3 }}
+                  color={'#616061'} />
+                <Text style={{
+                  color: "#70747a",
+                  marginVertical: 6,
+                  paddingHorizontal: 16,
+                  fontWeight: 'bold'
+
+                }}>
+
+                  Timezone: {timezone ? timezone : "Not available"}</Text>
+              </View>
+            </View>
             <View style={styles.buttonbox}>
               <LinearGradient
                 start={{ x: 0, y: 0 }}
@@ -460,7 +544,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   icon: {
-    position: 'absolute', // Position the icon absolutely within the placeholder
-    zIndex: 1, // Ensure the icon is on top of the placeholder
+    position: 'absolute',
+    zIndex: 1,
+  },
+  tz_container: {
+    backgroundColor: 'white',
+    padding: 16,
+  },
+  tz: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 2.5,
+    borderRadius: 60,
+    paddingHorizontal: 8,
+    margin: 18,
+    //justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center'
   },
 });

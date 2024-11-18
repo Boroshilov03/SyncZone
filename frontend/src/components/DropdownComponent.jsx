@@ -3,16 +3,16 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import { API_KEY, API_URL } from '@env';
+import Icon from "react-native-vector-icons/FontAwesome";
+import Icon2 from "react-native-vector-icons/FontAwesome5";
 
-const DropdownComponent = () => {
+const DropdownComponent = ({ setCity, location }) => {
     const [countryData, setCountryData] = useState([]);
     const [cityData, setCityData] = useState([]);
     const [country, setCountry] = useState(null);
-    const [city, setCity] = useState(null);
+    const [state, setState] = useState(null);
     const [isFocus, setIsFocus] = useState(false);
 
-    console.log(API_KEY);  // Should log your API key
-    console.log(API_URL);
     useEffect(() => {
         var config = {
             method: 'get',
@@ -23,8 +23,7 @@ const DropdownComponent = () => {
         };
         axios(config)
             .then(response => {
-                console.log(JSON.stringify(response.data));
-                var count = Object.keys(response.data).length
+                var count = Object.keys(response.data).length;
                 let countryArray = [];
                 for (var i = 0; i < count; i++) {
                     countryArray.push({
@@ -39,40 +38,33 @@ const DropdownComponent = () => {
             });
     }, []);
 
-    const handleCity = (countryCode) => {
-        const url = `${API_URL}/${countryCode}/cities`;
-        var config = {
-            method: 'get',
-            url: url,
-            headers: {
-                'X-CSCAPI-KEY': API_KEY
-            }
-        };
-
-        axios(config)
-            .then(function (response) {
-                const cities = response.data;
-
-                const uniqueCities = Array.from(
-                    new Map(cities.map((city) => [city.name, city])).values()
-                );
-
-                const cityArray = uniqueCities.map((city) => ({
-                    value: city.iso2,
-                    label: city.name,
-                }));
-
-                setCityData(cityArray);
-            })
-            .catch(function (error) {
-                console.log(error);
+    const handleCity = async (countryCode) => {
+        try {
+            const response = await axios.get(`${API_URL}/${countryCode}/cities`, {
+                headers: { 'X-CSCAPI-KEY': API_KEY }
             });
+
+            console.log("City response:", response.data);
+            const uniqueCities = Array.from(
+                new Map(response.data.map(city => [city.name, city])).values()
+            );
+
+            const cityArray = uniqueCities.map(city => ({
+                value: city.iso2,
+                label: city.name,
+            }));
+
+            console.log("Mapped city data:", cityArray);
+            setCityData(cityArray);
+        } catch (error) {
+            console.error("Error fetching cities:", error);
+        }
     };
 
     return (
         <View style={styles.container}>
             <Dropdown
-                style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+                style={[styles.dropdown, isFocus && { borderColor: '#7fc7c9' }]}
                 placeholderStyle={styles.placeholderStyle}
                 selectedTextStyle={styles.selectedTextStyle}
                 inputSearchStyle={styles.inputSearchStyle}
@@ -82,20 +74,27 @@ const DropdownComponent = () => {
                 maxHeight={300}
                 labelField="label"
                 valueField="value"
-                placeholder={!isFocus ? 'Select countries' : '...'}
+                placeholder={!isFocus ? 'Select country' : '...'}
                 searchPlaceholder="Search..."
                 value={country}
                 onFocus={() => setIsFocus(true)}
                 onBlur={() => setIsFocus(false)}
+                renderLeftIcon={() =>
+                    <Icon
+                        style={styles.icon}
+                        color={isFocus ? '#9ae1e3' : '#616061'}
+                        name="globe"
+                        size={24}
+                    />
+                }
                 onChange={item => {
                     setCountry(item.value);
                     handleCity(item.value);
                     setIsFocus(false);
                 }}
-
             />
             <Dropdown
-                style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+                style={[styles.dropdown, isFocus && { borderColor: '#7fc7c9' }]}
                 placeholderStyle={styles.placeholderStyle}
                 selectedTextStyle={styles.selectedTextStyle}
                 inputSearchStyle={styles.inputSearchStyle}
@@ -105,17 +104,24 @@ const DropdownComponent = () => {
                 maxHeight={300}
                 labelField="label"
                 valueField="value"
-                placeholder={!isFocus ? 'Select cities' : '...'}
+                placeholder={!isFocus ? 'Select city' : '...'}
                 searchPlaceholder="Search..."
-                value={city}
+                value={location}
                 onFocus={() => setIsFocus(true)}
                 onBlur={() => setIsFocus(false)}
+                renderLeftIcon={() =>
+                    <Icon2
+                        style={styles.icon}
+                        color={isFocus ? '#9ae1e3' : '#616061'}
+                        name="city"
+                        size={18}
+                    />
+                }
                 onChange={item => {
-                    setCity(item.value);
-
+                    console.log("Selected item:", item);
+                    setCity(item.label);
                     setIsFocus(false);
                 }}
-
             />
         </View>
     );
@@ -129,14 +135,15 @@ const styles = StyleSheet.create({
         padding: 16,
     },
     dropdown: {
-        height: 50,
+        height: 40,
         borderColor: 'gray',
-        borderWidth: 0.5,
-        borderRadius: 8,
+        borderWidth: 2.5,
+        borderRadius: 60,
         paddingHorizontal: 8,
+        margin: 18,
     },
     icon: {
-        marginRight: 5,
+        marginRight: 8,
     },
     label: {
         position: 'absolute',
@@ -148,14 +155,21 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     placeholderStyle: {
-        fontSize: 16,
+        fontSize: 14,
+
+        color: "#70747a",
+        marginVertical: 6,
+        paddingHorizontal: 16,
+        fontWeight: 'bold'
+
     },
     selectedTextStyle: {
-        fontSize: 16,
-    },
-    iconStyle: {
-        width: 20,
-        height: 20,
+        fontSize: 14,
+
+        color: "#70747a",
+        marginVertical: 6,
+        paddingHorizontal: 16,
+        fontWeight: 'bold'
     },
     inputSearchStyle: {
         height: 40,

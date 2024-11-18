@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,14 +8,13 @@ import {
   FlatList,
   Image,
   Button,
+  Platform,
   Modal,
 } from "react-native";
 import { supabase } from "../lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import useStore from "../store/store";
-import DeleteEvent from "../components/DeleteEvent";
 import AddParticipants from "./AddParticipants";
-
 
 const getMoodColor = (mood) => {
   switch (mood) {
@@ -34,173 +33,110 @@ const getMoodColor = (mood) => {
   }
 };
 
-const parseTimeString = (timeString) => {
-  // Log the input time string
-  console.log(`Input time string: ${timeString}`);
-
-  const [time, modifier] = timeString.split(" ");
-
-  // Log the extracted time and modifier
-  console.log(`Time: ${time}, Modifier: ${modifier}`);
-
-  let [hours, minutes] = time.split(":");
-  hours = parseInt(hours, 10);
-  minutes = parseInt(minutes, 10);
-
-  // Log parsed hours and minutes
-  console.log(`Parsed hours: ${hours}, Parsed minutes: ${minutes}`);
-
-  // Adjust hours based on AM/PM
-  if (modifier === "PM" && hours < 12) {
-    hours += 12; // Convert PM to 24-hour format
-  } else if (modifier === "AM" && hours === 12) {
-    hours = 0; // Convert 12 AM to 0 hours
-  }
-
-  // Log the final hours after modification
-  console.log(`Final hours after modification: ${hours}`);
-
-  const date = new Date();
-  date.setHours(hours, minutes, 0, 0); // Set the date to the current date
-  return date;
-};
-
-const handleTimeChange = (event, selectedTime, setTime) => {
-  if (selectedTime) {
-    const currentTime = selectedTime;
-
-    // Manually format time with AM/PM
-    const formattedTime = currentTime.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-
-    console.log("Selected time:", formattedTime);
-
-    // Update the state with the selected time
-    setTime(currentTime);
-  }
-};
-
-const EditEvent = ({ event, onClose }) => {
-  console.log(event);
+const AddEvent = ({ onClose }) => {
   const { user } = useStore();
-  const [titleValue, settitleValue] = useState(event.title); // Title
-
-  console.log(event.date);
+  const [titleValue, settitleValue] = useState(""); // Title
+  const [date, setDate] = useState(new Date()); // Date
+  const [showPicker, setShowPicker] = useState(false); // State to manage visibility
   const [showDatePicker, setShowDatePicker] = useState(false); // Toggle date picker
-
-  // Use existing times from the event
-  const initialStartTime = event.startTime
-    ? parseTimeString(event.startTime)
-    : new Date();
-  const initialEndTime = event.endTime
-    ? parseTimeString(event.endTime)
-    : new Date();
-
-  const [startTime, setStartTime] = useState(initialStartTime);
-  const [endTime, setEndTime] = useState(initialEndTime);
-  const [date, setDate] = useState(() => {
-    const initialDate = new Date(event.date);
-    initialDate.setDate(initialDate.getDate() + 1); // Increment by one day
-    return initialDate;
-  });
-  console.log(date);
-
-  // Now you can format the date
-  const formattedDate = date.toISOString().split("T")[0]; // Formats as YYYY-MM-DD
+  const [startTime, setStartTime] = useState(new Date()); // Start time state
+  const [endTime, setEndTime] = useState(new Date()); // End time state
   const [showStartTimePicker, setShowStartTimePicker] = useState(false); // State to show start time picker
   const [showEndTimePicker, setShowEndTimePicker] = useState(false); // State to show end time picker
-  const [description, setDescription] = useState(event.description); // Description
-  const [participants, setparticipants] = useState([]); // Selected participants
+  const [description, setDescription] = useState(""); // Description
+  const [selectedContacts, setSelectedContacts] = useState(); // Initialize as an empty array
   const [newMember, setNewMember] = useState(""); // Input for new member
-  const [mood, setMood] = useState(event.mood); // Selected mood
-  const [deletePopupVisible, setDeletePopupVisible] = useState(false); // Controls visibility of DeleteEvent
+  const [mood, setMood] = useState(null); // Selected mood
+  const [modalVisible, setModalVisible] = useState(false);
+  const [contacts, setContacts] = useState([]);
 
-  const handleEditEvent = async () => {
-    // Function to format date as YYYY-MM-DD
-    const formatDateForSubmission = (date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`; // Format: YYYY-MM-DD
+  useEffect(() => {
+    const fetchContacts = async () => {
+      if (selectedContacts.length === 0) return;
+      try {
+        // Fetch contacts from "profiles" table by user_id
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, first_name, avatar_url")
+          .in("id", selectedContacts)
+          .neq("id", user.id);
+        if (error) {
+          console.error("Error fetching contacts:", error.message);
+        } else {
+          setContacts(data); // Store the contacts with avatar_url
+        }
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
+      }
     };
 
-    // Function to format time as HH:mm:ss
-    const formatTimeForSubmission = (date) => {
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      const seconds = String(date.getSeconds()).padStart(2, "0");
-      return `${hours}:${minutes}:${seconds}`; // Format: HH:mm:ss
+    fetchContacts();
+  }, [selectedContacts]); // Trigger whenever selectedContacts changes
+
+  const handleAddEvent = async () => {
+    const formatTime = (date) => {
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      });
     };
 
-    // Formatting the start and end times
-    const formattedStartTime = formatTimeForSubmission(startTime);
-    const formattedEndTime = formatTimeForSubmission(endTime);
+    const formattedStartTime = formatTime(startTime);
+    const formattedEndTime = formatTime(endTime);
+
+    console.log({
+      titleValue,
+      date,
+      startTime: formattedStartTime,
+      endTime: formattedEndTime,
+      description,
+      selectedContacts,
+      mood,
+    });
 
     try {
-      console.log(
-        titleValue,
-        formatDateForSubmission(date), // Ensure the date is formatted
-        formattedStartTime,
-        formattedEndTime,
-        description,
-        mood
-      );
-
-      // Update the event in the database
       const { data, error } = await supabase
         .from("event")
-        .update({
-          title: titleValue,
-          date: formatDateForSubmission(date), // Format the date for submission
-          start_time: formattedStartTime,
-          end_time: formattedEndTime,
-          description: description,
-          mood: mood,
-        })
-        .eq("id", event.id)
+        .insert([
+          {
+            title: titleValue,
+            date,
+            start_time: formattedStartTime,
+            end_time: formattedEndTime,
+            description,
+            mood,
+          },
+        ])
         .select();
 
-      // Check for errors
       if (error) {
-        console.error("Error updating event:", error.message);
+        console.error(error.message);
       } else {
-        console.log("Event updated successfully:", data);
+        settitleValue("");
+        setDescription("");
+        setMood(null);
         onClose();
+        console.log(data);
+
+        // Get the event ID from the inserted data and add selectedContacts
+        const eventID = data[0].id;
+        await addEventParticipants(eventID);
       }
     } catch (error) {
-      console.error("Error updating event:", error);
+      console.error("Error adding event:", error);
     }
   };
 
-  const onDateChange = (event, selectedDate) => {
-    // Close the picker when a date is selected or if dismissed
-    if (event.type === 'set' && selectedDate) {
-      setDate(selectedDate); // Update the date
-    }
-    setShowDatePicker(false); // Close the picker in all cases
-  };
-
-  const EditEventParticipants = async () => {
+  const addEventParticipants = async (eventID) => {
     try {
-      // First, delete all existing participants for the event
-      const { error: deleteError } = await supabase
-        .from("event_participants")
-        .delete()
-        .eq("event_id", event.id);
-
-      if (deleteError) {
-        console.error("Error deleting old participants:", deleteError.message);
-        return;
-      }
-
-      // Then, add the new participants
-      for (let participantId of participants) {
+      // Iterate over the selectedContacts array
+      for (let participantId of selectedContacts) {
         const { data, error } = await supabase
           .from("event_participants")
-          .insert({ user_id: participantId, event_id: event.id });
+          .insert({ user_id: participantId, event_id: eventID })
+          .select();
 
         if (error) {
           console.error(
@@ -212,91 +148,55 @@ const EditEvent = ({ event, onClose }) => {
         }
       }
     } catch (error) {
-      console.error("Error updating participants:", error);
+      console.error("Error adding selectedContacts:", error);
     }
   };
 
-  const predefinedPFPs = [
-    require("../../assets/icons/pfp1.png"),
-    require("../../assets/icons/pfp2.jpg"),
-    require("../../assets/icons/pfp3.webp"),
-    require("../../assets/icons/add_person.png"),
-  ];
-
-  const handleTrashIconPress = () => {
-    setDeletePopupVisible(true); // Show DeleteEvent popup
+  const onDateChange = (event, selectedDate) => {
+    // Close the picker when a date is selected or if dismissed
+    if (event.type === "set" && selectedDate) {
+      setDate(selectedDate); // Update the date
+    }
+    setShowDatePicker(false); // Close the picker in all cases
   };
 
-  const handleDeleteEvent = async () => {
-    const { error } = await supabase.from("event").delete().eq("id", event.id);
-    console.log("Event Deleted:", event.id);
-    setDeletePopupVisible(false); // Close delete popup
-    onClose(); // Close EditEvent view
-  };
+  const predefinedPFPs = [require("../../assets/icons/add_person.png")];
 
-  const handleCloseDeletePopup = () => {
-    setDeletePopupVisible(false); // Close the popup without deleting the event
+  const handleModalClose = (contacts) => {
+    setSelectedContacts(contacts); // Save the selected contacts
+    setModalVisible(false); // Close the modal
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        {/* Title Container */}
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>Edit Event</Text>
-        </View>
+      <Text style={styles.title}>New Event</Text>
 
-        {/* Trash Icon */}
-        <TouchableOpacity
-          style={styles.trashIconContainer}
-          onPress={handleTrashIconPress} // Handle trash icon press
-        >
-          <Image
-            source={require("../../assets/icons/trash_icon.png")}
-            style={[styles.trashIcon]}
-          />
-        </TouchableOpacity>
-
-        {/* Conditionally render the DeleteEvent component */}
-        {deletePopupVisible && (
-          <DeleteEvent
-            visible={deletePopupVisible}
-            onClose={handleCloseDeletePopup} // Close without deletion
-            onConfirm={handleDeleteEvent} // Delete and close popup
-            eventID={event.id}
-          />
-        )}
-      </View>
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Event Title"
-          value={titleValue}
-          onChangeText={settitleValue}
-        />
-      </View>
+      <TextInput
+        style={styles.input}
+        placeholder="Event Title"
+        value={titleValue}
+        onChangeText={settitleValue}
+      />
 
       <View style={styles.row}>
         <Text style={styles.label}>Date: </Text>
         <Image
-          source={require("../../assets/icons/date_icon.png")} 
-          style={styles.dateIcon} 
+          source={require("../../assets/icons/date_icon.png")}
+          style={styles.dateIcon}
         />
         <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-          <Text>{date.toLocaleDateString()}</Text> 
+          <Text>{date.toLocaleDateString()}</Text>
         </TouchableOpacity>
         {showDatePicker && (
-        <DateTimePicker
-          testID="dateTimePicker"
-          value={date} // Use the date state
-          mode="date"
-          display="calendar"
-          onChange={onDateChange} // Handles date changes
-        />
+          <DateTimePicker
+            testID="dateTimePicker"
+            value={date}
+            mode="date"
+            display="calendar"
+            onChange={onDateChange}
+          />
         )}
       </View>
-
 
       {/* Start Time */}
       <View style={styles.column}>
@@ -314,7 +214,6 @@ const EditEvent = ({ event, onClose }) => {
               {startTime.toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
-                hour12: true, // Force 12-hour format with AM/PM
               })}
             </Text>
           </TouchableOpacity>
@@ -322,10 +221,10 @@ const EditEvent = ({ event, onClose }) => {
         {showStartTimePicker && (
           <DateTimePicker
             testID="startTimePicker"
-            value={startTime}
-            mode="time"
-            is24Hour={false}
-            display="spinner"
+            value={startTime} // Pass the time state
+            mode="time" // Make sure the mode is set to "time"
+            is24Hour={false} // Set to false for 12-hour format or true for 24-hour format
+            display="spinner" // Optional display style
             onChange={(event, selectedTime) => {
               const currentTime = selectedTime || startTime;
               setShowStartTimePicker(false);
@@ -351,7 +250,6 @@ const EditEvent = ({ event, onClose }) => {
               {endTime.toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
-                hour12: true, // Force 12-hour format with AM/PM
               })}
             </Text>
           </TouchableOpacity>
@@ -359,10 +257,10 @@ const EditEvent = ({ event, onClose }) => {
         {showEndTimePicker && (
           <DateTimePicker
             testID="endTimePicker"
-            value={endTime}
-            mode="time"
-            is24Hour={false}
-            display="spinner"
+            value={endTime} // Pass the time state
+            mode="time" // Make sure the mode is set to "time"
+            is24Hour={false} // Set to false for 12-hour format or true for 24-hour format
+            display="spinner" // Optional display style
             onChange={(event, selectedTime) => {
               const currentTime = selectedTime || endTime;
               setShowEndTimePicker(false);
@@ -378,30 +276,62 @@ const EditEvent = ({ event, onClose }) => {
         value={description}
         onChangeText={setDescription}
       />
-
+      <TouchableOpacity
+        onPress={() => setModalVisible(true)}
+        style={styles.addParticipantsButton}
+      >
+        <Text style={styles.addText}>Add Guests</Text>
+      </TouchableOpacity>
       <View style={styles.row}>
-        <Text style={styles.label}>Participants:</Text>
-
+        <Text style={styles.label}>Guests:  </Text>
         <View style={styles.pfpContainer}>
-          <FlatList
-            data={predefinedPFPs}
-            renderItem={({ item }) => {
-              const isAddPersonIcon =
-                item === require("../../assets/icons/add_person.png");
+          {contacts && contacts.length > 0 ? (
+            <FlatList
+              data={contacts}
+              renderItem={({ item }) => {
+                return (
+                  <TouchableOpacity>
+                    {!item.avatar_url ? (
+                      <View style={[styles.cardImg]}>
+                        <Text style={styles.cardAvatarText}>
+                          {item.first_name[0].toUpperCase()}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Image
+                        alt="Avatar"
+                        resizeMode="cover"
+                        source={{ uri: item.avatar_url }}
+                        style={styles.profileImage}
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
+              keyExtractor={(item, index) => index.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            />
+          ) : (
+            <Text style={styles.none}>None</Text>
+          )}
 
-              return (
-                <Image
-                  source={item}
-                  style={[
-                    styles.pfpImage,
-                    isAddPersonIcon && styles.addPersonIcon, // Apply specific styling for 'add_person.png'
-                  ]}
+          <Modal
+            animationType="none"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <View style={styles.modalBackground}>
+              <View style={styles.modalContainer}>
+                <AddParticipants
+                  onClose={() => setModalVisible(false)}
+                  selectedContacts={selectedContacts || []} // Pass down the selected contacts
+                  setSelectedContacts={setSelectedContacts} // Allow child to update selected contacts
                 />
-              );
-            }}
-            keyExtractor={(item, index) => index.toString()}
-            horizontal
-          />
+              </View>
+            </View>
+          </Modal>
         </View>
       </View>
 
@@ -430,8 +360,8 @@ const EditEvent = ({ event, onClose }) => {
         <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
           <Text style={styles.buttonText}>Cancel</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleEditEvent} style={styles.addButton}>
-          <Text style={styles.buttonText}>Save</Text>
+        <TouchableOpacity onPress={handleAddEvent} style={styles.addButton}>
+          <Text style={styles.buttonText}>Create</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -442,7 +372,9 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     top: "22%",
-    alignSelf: 'center',
+    // left: "50%",
+    // transform: [{ translateX: -155 }, { translateY: -175 }],
+    alignSelf: "center",
     width: "80%",
     maxWidth: 400,
     backgroundColor: "white",
@@ -453,49 +385,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 5,
-    zIndex: 5,
-  },
-  headerContainer: {
-    width: "100%",
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    zIndex: 5,
-
-  },
-
-  titleContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "absolute",
-    left: 0,
-    right: 0,
-  },
-  trashIconContainer: {
-    position: "absolute",
-    right: 10,
-    top: "50%",
-    transform: [{ translateY: -16 }],
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
-    flex: 1,
-  },
-  trashIcon: {
-    width: 20,
-    height: 20,
   },
   input: {
     height: 40,
     borderColor: "grey",
     borderWidth: 1,
     paddingLeft: 10,
-    marginBottom: 20,
+    marginBottom: 10,
     borderRadius: 5,
     backgroundColor: "#fff",
     width: "100%",
@@ -507,7 +409,6 @@ const styles = StyleSheet.create({
   },
   participantsContainer: {
     flexDirection: "row",
-    marginBottom: 20,
   },
   memberImage: {
     width: 40,
@@ -545,7 +446,6 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 20,
   },
-
   cancelButton: {
     backgroundColor: "#FFABAB",
     borderRadius: 25,
@@ -577,9 +477,25 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
   },
+  addParticipantsButton: {
+    backgroundColor: "#17D7", // Stronger contrast for visibility
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addText: {
+    color: "white",
+    textAlign: "center",
+  },
   label: {
     fontSize: 18,
     fontWeight: "bold",
+  },
+  none: {
+    color: "#696969",
+    fontSize: 16,
   },
   value: {
     fontSize: 16,
@@ -601,25 +517,50 @@ const styles = StyleSheet.create({
     height: 20,
   },
   pfpContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 10,
-  },
-  pfpImage: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: -10,
-    zIndex: 1,
+    width: "80%",
+    overflow: "hidden", // Ensure content stays within the container
   },
   addPersonIcon: {
-    width: 20,
-    height: 20,
-    marginLeft: 15,
-    marginRight: 0,
-    zIndex: 0,
-    alignSelf: "center",
+    borderWidth: 2,
+    borderColor: "#007BFF", // Border color for the add icon
+    padding: 10,
+    backgroundColor: "#F1F1F1", // Background for add icon to make it more visible
+  },
+  profileImage: {
+    width: 30, // or whatever size you want
+    height: 30,
+    borderRadius: 15, // circular image
+    marginRight: 2,
+  },
+  cardImg: {
+    width: 30,
+    height: 30,
+    backgroundColor: "#FFADAD",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 15,
+    marginRight: 2,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "80%",
+    height: "66%", // Increase the modal height
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    // justifyContent: 'space-between', // Space out content and button
   },
 });
 
-export default EditEvent;
+export default AddEvent;

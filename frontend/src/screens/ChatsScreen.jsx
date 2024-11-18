@@ -36,11 +36,13 @@ const ChatsScreen = ({ navigation }) => {
     data: chats = [],
     error,
     isLoading,
+    refetch,
   } = useQuery({
     queryKey: ["recentChats", user.id],
     queryFn: fetchChats,
     enabled: !!user.id,
     refetchOnWindowFocus: true,
+    refetchInterval: 10000, // Optional: Automatically refetch every 10 seconds for more real-time updates
   });
 
   async function fetchChats() {
@@ -53,6 +55,7 @@ const ChatsScreen = ({ navigation }) => {
       throw new Error("Error fetching chat participants: " + chatError.message);
     }
 
+    //console.log("Chat Participants:", chatParticipants);
     const chatIds = chatParticipants.map((chat) => chat.chat_id);
 
     const { data, error } = await supabase
@@ -80,29 +83,73 @@ const ChatsScreen = ({ navigation }) => {
       throw new Error("Error fetching chats: " + error.message);
     }
 
-    return data.map((chat) => {
-      const messages = chat.messages || [];
+ // Fetch active banners for other participants
+ for (const chat of data) {
+  const participants = chat.chat_participants;
+  const otherParticipants = participants.filter(
+    (participant) => participant.user_id !== user.id
+  );
 
-      // Sort messages by creation date and pick the most recent one
-      const lastMessage =
-        messages.length > 0
-          ? messages.sort(
-              (a, b) => new Date(b.created_at) - new Date(a.created_at)
-            )[0]
-          : null;
+  for (const participant of otherParticipants) {
+    const { data: activeBanner, error: bannerError } = await supabase
+      .from("active_banner")
+      .select("banner_id")
+      .eq("user_id", participant.user_id)
+      .single();
+  
+    if (bannerError) {
+      // Suppress error logs by removing or commenting out the log
+      participant.activeBanner = null;
+    } else if (activeBanner) {
+      const { data: bannerDetails, error: bannerDetailsError } = await supabase
+        .from("banners")
+        .select("image_url")
+        .eq("id", activeBanner.banner_id)
+        .single();
+  
+      if (bannerDetailsError) {
+        // Suppress error logs by removing or commenting out the log
+        participant.activeBanner = null;
+      } else {
+        participant.activeBanner = bannerDetails.image_url;
+      }
+    } else {
+      participant.activeBanner = null; // Explicitly set to null if no banner found
+    }
+  
+    console.log(
+      `Participant User ID: ${participant.user_id}, Active Banner: ${participant.activeBanner}`
+    );
+  }
+  
+  
+}
 
-      const unreadMessagesCount = messages.filter(
-        (message) => !message.is_read && message.sender_id !== user.id
-      ).length;
+    return data
+      .map((chat) => {
+        const messages = chat.messages || [];
 
-      return {
-        ...chat,
-        lastMessageContent: lastMessage?.content || "No messages yet",
-        lastMessageSender: lastMessage?.sender_id,
-        lastMessageTime: lastMessage?.created_at, // Get the last message time
-        unreadMessagesCount,
-      };
-    });
+        // Sort messages by creation date and pick the most recent one
+        const lastMessage =
+          messages.length > 0
+            ? messages.sort(
+                (a, b) => new Date(b.created_at) - new Date(a.created_at)
+              )[0]
+            : null;
+
+        const unreadMessagesCount = messages.filter(
+          (message) => !message.is_read && message.sender_id !== user.id
+        ).length;
+
+        return {
+          ...chat,
+          lastMessageContent: lastMessage?.content || "No messages yet",
+          lastMessageSender: lastMessage?.sender_id,
+          lastMessageTime: lastMessage?.created_at, // Get the last message time
+          unreadMessagesCount,
+        };
+      })
+      .reverse(); // Reverse the chats list
   }
 
   // Function to mark all messages as read in a chat
@@ -111,7 +158,7 @@ const ChatsScreen = ({ navigation }) => {
       .from("messages")
       .update({ is_read: true })
       .match({ chat_id: chatId })
-      .neq("sender_id", user.id); // Only mark messages from the other user as read
+      .neq("sender_id", user.id);
 
     if (error) {
       console.error("Error marking messages as read:", error.message);
@@ -120,6 +167,42 @@ const ChatsScreen = ({ navigation }) => {
     // Refetch recent chats to update unread count
     queryClient.invalidateQueries(["recentChats", user.id]);
   }
+
+  useEffect(() => {
+    if (!user.id) return;
+
+    const channel = supabase
+      .channel("chats-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chats" },
+        (payload) => {
+          console.log("New change in chats table:", payload);
+          queryClient.invalidateQueries(["recentChats", user.id]);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_participants" },
+        (payload) => {
+          console.log("New change in chat_participants table:", payload);
+          queryClient.invalidateQueries(["recentChats", user.id]);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "messages" },
+        (payload) => {
+          console.log("New message:", payload);
+          queryClient.invalidateQueries(["recentChats", user.id]); // Refetch when a new message is sent
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [user.id, queryClient]);
 
   useEffect(() => {
     if (!user.id) return;
@@ -151,7 +234,6 @@ const ChatsScreen = ({ navigation }) => {
 
   const filteredChats = useMemo(() => {
     return chats.filter((chat) => {
-      // Check if chat is a group chat or has other participants
       const participants = chat.chat_participants;
       return (
         chat.is_group ||
@@ -175,19 +257,19 @@ const ChatsScreen = ({ navigation }) => {
     const otherParticipants = participants.filter(
       (participant) => participant.user_id !== user.id
     );
-
+  
     const isGroupChat = item.is_group;
     const isLastItem = index === filteredChats.length - 1;
-
+  
     let displayName = isGroupChat
       ? item.group_title
       : `${otherParticipants[0]?.profiles?.first_name} ${otherParticipants[0]?.profiles?.last_name}`;
     let displayPhoto = isGroupChat
       ? item.group_photo
       : otherParticipants[0]?.profiles?.avatar_url;
-
+  
     if (!displayName) return null;
-
+  
     return (
       <TouchableOpacity
         onPress={() => {
@@ -195,6 +277,7 @@ const ChatsScreen = ({ navigation }) => {
             chatId: item.id,
             username: displayName,
             otherPFP: displayPhoto,
+            groupTitle: item.group_title,
           });
           markMessagesAsRead(item.id); // Mark messages as read upon opening
         }}
@@ -234,31 +317,37 @@ const ChatsScreen = ({ navigation }) => {
                 </View>
               </View>
             </Modal>
-            {displayPhoto ? (
-              <Image
-                alt="Avatar"
-                resizeMode="cover"
-                source={{ uri: displayPhoto }}
-                style={styles.cardImg}
-              />
-            ) : (
-              <View style={[styles.cardImg, styles.cardAvatar]}>
-                <Text style={styles.cardAvatarText}>
-                  {displayName[0].toUpperCase()}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          <View style={styles.cardBody}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>{displayName}</Text>
-              {item.unreadMessagesCount > 0 && (
-                <View style={styles.unreadBadge}>
-                  <Text style={styles.unreadBadgeText}>
-                    {item.unreadMessagesCount}
+  
+            {/* Avatar with Active Banner */}
+            <View style={styles.avatarContainer}>
+              {displayPhoto ? (
+                <Image
+                  alt="Avatar"
+                  resizeMode="cover"
+                  source={{ uri: displayPhoto }}
+                  style={styles.cardImg}
+                />
+              ) : (
+                <View style={[styles.cardImg]}>
+                  <Text style={styles.cardAvatarText}>
+                    {displayName[0].toUpperCase()}
                   </Text>
                 </View>
               )}
+              {otherParticipants[0]?.activeBanner && (
+                <Image
+                  alt="Active Banner"
+                  resizeMode="contain"
+                  source={{ uri: otherParticipants[0]?.activeBanner }}
+                  style={styles.activeBanner}
+                />
+              )}
+            </View>
+          </TouchableOpacity>
+  
+          <View style={styles.cardBody}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>{displayName}</Text>
               <Text style={styles.cardTimestamp}>
                 {item.lastMessageTime
                   ? new Date(item.lastMessageTime).toLocaleTimeString([], {
@@ -268,14 +357,29 @@ const ChatsScreen = ({ navigation }) => {
                   : ""}
               </Text>
             </View>
-            <Text style={styles.cardMessage}>
-              {item.lastMessageContent || "No messages yet"}
-            </Text>
+            <View style={styles.cardHeader}>
+              <View style={styles.messageContainer}>
+                <Text style={styles.cardMessage}>
+                  {item.lastMessageContent?.length > 15
+                    ? `${item.lastMessageContent.slice(0, 15)}...`
+                    : item.lastMessageContent || "No messages yet"}
+                </Text>
+                {item.unreadMessagesCount > 0 && (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadBadgeText}>
+                      {item.unreadMessagesCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
     );
   };
+  
+  
 
   if (isLoading) {
     return <Text>Loading...</Text>;
@@ -344,6 +448,22 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     flexBasis: 0,
   },
+  avatarContainer: {
+    position: "relative", // Ensures the avatar and banner are in the same space
+    width: 40,
+    height: 40,
+  },
+  
+  activeBanner: {
+    position: "absolute",
+    bottom: -4, // Aligns the banner to the bottom edge of the avatar
+    right: -4, // Aligns the banner to the right edge
+    width: 50, // Banner width
+    height: 50, // Banner height
+    borderRadius: 8, // Makes the banner circular
+    borderWidth: 2, // Optional border for aesthetics
+  },
+  
   favoritesContainer: {
     width: "100%", // Make the container take full width
     marginBottom: 10, // Add some space between favorites and chats
@@ -480,7 +600,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between", // Add space between the title and timestamp
     alignItems: "center", // Align items vertically
-    marginBottom: 4, // Add some space between the title/timestamp and message
+  },
+  messageContainer: {
+    flex: 1, // Allow the message to take up the remaining space
+    flexDirection: "row",
+    alignItems: "center",
   },
   cardTitle: {
     fontSize: 16,
@@ -488,8 +612,9 @@ const styles = StyleSheet.create({
     flex: 1, // Allow the title to take up remaining space
   },
   cardMessage: {
-    fontSize: 14,
-    fontWeight: "300", // Use '300' for light or '400' for regular
+    flex: 1, // Occupy the available space in the row
+    fontWeight: "400",
+    color: "gray",
   },
   cardTimestamp: {
     fontSize: 12,
