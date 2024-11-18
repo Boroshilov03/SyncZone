@@ -23,13 +23,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import ScheduleButton from "../../emotion/ScheduleButton";
 import OwnedStickersModal from "../components/OwnedStickersModal";
 
-
 const ChatDetailScreen = () => {
   const { user } = useStore();
   const route = useRoute();
   const navigation = useNavigation();
   const { chatId, username, otherPFP, groupTitle } = route.params;
-
+  const [senderPFP, setSenderPFP] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,6 +45,10 @@ const ChatDetailScreen = () => {
   const toggleOwnedStickersModal = () => {
     setOwnedStickersVisible(!ownedStickersVisible);
   };
+  useEffect(() => {
+    // Example API call to fetch profile picture
+    fetchProfilePicture()
+  }, []);
 
   const fetchProfilePicture = async (senderId) => {
     if (profilePics[senderId]) return; // Skip if already fetched
@@ -124,6 +127,38 @@ const ChatDetailScreen = () => {
       }
     };
   }, [chatId, username, user.id]);
+
+  const updateReadStatus = async () => {
+    try {
+      const { error } = await supabase
+        .from("messages")
+        .update({ is_read: true })
+        .eq("chat_id", chatId)
+        .neq("sender_id", user.id)
+        .is("is_read", false); // Only update unread messages
+
+      if (error) {
+        console.error("Error updating read status:", error);
+      }
+    } catch (err) {
+      console.error("Unexpected error updating read status:", err);
+    }
+  };
+
+  useEffect(() => {
+    updateReadStatus(); // Mark messages as read when the screen loads
+
+    // Optional: Call again when new messages arrive
+    const channel = supabase.channel(`chat-room-${chatId}`);
+    channel.on("broadcast", { event: "new-message" }, () => {
+      updateReadStatus();
+    });
+
+    return () => {
+      channel.unsubscribe();
+      supabase.removeChannel(channel);
+    };
+  }, [chatId, user.id]);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -329,7 +364,7 @@ const ChatDetailScreen = () => {
   const renderMessage = ({ item }) => {
     const isMyMessage = item.sender_id === user.id;
     const senderPFP = profilePics[item.sender_id] || noProfilePic;
-
+    console.log(senderPFP);
     return (
       <View style={styles.messageWrapper}>
         <View
@@ -349,10 +384,13 @@ const ChatDetailScreen = () => {
           >
             {!isMyMessage && (
               <Image
-                source={{ uri: senderPFP }}
+                source={
+                  loading || !senderPFP ? noProfilePic : { uri: senderPFP }
+                }
                 style={[styles.profileImage, styles.otherProfileContainer]}
               />
             )}
+
             {item.senderEmotion && (
               <View
                 style={[
@@ -414,10 +452,23 @@ const ChatDetailScreen = () => {
             <TouchableOpacity
               onPress={() => console.log("Opening profile", otherPFP, username)}
             >
-              <Image
-                source={otherPFP ? { uri: otherPFP } : noProfilePic}
-                style={styles.profileImage}
-              />
+              {/* {console.log("otherPFP:", otherPFP)} */}
+              {otherPFP ? (
+                <Image
+                  alt="Avatar"
+                  resizeMode="cover"
+                  source={{ uri: otherPFP }}
+                  style={styles.cardImg}
+                />
+              ) : (
+                <View style={[styles.cardImg]}>
+                  <Text style={styles.cardAvatarText}>
+                    {groupTitle
+                      ? groupTitle[0].toUpperCase()
+                      : username[0].toUpperCase()}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
 
             <Text style={styles.title}>
@@ -467,15 +518,15 @@ const ChatDetailScreen = () => {
               handleTyping();
             }}
           />
-            {/* Secondary Button */}
-            <TouchableOpacity
-              style={styles.secondaryButtonContainer}
-              onPress={toggleOwnedStickersModal}
-            >           
-              <Image
+          {/* Secondary Button */}
+          <TouchableOpacity
+            style={styles.secondaryButtonContainer}
+            onPress={toggleOwnedStickersModal}
+          >
+            <Image
               source={require("../../assets/icons/gift-icon.png")}
               style={styles.secondaryButtonIcon} // Add a style to control size and position
-                />    
+            />
             <Text style={styles.secondaryButtonText}></Text>
 
             {/* Owned Stickers Modal */}
@@ -503,7 +554,6 @@ const ChatDetailScreen = () => {
               />
             </LinearGradient>
           </TouchableOpacity>
-
         </View>
       </SafeAreaView>
     </KeyboardAvoidingView>
@@ -653,7 +703,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
     marginBottom: 20,
-  },  
+  },
   myMessageContainer: {
     alignSelf: "flex-end",
     paddingLeft: 20,
@@ -708,7 +758,7 @@ const styles = StyleSheet.create({
     padding: 5,
     fontSize: 16,
   },
-   sendButtonContainer: {
+  sendButtonContainer: {
     borderRadius: "50%",
     padding: 8,
     alignItems: "center", // Center horizontally
@@ -728,8 +778,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   //secondaryButtonText: {
-    //fontSize: 16,
-    //left: -20,
+  //fontSize: 16,
+  //left: -20,
   //},
   secondaryButtonIcon: {
     width: 25,
@@ -802,6 +852,20 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 12,
     fontWeight: "500",
+  },
+  cardImg: {
+    width: 40,
+    height: 40,
+    marginRight: 8,
+    backgroundColor: "#FFADAD", // soft coral to complement pastel blue
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF", // keeping the text white for readability
   },
 });
 
