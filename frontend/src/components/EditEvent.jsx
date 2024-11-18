@@ -552,7 +552,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     position: "relative",
     zIndex: 5,
-
   },
 
   titleContainer: {
