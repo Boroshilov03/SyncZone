@@ -58,8 +58,8 @@ const AddEvent = ({ onClose }) => {
         const { data, error } = await supabase
           .from("profiles")
           .select("id, first_name, avatar_url")
-          .in("id", selectedContacts);
-
+          .in("id", selectedContacts)
+          .neq("id", user.id);
         if (error) {
           console.error("Error fetching contacts:", error.message);
         } else {
@@ -283,7 +283,7 @@ const AddEvent = ({ onClose }) => {
         <Text style={styles.addText}>Add Guests</Text>
       </TouchableOpacity>
       <View style={styles.row}>
-        <Text style={styles.label}>Guests: </Text>
+        <Text style={styles.label}>Guests:  </Text>
         <View style={styles.pfpContainer}>
           {contacts && contacts.length > 0 ? (
             <FlatList
