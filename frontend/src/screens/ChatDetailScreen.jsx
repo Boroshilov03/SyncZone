@@ -47,7 +47,7 @@ const ChatDetailScreen = () => {
   };
   useEffect(() => {
     // Example API call to fetch profile picture
-    fetchProfilePicture()
+    fetchProfilePicture();
   }, []);
 
   const fetchProfilePicture = async (senderId) => {
@@ -55,12 +55,18 @@ const ChatDetailScreen = () => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("avatar_url")
+        .select("avatar_url, username")
         .eq("id", senderId)
         .single();
 
       if (!error && data) {
-        setProfilePics((prev) => ({ ...prev, [senderId]: data.avatar_url }));
+        setProfilePics((prev) => ({
+          ...prev,
+          [senderId]: {
+            avatar_url: data.avatar_url,
+            username: data.username,
+          },
+        }));
       }
     } catch (error) {
       console.error("Error fetching profile picture:", error);
@@ -363,8 +369,11 @@ const ChatDetailScreen = () => {
 
   const renderMessage = ({ item }) => {
     const isMyMessage = item.sender_id === user.id;
-    const senderPFP = profilePics[item.sender_id] || noProfilePic;
-    console.log(senderPFP);
+    const senderProfile = profilePics[item.sender_id] || {
+      avatar_url: null,
+      username: "L",
+    };
+    const { avatar_url, username } = senderProfile;
     return (
       <View style={styles.messageWrapper}>
         <View
@@ -382,14 +391,20 @@ const ChatDetailScreen = () => {
               alignItems: "center",
             }}
           >
-            {!isMyMessage && (
-              <Image
-                source={
-                  loading || !senderPFP ? noProfilePic : { uri: senderPFP }
-                }
-                style={[styles.profileImage, styles.otherProfileContainer]}
-              />
-            )}
+            {!isMyMessage ? (
+              avatar_url ? (
+                <Image
+                  source={{ uri: avatar_url }}
+                  style={[styles.profileImage, styles.otherProfileContainer]}
+                />
+              ) : (
+                <View style={styles.cardImg}>
+                  <Text style={styles.cardAvatarText}>
+                    {username[0].toUpperCase() || "N/A"}
+                  </Text>
+                </View>
+              )
+            ) : null}
 
             {item.senderEmotion && (
               <View

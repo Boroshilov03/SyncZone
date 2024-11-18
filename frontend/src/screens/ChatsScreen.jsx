@@ -83,47 +83,42 @@ const ChatsScreen = ({ navigation }) => {
       throw new Error("Error fetching chats: " + error.message);
     }
 
- // Fetch active banners for other participants
- for (const chat of data) {
-  const participants = chat.chat_participants;
-  const otherParticipants = participants.filter(
-    (participant) => participant.user_id !== user.id
-  );
+    // Fetch active banners for other participants
+    for (const chat of data) {
+      const participants = chat.chat_participants;
+      const otherParticipants = participants.filter(
+        (participant) => participant.user_id !== user.id
+      );
 
-  for (const participant of otherParticipants) {
-    const { data: activeBanner, error: bannerError } = await supabase
-      .from("active_banner")
-      .select("banner_id")
-      .eq("user_id", participant.user_id)
-      .single();
-  
-    if (bannerError) {
-      // Suppress error logs by removing or commenting out the log
-      participant.activeBanner = null;
-    } else if (activeBanner) {
-      const { data: bannerDetails, error: bannerDetailsError } = await supabase
-        .from("banners")
-        .select("image_url")
-        .eq("id", activeBanner.banner_id)
-        .single();
-  
-      if (bannerDetailsError) {
-        // Suppress error logs by removing or commenting out the log
-        participant.activeBanner = null;
-      } else {
-        participant.activeBanner = bannerDetails.image_url;
+      for (const participant of otherParticipants) {
+        const { data: activeBanner, error: bannerError } = await supabase
+          .from("active_banner")
+          .select("banner_id")
+          .eq("user_id", participant.user_id)
+          .single();
+
+        if (bannerError) {
+          // Suppress error logs by removing or commenting out the log
+          participant.activeBanner = null;
+        } else if (activeBanner) {
+          const { data: bannerDetails, error: bannerDetailsError } =
+            await supabase
+              .from("banners")
+              .select("image_url")
+              .eq("id", activeBanner.banner_id)
+              .single();
+
+          if (bannerDetailsError) {
+            // Suppress error logs by removing or commenting out the log
+            participant.activeBanner = null;
+          } else {
+            participant.activeBanner = bannerDetails.image_url;
+          }
+        } else {
+          participant.activeBanner = null; // Explicitly set to null if no banner found
+        }
       }
-    } else {
-      participant.activeBanner = null; // Explicitly set to null if no banner found
     }
-  
-   // console.log(
-     // `Participant User ID: ${participant.user_id}, Active Banner: ${participant.activeBanner}`
-    //);
-  }
-  
-  
-}
 
     return data
       .map((chat) => {
@@ -257,19 +252,19 @@ const ChatsScreen = ({ navigation }) => {
     const otherParticipants = participants.filter(
       (participant) => participant.user_id !== user.id
     );
-  
+
     const isGroupChat = item.is_group;
     const isLastItem = index === filteredChats.length - 1;
-  
+
     let displayName = isGroupChat
       ? item.group_title
       : `${otherParticipants[0]?.profiles?.first_name} ${otherParticipants[0]?.profiles?.last_name}`;
     let displayPhoto = isGroupChat
       ? item.group_photo
       : otherParticipants[0]?.profiles?.avatar_url;
-  
+
     if (!displayName) return null;
-  
+
     return (
       <TouchableOpacity
         onPress={() => {
@@ -317,7 +312,7 @@ const ChatsScreen = ({ navigation }) => {
                 </View>
               </View>
             </Modal>
-  
+
             {/* Avatar with Active Banner */}
             <View style={styles.avatarContainer}>
               {displayPhoto ? (
@@ -344,7 +339,7 @@ const ChatsScreen = ({ navigation }) => {
               )}
             </View>
           </TouchableOpacity>
-  
+
           <View style={styles.cardBody}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>{displayName}</Text>
@@ -378,8 +373,6 @@ const ChatsScreen = ({ navigation }) => {
       </TouchableOpacity>
     );
   };
-  
-  
 
   if (isLoading) {
     return <Text>Loading...</Text>;
@@ -453,7 +446,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
   },
-  
+
   activeBanner: {
     position: "absolute",
     bottom: -4, // Aligns the banner to the bottom edge of the avatar
@@ -461,9 +454,8 @@ const styles = StyleSheet.create({
     width: 50, // Banner width
     height: 50, // Banner height
     borderRadius: 8, // Makes the banner circular
-    borderWidth: 2, // Optional border for aesthetics
   },
-  
+
   favoritesContainer: {
     width: "100%", // Make the container take full width
     marginBottom: 10, // Add some space between favorites and chats
@@ -606,6 +598,7 @@ const styles = StyleSheet.create({
   },
   cardBody: {
     flex: 1,
+    marginLeft: 10,
   },
   cardHeader: {
     flexDirection: "row",
