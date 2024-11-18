@@ -30,40 +30,40 @@ const Header = ({
   // Function to fetch the active banner
   const fetchActiveBanner = async () => {
     if (!user) return;
-  
+
     const { data, error } = await supabase
       .from("active_banner")
       .select("banner_id")
       .eq("user_id", user.id)
       .single();
-  
+
     if (error) {
-      if (error.code === "PGRST116") { // No rows returned for single query
+      if (error.code === "PGRST116") {
+        // No rows returned for single query
         setActiveBannerData(null); // Set active banner data to null if no active banner
       } else {
         console.error("Error fetching active banner:", error.message);
       }
       return;
     }
-  
+
     if (data) {
       const { data: bannerData, error: bannerError } = await supabase
         .from("banners")
         .select("image_url")
         .eq("id", data.banner_id)
         .single();
-  
+
       if (bannerError) {
         console.error("Error fetching banner details:", bannerError.message);
         setActiveBannerData(null); // Fallback to null if there's an error with banner details
       } else {
-        setActiveBannerData(bannerData); 
+        setActiveBannerData(bannerData);
       }
     } else {
       setActiveBannerData(null); // Explicitly set to null if no data returned
     }
   };
-  
 
   // Use useFocusEffect to refetch active banner on screen focus
   useFocusEffect(
@@ -100,11 +100,21 @@ const Header = ({
             style={styles.bannerImage}
           />
         )}
-        <Image
-          accessibilityLabel=""
-          source={avatarUrl ? { uri: avatarUrl } : profilePic}
-          style={styles.profilePic}
-        />
+        {avatarUrl ? (
+          <Image
+            accessibilityLabel=""
+            alt="Avatar"
+            resizeMode="cover"
+            source={{ uri: avatarUrl }}
+            style={styles.cardImg}
+          />
+        ) : (
+          <View style={[styles.cardImg]}>
+            <Text style={styles.cardAvatarText}>
+              {user.user_metadata.username[0].toUpperCase()}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
 
       <View style={styles.titleContainer}>
@@ -128,7 +138,7 @@ const Header = ({
           </Text>
           <Switch
             onValueChange={toggleSwitch}
-            style={{ transform: [{ scaleX: 0.80 }, { scaleY: 0.80 }] }}
+            style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
             value={switchValue}
           />
         </View>
@@ -163,6 +173,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     position: "relative",
     zIndex: 0,
+  },
+  cardImg: {
+    width: 40,
+    height: 40,
+    marginRight: 8,
+    backgroundColor: "#FFADAD", // soft coral to complement pastel blue
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF", // keeping the text white for readability
   },
   bannerImage: {
     position: "absolute",
