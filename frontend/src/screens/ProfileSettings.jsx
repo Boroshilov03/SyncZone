@@ -270,21 +270,6 @@ const ProfileSettings = ({ navigation, route }) => {
     }
   };
 
-  
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchActiveBanner();
-    }, [user, fetchActiveBanner]) 
-  );
-
-  useEffect(() => {
-    fetchActiveBanner(); // Fetch the active banner when the component mounts
-  }, [user]); // Dependency on user to refetch when user state changes
-
-  // Use useFocusEffect to refetch active banner on screen focus
-
-
-
   const fetchProfileData = async () => {
     try {
       const { data, error } = await supabase
@@ -308,6 +293,20 @@ const ProfileSettings = ({ navigation, route }) => {
       console.error("Error in fetchProfileData:", error);
     }
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Re-fetch user profile data here
+      fetchProfileData();
+    }, [])
+  );
+
+  useEffect(() => {
+    fetchActiveBanner(); // Fetch the active banner when the component mounts
+  }, [user]); // Dependency on user to refetch when user state changes
+
+  // Use useFocusEffect to refetch active banner on screen focus
+
 
 
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
