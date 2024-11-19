@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Modal, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, View, Modal, ScrollView, Image, TouchableOpacity, Alert, Animated, PanResponder } from 'react-native';
 import { supabase } from "../lib/supabase"; // Import Supabase client
 import useStore from "../store/store"; // Importing the store
 
@@ -7,77 +7,137 @@ const OwnedStickersModal = ({ visible, onClose }) => {
   const { user } = useStore(); // Get the current user
   const [ownedStickers, setOwnedStickers] = useState([]); // State to store the user's owned stickers
   const [loading, setLoading] = useState(true); // State to manage loading status
+  const slideAnim = useState(new Animated.Value(500))[0]; // Modal's vertical position, starts off-screen (500)
+  const [panResponder, setPanResponder] = useState(null); // PanResponder for drag gestures
 
-  useEffect(() => { // Effect to fetch owned stickers when the component mounts or user changes
+  useEffect(() => {
     const fetchOwnedStickers = async () => {
-      if (!user) return; // If there's no user, exit the function
+      if (!user) return;
 
-      const { data: userStickers, error } = await supabase // Fetch user's owned stickers from the user_stickers table
+      const { data: userStickers, error } = await supabase
         .from("user_stickers")
         .select("sticker_id")
-        .eq("user_id", user.id); // Query user_stickers table to get sticker IDs for the logged-in user
+        .eq("user_id", user.id);
 
-      if (error) { // If there's an error fetching user stickers
-        console.error("Error fetching user_stickers:", error.message); // Log the error
-        Alert.alert("Error", "Failed to fetch owned stickers."); // Show an alert
-        setLoading(false); // Set loading to false
-        return; // Exit the function
+      if (error) {
+        console.error("Error fetching user_stickers:", error.message);
+        Alert.alert("Error", "Failed to fetch owned stickers.");
+        setLoading(false);
+        return;
       }
 
-      if (userStickers.length > 0) { // If the user has owned stickers
-        const stickerIds = userStickers.map(sticker => sticker.sticker_id); // Extract the sticker IDs
-        const { data: stickers, error: stickersError } = await supabase // Fetch sticker details from the stickers table using the extracted IDs
+      if (userStickers.length > 0) {
+        const stickerIds = userStickers.map(sticker => sticker.sticker_id);
+        const { data: stickers, error: stickersError } = await supabase
           .from("stickers")
           .select("*")
-          .in("id", stickerIds); // Query stickers table for details of owned stickers
+          .in("id", stickerIds);
 
-        if (stickersError) { // If there's an error fetching stickers
-          console.error("Error fetching stickers:", stickersError.message); // Log the error
-          Alert.alert("Error", "Failed to fetch stickers."); // Show an alert
+        if (stickersError) {
+          console.error("Error fetching stickers:", stickersError.message);
+          Alert.alert("Error", "Failed to fetch stickers.");
         } else {
-          setOwnedStickers(stickers); // Set the owned stickers state with the fetched stickers
+          setOwnedStickers(stickers);
         }
       }
 
-      setLoading(false); // Set loading to false after fetching data
+      setLoading(false);
     };
 
-    fetchOwnedStickers(); // Call the function to fetch owned stickers
-  }, [user]); // Dependency array: re-run effect when user changes
+    fetchOwnedStickers();
+  }, [user]);
 
-  return ( // Rendering the modal component
+  useEffect(() => {
+    if (visible) {
+      setPanResponder(PanResponder.create({
+        onStartShouldSetPanResponder: (e, gestureState) => {
+          const touchLocation = e.nativeEvent.locationY;
+          return touchLocation < 100; // Only trigger drag if touch is in the top 100px area
+        },
+        onMoveShouldSetPanResponder: (e, gestureState) => true,
+        onPanResponderMove: (e, gestureState) => {
+          if (gestureState.dy > 0) {
+            Animated.event([null, { dy: slideAnim }], { useNativeDriver: false })(e, gestureState);
+          }
+        },
+        onPanResponderRelease: (e, gestureState) => {
+          if (gestureState.dy > 150) {
+            handleClose(); // Close the modal if dragged down far enough
+          } else {
+            Animated.spring(slideAnim, {
+              toValue: 0, // Reset to the bottom of the screen
+              useNativeDriver: true,
+            }).start();
+          }
+        },
+      }));
+    }
+
+    if (visible) {
+      Animated.spring(slideAnim, {
+        toValue: 0, // Slide in from the bottom
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.spring(slideAnim, {
+        toValue: 500, // Slide off-screen (down)
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+
+  const handleStickerPress = (stickerId) => {
+    console.log("Sticker ID:", stickerId);
+    // Replace with functionality to use the sticker ID
+  };
+
+  const handleClose = () => {
+    Animated.spring(slideAnim, {
+      toValue: 500, // Slide off-screen
+      useNativeDriver: true,
+    }).start();
+
+    setTimeout(onClose, 300); // Close after animation completes
+  };
+
+  return (
     <Modal
-      transparent={true} // Make the modal transparent
-      animationType="slide" // Animation type for opening the modal
-      visible={visible}  // Control the visibility of the modal
-      onRequestClose={onClose}  // Callback to execute when the modal requests to close
+      transparent={true}
+      animationType="none"
+      visible={visible}
+      onRequestClose={handleClose}
     >
-      <View style={styles.modalOverlay}>  
-        <View style={styles.modalContainer}>  
+      <View style={styles.modalOverlay}>
+        <Animated.View
+          style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}
+          {...(panResponder ? panResponder.panHandlers : {})} // Attach pan responder
+        >
+          {/* Handle for sliding */}
+          <View style={styles.slideHandle}></View>
+
           <Text style={styles.modalTitle}>Your Owned Stickers</Text>
-          
-          {/* Close button */}
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
 
           {loading ? (
             <Text>Loading...</Text>
           ) : (
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
+            <ScrollView contentContainerStyle={styles.stickerGrid}>
               {ownedStickers.length > 0 ? (
                 ownedStickers.map(sticker => (
-                  <View key={sticker.id} style={styles.stickerContainer}>
+                  <TouchableOpacity
+                    key={sticker.id}
+                    onPress={() => handleStickerPress(sticker.id)}
+                    style={styles.stickerContainer}
+                  >
                     <Image source={{ uri: sticker.image_url }} style={styles.stickerImage} />
                     <Text style={styles.stickerName}>{sticker.name}</Text>
-                  </View>
+                  </TouchableOpacity>
                 ))
               ) : (
                 <Text style={styles.noStickersText}>You have no owned stickers.</Text>
               )}
             </ScrollView>
           )}
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -86,45 +146,52 @@ const OwnedStickersModal = ({ visible, onClose }) => {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
-    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Darkened background
+    justifyContent: 'flex-end',
     alignItems: 'center',
   },
   modalContainer: {
-    width: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    width: '100%',
+    backgroundColor: '#2f3136', // Dark background, Discord-like
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
     padding: 20,
+    maxHeight: '70%',
+  },
+  slideHandle: {
+    width: 50,
+    height: 5,
+    backgroundColor: '#40444b', // Subtle color for handle
+    borderRadius: 5,
+    alignSelf: 'center',
+    marginBottom: 10,
+    marginTop: 10,
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  closeButton: {
-    alignSelf: 'flex-end',
+    color: '#fff',
     marginBottom: 10,
   },
-  closeButtonText: {
-    color: '#007bff',
-    fontSize: 16,
-  },
-  scrollContainer: {
+  stickerGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'space-around',
   },
   stickerContainer: {
     width: 100,
     alignItems: 'center',
-    margin: 10,
+    marginBottom: 15,
   },
   stickerImage: {
-    width: 80,
-    height: 80,
+    width: 90,
+    height: 90,
     marginBottom: 5,
+    borderRadius: 10,
   },
   stickerName: {
     fontSize: 12,
+    color: '#fff',
     textAlign: 'center',
   },
   noStickersText: {
