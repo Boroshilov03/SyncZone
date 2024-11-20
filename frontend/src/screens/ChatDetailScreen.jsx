@@ -709,27 +709,25 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 8,
     backgroundColor: "white",
-    borderWidth: 2, // Border width
+    borderWidth: 1,
     borderColor: "#D1EBEF",
     maxWidth: "80%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 3,
-    marginBottom: 20,
+    marginBottom: 15,
   },
   myMessageContainer: {
     alignSelf: "flex-end",
-    paddingLeft: 20,
     fontWeight: "semibold",
     borderBottomWidth: 1,
+    borderRadius: 8,
     borderBlockColor: "#F6D6EE",
   },
   otherMessageContainer: {
     alignSelf: "flex-start",
     borderRadius: 10,
-    paddingRight: 20,
+    paddingRight: 10,
     paddingLeft: 10,
     fontWeight: "semibold",
     borderBottomWidth: 1,
@@ -820,14 +818,12 @@ const styles = StyleSheet.create({
   },
   myEmotionContainer: {
     position: "absolute", // Allows it to be positioned absolutely within the parent
-    padding: 5,
+    padding: 4,
     borderTopLeftRadius: 12, // Round the top left corner
     borderBottomLeftRadius: 12, // Round the bottom left corner
     borderTopRightRadius: 12, // No rounding on the top right corner
     borderBottomRightRadius: 0, // Round the bottom right corner
     top: -15, // Adjust the vertical position as needed
-    right: -10, // Move it to the right side, adjust as needed
-    borderWidth: 1,
   },
   otherEmotionContainer: {
     position: "absolute", // Allows it to be positioned absolutely within the parent
@@ -839,7 +835,7 @@ const styles = StyleSheet.create({
     left: -10, // Move it to the right side, adjust as needed
   },
   otherProfileContainer: {
-    marginRight: 4, // Adds space between the profile image and message for other users
+    marginRight: 3, // Adds space between the profile image and message for other users
   },
   emotionText: {
     fontSize: 12,

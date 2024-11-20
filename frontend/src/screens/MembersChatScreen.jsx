@@ -40,10 +40,20 @@ const MembersChatScreen = ({ navigation }) => {
 
   const renderContactItem = ({ item }) => (
     <View style={styles.contactItem}>
-      <Image
-        source={{ uri: item.profiles.avatar_url }}
-        style={styles.profileImage}
-      />
+      {item.profiles.avatar_url ? (
+        <Image
+          alt="Avatar"
+          resizeMode="cover"
+          source={{ uri: item.profiles.avatar_url }}
+          style={styles.profileImage}
+        />
+      ) : (
+        <View style={[styles.cardImg]}>
+          <Text style={styles.cardAvatarText}>
+            {item.profiles.first_name[0].toUpperCase()}
+          </Text>
+        </View>
+      )}
       <View style={styles.wrapperCol}>
         <View style={styles.wrapperRow}>
           <Text style={styles.contactText}>{item.profiles.first_name}</Text>
@@ -209,10 +219,24 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   profileImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     marginRight: 10,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  cardImg: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+    backgroundColor: "#FFADAD",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
   },
   contactItem: {
     marginTop: 8,
