@@ -32,6 +32,7 @@ import Acon from "react-native-vector-icons/AntDesign";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import * as Font from 'expo-font';
+import { WEATHER_API_KEY } from '@env';
 
 export default function SignupScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -44,6 +45,11 @@ export default function SignupScreen({ navigation }) {
     location: "",
   });
 
+  const [weather, setWeather] = useState({
+    temp: null,
+    description: null,
+    time: null,
+  });
   const [timezone, setTimezone] = useState(null);
   const [lat, setLat] = useState(null);
   const [lon, setLon] = useState(null);
@@ -51,8 +57,52 @@ export default function SignupScreen({ navigation }) {
   const [base64Photo, setBase64Photo] = useState(null);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
   const handleInputChange = useCallback((name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
+  }, []);
+
+
+  const fetchWeatherAndTime = useCallback(async (lat, lon) => {
+    try {
+      const weatherResponse = await axios.get(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${WEATHER_API_KEY}`
+      );
+
+      let weatherData = {};
+      if (weatherResponse.data) {
+        const { main, weather: weatherDetails } = weatherResponse.data;
+        const description = weatherDetails[0]?.description;
+
+        weatherData = {
+          temp: main.temp,
+          description: description
+            ? description.charAt(0).toUpperCase() + description.slice(1)
+            : "",
+        };
+      }
+
+      const timeResponse = await axios.get(
+        `http://api.geonames.org/timezoneJSON?lat=${lat}&lng=${lon}&username=synczone`
+      );
+
+      let localTime = null;
+      if (timeResponse.data) {
+        const rawTime = timeResponse.data.time;
+        const dateObj = new Date(rawTime);
+        localTime = dateObj.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
+      }
+
+      setWeather({ ...weatherData, time: localTime });
+      console.log("Weather and Time:", { ...weatherData, time: localTime });
+    } catch (error) {
+      console.error("Error fetching weather or time:", error);
+      Alert.alert("Error", "Failed to fetch weather or time.");
+    }
   }, []);
 
   const fetchTimeZone = useCallback(async (lat, lon) => {
@@ -94,6 +144,12 @@ export default function SignupScreen({ navigation }) {
       Alert.alert("Error", "Failed to fetch coordinates.");
     }
   }, []);
+
+  useEffect(() => {
+    if (lat && lon) {
+      fetchWeatherAndTime(lat, lon);
+    }
+  }, [lat, lon, fetchWeatherAndTime]);
 
   const handleCitySelection = (cityCode) => {
     console.log("Selected city code:", cityCode);
@@ -376,7 +432,38 @@ export default function SignupScreen({ navigation }) {
 
                   Timezone: {timezone ? timezone : "Not available"}</Text>
               </View>
+              <View style={styles.tz}>
+                <Icon
+                  name="cloud"
+                  size={22}
+                  style={{ marginHorizontal: 3 }}
+                  color={'#616061'} />
+                <Text style={{
+                  color: "#70747a",
+                  marginVertical: 6,
+                  paddingHorizontal: 16,
+                  fontWeight: 'bold'
+
+                }}>
+                  Weather:{" "}
+                  {weather
+                    ? `${weather.temp}°F,  ${weather.description}`
+                    : "Not available"}
+                </Text>
+              </View>
+              <View style={styles.tz}>
+                <Icon name="clock-o" size={22} style={{ marginHorizontal: 3 }} color={'#616061'} />
+                <Text style={{
+                  color: "#70747a",
+                  marginVertical: 6,
+                  paddingHorizontal: 16,
+                  fontWeight: 'bold'
+                }}>
+                  Time: {weather.time ? weather.time : "Not available"}
+                </Text>
+              </View>
             </View>
+
             <View style={styles.buttonbox}>
               <LinearGradient
                 start={{ x: 0, y: 0 }}
