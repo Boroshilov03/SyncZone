@@ -616,13 +616,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between", // Space out items
     padding: 15, // Padding around the container
     borderColor: "rgba(209, 235, 239, 0.5)", // Semi-transparent border color
-    backgroundColor: "rgba(240, 249, 249, 0.7)", // Semi-transparent background color for glassy effect
-    backdropFilter: "blur(10px)", // Add blur effect (may need alternative library)
+    backgroundColor: 'white',
     borderRadius: 10, // Rounded corners
     borderWidth: 1, // Border width
-    shadowColor: "#000", // Shadow color
-    shadowOffset: { width: 0, height: 2 }, // Shadow offset
-    shadowOpacity: 0.1, // Light shadow effect
     shadowRadius: 4, // Soft shadow
     elevation: 3, // For Android shadow effect
   },
@@ -773,15 +769,17 @@ const styles = StyleSheet.create({
   },
   sendButtonContainer: {
     borderRadius: "50%",
-    padding: 8,
+    padding: 10,
     alignItems: "center", // Center horizontally
     justifyContent: "center", // Center vertically
+    borderRadius: 20,
   },
   sendButton: {
     width: 40,
     height: 40,
     alignItems: "center", // Center horizontally
     justifyContent: "center", // Center vertically
+    alignSelf: "center",
   },
   secondaryButtonContainer: {
     flexDirection: "row",
@@ -790,10 +788,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  //secondaryButtonText: {
-  //fontSize: 16,
-  //left: -20,
-  //},
   secondaryButtonIcon: {
     width: 25,
     height: 25,

@@ -11,6 +11,10 @@ import {
 import React, { useState } from "react";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import { useRoute } from "@react-navigation/native";
+import { Dimensions } from "react-native";
+
+const { height: screenHeight } = Dimensions.get("window"); // Get screen height
+
 
 const MembersChatScreen = ({ navigation }) => {
   const route = useRoute();
@@ -208,6 +212,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 5,
     elevation: 3,
+    height: screenHeight * 0.05, // Dynamically set height as 6% of screen height
   },
   searchIcon: {
     marginRight: 10,
