@@ -12,6 +12,8 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase"; // Import Supabase client for Database Operations
 import useStore from "../store/store"; // Import store for state management
 import Header from "../components/Header"; //Import Header Component
+import BannerCategory from "../../assets/icons/BannerCat.png";
+import BannerStickers from "../../assets/icons/BannerStickers.png";
 
 const GiftsScreen = ({ navigation }) => {
   const { user } = useStore(); // Retrieve the user from the store
@@ -202,65 +204,79 @@ const GiftsScreen = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <Header event="shop" navigation={navigation} title="Shop" // Set static title for the Header
-        toggleSwitch={toggleSwitch} // Pass toggleSwitch function for handling switch
-        switchValue={showOwned} // Pass switch value to Header
+      <Header
+        event="shop"
+        navigation={navigation}
+        title="Shop"
+        toggleSwitch={toggleSwitch}
+        switchValue={showOwned}
       />
       <ScrollView contentContainerStyle={styles.container}>
         {/* Banners Category Box */}
         <View style={styles.categoryContainer}>
-          <Text style={styles.categoryText}>Banners</Text>
+          <Image
+            source={BannerCategory}
+            style={styles.categoryImage}
+            resizeMode="contain"
+          />
         </View>
         <ScrollView
           horizontal
-          showsHorizontalScrollIndicator={false} // Hide horizontal scroll indicator
+          showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scrollContainer}
         >
           <View style={styles.itemsContainer}>
             {banners.map((banner) => {
-              const isOwned = user_banners.has(banner.id); // Check if the current banner is owned
+              const isOwned = user_banners.has(banner.id);
               return showOwned ? (
-                isOwned ? ( // If showOwned is true, render owned banners only
+                isOwned ? (
                   <View key={banner.id} style={styles.itemFrame}>
                     <Image
-                      source={{ uri: banner.image_url }} //  image_url is available
+                      source={{ uri: banner.image_url }}
                       style={styles.image}
                       resizeMode="contain"
                     />
-                    {/* Banner Name */}
                     <Text style={styles.bannerName}>{banner.name}</Text>
                     <TouchableOpacity
-                      style={[styles.button, styles.ownedButton]} // Always use ownedButton style
-                      disabled // Disable the button for owned items
+                      style={[styles.button, styles.ownedButton]}
+                      disabled
                     >
                       <Text style={styles.buttonText}>Owned</Text>
                     </TouchableOpacity>
                   </View>
                 ) : null
-              ) : !isOwned ? ( // If showOwned is false, render unowned banners only
+              ) : !isOwned ? (
                 <View key={banner.id} style={styles.itemFrame}>
                   <Image
-                    source={{ uri: banner.image_url }} // image_url is available
+                    source={{ uri: banner.image_url }}
                     style={styles.image}
                     resizeMode="contain"
                   />
-                  {/* Banner Name */}
                   <Text style={styles.bannerName}>{banner.name}</Text>
                   <TouchableOpacity
                     style={[styles.button, styles.getButton]}
                     onPress={() => handleGetBanner(banner.id)}
                   >
-                    <Text style={styles.buttonText}>Get</Text>
+                      <Text style={styles.buttonText}>Get</Text>
                   </TouchableOpacity>
                 </View>
               ) : null;
             })}
+  
+            {/* Show "More Banners Coming Soon..." only if all banners are owned */}
+            {!showOwned && banners.filter(banner => !user_banners.has(banner.id)).length === 0 && (
+              <Text style={styles.moreMessage}>More Banners Coming Soon...</Text>
+            )}
           </View>
         </ScrollView>
-
+  
         {/* Stickers Category Box */}
         <View style={styles.categoryContainer}>
-          <Text style={styles.categoryText}>Stickers</Text>
+          <Image
+            source={BannerStickers}
+            style={styles.categoryImage}
+            resizeMode="contain"
+          />
         </View>
         <ScrollView
           horizontal
@@ -274,15 +290,14 @@ const GiftsScreen = ({ navigation }) => {
                 isOwned ? (
                   <View key={sticker.id} style={styles.itemFrame}>
                     <Image
-                      source={{ uri: sticker.image_url }} // Assuming image_url is available
+                      source={{ uri: sticker.image_url }}
                       style={styles.image}
                       resizeMode="contain"
                     />
-                    {/* Sticker Name */}
                     <Text style={styles.bannerName}>{sticker.name}</Text>
                     <TouchableOpacity
-                      style={[styles.button, styles.ownedButton]} // Always use ownedButton style
-                      disabled // Disable the button for owned items
+                      style={[styles.button, styles.ownedButton]}
+                      disabled
                     >
                       <Text style={styles.buttonText}>Owned</Text>
                     </TouchableOpacity>
@@ -291,11 +306,10 @@ const GiftsScreen = ({ navigation }) => {
               ) : !isOwned ? (
                 <View key={sticker.id} style={styles.itemFrame}>
                   <Image
-                    source={{ uri: sticker.image_url }} // image_url is available
+                    source={{ uri: sticker.image_url }}
                     style={styles.image}
                     resizeMode="contain"
                   />
-                  {/* Sticker Name */}
                   <Text style={styles.bannerName}>{sticker.name}</Text>
                   <TouchableOpacity
                     style={[styles.button, styles.getButton]}
@@ -306,12 +320,18 @@ const GiftsScreen = ({ navigation }) => {
                 </View>
               ) : null;
             })}
+  
+            {/* Show "More Stickers Coming Soon..." only if all stickers are owned */}
+            {!showOwned && stickers.filter(sticker => !user_stickers.has(sticker.id)).length === 0 && (
+              <Text style={styles.moreMessage}>More Stickers Coming Soon...</Text>
+            )}
           </View>
         </ScrollView>
       </ScrollView>
     </View>
   );
-};
+  
+  };
 
 const styles = StyleSheet.create({
   container: {
@@ -320,18 +340,40 @@ const styles = StyleSheet.create({
   },
   categoryContainer: {
     //Style for boxes for Banners and Stickers
-    marginBottom: 8, //Adds vertical margin (Space above and below)
-    padding: 10, // Adds Padding inside the box
-    borderWidth: 1, // Defines the border's width as 1 pixel.
-    borderColor: "#ccc", // Sets the border color to a loght gray
-    borderRadius: 8, // Rounds the corners of the box.
-    marginHorizontal: 10,
+    //marginBottom: 8, //Adds vertical margin (Space above and below)
+    //padding: 10, // Adds Padding inside the box
+    //borderWidth: 1, // Defines the border's width as 1 pixel.
+    //borderColor: "#ccc", // Sets the border color to a loght gray
+    //borderRadius: 8, // Rounds the corners of the box.
+    //marginHorizontal: 10,
+  },
+  categoryHeader: {
+    flexDirection: "row",
+    alignItems: "center", // Aligns image and text vertically
+  },
+  categoryImage: {
+    width: 380, // Adjust width as needed
+    height: 180, // Adjust height as needed
+    marginTop: -35,
+    marginBottom: -25,
+    borderRadius: 20,
+    right:-10,
+    
   },
   categoryText: {
     // Style adds text to display Catefgory names (Banners/Stickers)
     fontSize: 20,
     fontWeight: "bold",
   },
+moreMessage: {
+  fontSize: 16,
+  fontWeight: "bold",
+  color: "#888", // Subtle gray color
+  textAlign: "center",
+  marginTop: 20, // Adds margin to the top to separate from items
+  marginBottom: 20, // Space at the bottom
+  width: "100%", // Ensures it takes up the full width
+},
   scrollContainer: {
     // USed for SCrollView for contain items
     flexDirection: "row", // Horizontal
@@ -347,6 +389,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginLeft: 10,
     marginBottom: 10, 
+    
   },
   itemFrame: {
     // image displayed for each banner or sticker
@@ -357,10 +400,11 @@ const styles = StyleSheet.create({
     marginRight: 10,
     padding: 10,
     alignItems: "center",
+
   },
   image: {
-    width: 100,
-    height: 100,
+    width: 90,
+    height: 90,
   },
   bannerName: {
     marginVertical: 5,
@@ -392,6 +436,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontWeight: "lightbold",
   },
+
 });
 
 export default GiftsScreen;
