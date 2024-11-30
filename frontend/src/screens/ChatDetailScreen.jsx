@@ -11,11 +11,13 @@ import {
   Button,
   KeyboardAvoidingView,
   Platform,
+  Animated,
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
+import GradientText from "react-native-gradient-texts";
 import { initializeWebSocket, saveMessageToSupabase } from "../../emotion/api";
 import { processMessageWithEmotion } from "../../emotion/emotionAnalysisService";
 const noProfilePic = require("../../assets/icons/pfp_icon.png");
@@ -30,6 +32,7 @@ const ChatDetailScreen = () => {
   const { chatId, username, otherPFP, groupTitle } = route.params;
   const [senderPFP, setSenderPFP] = useState(null);
   const [messages, setMessages] = useState([]);
+  const animationValues = useRef([]); // Ref to track animation values for messages
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
@@ -165,56 +168,93 @@ const ChatDetailScreen = () => {
       supabase.removeChannel(channel);
     };
   }, [chatId, user.id]);
-
+  
+  const fetchStickerUrl = async (stickerId) => {
+    try {
+      const { data, error } = await supabase
+        .from("stickers")
+        .select("image_url") // Selecting the image_url field
+        .eq("id", stickerId) // Match the sticker_id
+        .single(); // Expecting a single result
+  
+      if (error) {
+        console.error("Error fetching sticker URL:", error);
+        return null;
+      }
+      return data?.image_url;
+    } catch (error) {
+      console.error("Error fetching sticker URL:", error);
+      return null;
+    }
+  };
+  
   useEffect(() => {
     const fetchMessages = async () => {
       try {
         const { data: messagesData, error: messagesError } = await supabase
           .from("messages")
           .select(
-            `
-            *,
+            `*,
+            attachments(sticker_id),
             emotion_analysis!message_id(
               sender_id,
               emotion,
               accuracy
-            )
-          `
+            )`
           )
           .eq("chat_id", chatId)
           .order("created_at", { ascending: false });
-
+  
         if (messagesError) throw messagesError;
-
-        const processedMessages = messagesData.map((message) => {
-          const emotionAnalyses = message.emotion_analysis || [];
-
-          const senderEmotion = emotionAnalyses.find(
-            (e) => e.sender_id === message.sender_id
-          );
-          const receiverEmotion = emotionAnalyses.find(
-            (e) => e.sender_id !== message.sender_id
-          );
-
-          fetchProfilePicture(message.sender_id); // Fetch profile picture for each message
-
-          return {
-            ...message,
-            senderEmotion: senderEmotion
-              ? {
-                  name: senderEmotion.emotion,
-                  score: senderEmotion.accuracy,
+  
+        const processedMessages = await Promise.all(
+          messagesData.map(async (message) => {
+            const emotionAnalyses = message.emotion_analysis || [];
+  
+            const senderEmotion = emotionAnalyses.find(
+              (e) => e.sender_id === message.sender_id
+            );
+            const receiverEmotion = emotionAnalyses.find(
+              (e) => e.sender_id !== message.sender_id
+            );
+  
+            fetchProfilePicture(message.sender_id); // Fetch profile picture for each message
+  
+            const attachmentsWithUrls = await Promise.all(
+              message.attachments.map(async (attachment) => {
+                if (attachment.sticker_id) {
+                  const stickerUrl = await fetchStickerUrl(attachment.sticker_id);
+                  
+                  console.log("Sticker URL:", stickerUrl); // Log the sticker URL here
+  
+                  return {
+                    ...attachment,
+                    sticker_url: stickerUrl, // Add the sticker_url to the attachment
+                  };
                 }
-              : null,
-            receiverEmotion: receiverEmotion
-              ? {
-                  name: receiverEmotion.emotion,
-                  score: receiverEmotion.accuracy,
-                }
-              : null,
-          };
-        });
-
+                return attachment;
+              })
+            );
+  
+            return {
+              ...message,
+              senderEmotion: senderEmotion
+                ? {
+                    name: senderEmotion.emotion,
+                    score: senderEmotion.accuracy,
+                  }
+                : null,
+              receiverEmotion: receiverEmotion
+                ? {
+                    name: receiverEmotion.emotion,
+                    score: receiverEmotion.accuracy,
+                  }
+                : null,
+              attachments: attachmentsWithUrls, // Attach updated attachments with sticker_url
+            };
+          })
+        );
+        console.log(processedMessages)
         setMessages(processedMessages);
         setLoading(false);
       } catch (err) {
@@ -223,10 +263,10 @@ const ChatDetailScreen = () => {
         setLoading(false);
       }
     };
-
+  
     fetchMessages();
   }, [chatId]);
-
+  
   const handleTyping = () => {
     if (!newMessage.trim()) return;
     supabase.channel(`chat-room-${chatId}`).send({
@@ -374,14 +414,13 @@ const ChatDetailScreen = () => {
       username: "L",
     };
     const { avatar_url, username } = senderProfile;
+  
     return (
       <View style={styles.messageWrapper}>
         <View
           style={[
             styles.messageContainer,
-            isMyMessage
-              ? styles.myMessageContainer
-              : styles.otherMessageContainer,
+            isMyMessage ? styles.myMessageContainer : styles.otherMessageContainer,
           ]}
         >
           <View
@@ -405,7 +444,7 @@ const ChatDetailScreen = () => {
                 </View>
               )
             ) : null}
-
+  
             {item.senderEmotion && (
               <View
                 style={[
@@ -424,7 +463,9 @@ const ChatDetailScreen = () => {
                 </Text>
               </View>
             )}
+  
             <View style={{ display: "flex" }}>
+              {/* Render message content */}
               <Text
                 style={[
                   styles.messageText,
@@ -433,6 +474,22 @@ const ChatDetailScreen = () => {
               >
                 {item.content}
               </Text>
+  
+              {/* Render sticker if available */}
+              {item.attachments && item.attachments.length > 0 && item.attachments.map((attachment, index) => {
+                if (attachment.sticker_url) {
+                  return (
+                    <Image
+                      key={index}
+                      source={{ uri: attachment.sticker_url }}
+                      style={styles.stickerImage} // You can define a style for sticker size
+                    />
+                  );
+                }
+                return null; // Return nothing if no sticker URL
+              })}
+  
+              {/* Message timestamp */}
               <Text style={styles.messageTimestamp}>
                 {new Date(item.created_at).toLocaleTimeString([], {
                   hour: "2-digit",
@@ -445,132 +502,140 @@ const ChatDetailScreen = () => {
       </View>
     );
   };
+  
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView style={styles.innerContainer}>
-        <View style={styles.profileContainer}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.navigate("MainTabs")}
-          >
-            <Image
-              source={require("../../assets/icons/back_arrow.webp")}
-              style={styles.backIcon}
-            />
-          </TouchableOpacity>
-
-          <View style={styles.centerContainer}>
+      <LinearGradient
+        colors={['#ffffff', '#F1D491','#FFD8D8', '#ffffff']}
+        style={styles.innerContainer}
+      >
+        <SafeAreaView style={styles.innerContainer}>
+          <View style={styles.profileContainer}>
             <TouchableOpacity
-              onPress={() => console.log("Opening profile", otherPFP, username)}
-            >
-              {/* {console.log("otherPFP:", otherPFP)} */}
-              {otherPFP ? (
-                <Image
-                  alt="Avatar"
-                  resizeMode="cover"
-                  source={{ uri: otherPFP }}
-                  style={styles.cardImg}
-                />
-              ) : (
-                <View style={[styles.cardImg]}>
-                  <Text style={styles.cardAvatarText}>
-                    {groupTitle
-                      ? groupTitle[0].toUpperCase()
-                      : username[0].toUpperCase()}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-
-            <Text style={styles.title}>
-              {groupTitle ? groupTitle : username}
-            </Text>
-          </View>
-
-          <TouchableOpacity style={styles.callIconContainer}>
-            <Image
-              source={require("../../assets/icons/call-icon.png")}
-              style={styles.callIcon}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {loading && <ActivityIndicator size="large" color="#007BFF" />}
-
-        {error && <Text style={styles.errorText}>{error}</Text>}
-
-        {!loading && !error && (
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderMessage}
-            contentContainerStyle={styles.messageList}
-            inverted
-          />
-        )}
-        {typingUser && (
-          <View style={styles.mainTyping}>
-            <View style={styles.typingIndicatorBubble}>
-              <Text style={styles.typingIndicator}>
-                {typingUser} is typing...
-              </Text>
-            </View>
-          </View>
-        )}
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Type a message"
-            value={newMessage}
-            onChangeText={(text) => {
-              setNewMessage(text);
-              handleTyping();
-            }}
-          />
-          {/* Secondary Button */}
-          <TouchableOpacity
-            style={styles.secondaryButtonContainer}
-            onPress={toggleOwnedStickersModal}
-          >
-            <Image
-              source={require("../../assets/icons/gift-icon.png")}
-              style={styles.secondaryButtonIcon} // Add a style to control size and position
-            />
-            <Text style={styles.secondaryButtonText}></Text>
-
-            {/* Owned Stickers Modal */}
-            <OwnedStickersModal
-              visible={ownedStickersVisible}
-              onClose={() => setOwnedStickersVisible(false)}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleSendMessage}>
-            <LinearGradient
-              colors={["#A0D7E5", "#D1EBEF"]}
-              style={styles.sendButtonContainer}
+              style={styles.backButton}
+              onPress={() => navigation.navigate("MainTabs")}
             >
               <Image
-                style={[
-                  styles.sendButton,
-                  {
-                    tintColor: "white",
-                    transform: [{ rotate: "-45deg" }],
-                    width: 20,
-                    height: 20,
-                  },
-                ]}
-                source={require("../../assets/icons/send_icon.png")}
+                source={require("../../assets/icons/back_arrow.webp")}
+                style={styles.backIcon}
               />
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+            </TouchableOpacity>
+
+            <View style={styles.centerContainer}>
+              <TouchableOpacity
+                onPress={() =>
+                  console.log("Opening profile", otherPFP, username)
+                }
+              >
+                {otherPFP ? (
+                  <Image
+                    alt="Avatar"
+                    resizeMode="cover"
+                    source={{ uri: otherPFP }}
+                    style={styles.cardImg}
+                  />
+                ) : (
+                  <View style={[styles.cardImg]}>
+                    <Text style={styles.cardAvatarText}>
+                      {groupTitle
+                        ? groupTitle[0].toUpperCase()
+                        : username[0].toUpperCase()}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <Text style={styles.title}>
+                {groupTitle ? groupTitle : username}
+              </Text>
+            </View>
+
+            <TouchableOpacity style={styles.callIconContainer}>
+              <Image
+                source={require("../../assets/icons/call-icon.png")}
+                style={styles.callIcon}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {loading && <ActivityIndicator size="large" color="#007BFF" />}
+
+          {error && <Text style={styles.errorText}>{error}</Text>}
+
+          {!loading && !error && (
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderMessage}
+              contentContainerStyle={styles.messageList}
+              inverted
+            />
+          )}
+          {typingUser && (
+            <View style={styles.mainTyping}>
+              <View style={styles.typingIndicatorBubble}>
+                <Text style={styles.typingIndicator}>
+                  {typingUser} is typing...
+                </Text>
+              </View>
+            </View>
+          )}
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Type a message"
+              value={newMessage}
+              onChangeText={(text) => {
+                setNewMessage(text);
+                handleTyping();
+              }}
+            />
+            {/* Secondary Button */}
+            <TouchableOpacity
+              style={styles.secondaryButtonContainer}
+              onPress={toggleOwnedStickersModal}
+            >
+              <Image
+                source={require("../../assets/icons/gift-icon.png")}
+                style={styles.secondaryButtonIcon} // Add a style to control size and position
+              />
+              <Text style={styles.secondaryButtonText}></Text>
+
+              {/* Owned Stickers Modal */}
+              <OwnedStickersModal
+                visible={ownedStickersVisible}
+                onClose={() => setOwnedStickersVisible(false)}
+                chatID={chatId}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleSendMessage}>
+              <LinearGradient
+                colors={["#A0D7E5", "#D1EBEF"]}
+                style={styles.sendButtonContainer}
+              >
+                <Image
+                  style={[
+                    styles.sendButton,
+                    {
+                      tintColor: "white",
+                      transform: [{ rotate: "-45deg" }],
+                      width: 20,
+                      height: 20,
+                    },
+                  ]}
+                  source={require("../../assets/icons/send_icon.png")}
+                />
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
     </KeyboardAvoidingView>
   );
 };
@@ -607,9 +672,9 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#f0f4f8",
+    padding: 10,
   },
+
   profileContainer: {
     flexDirection: "row", // Keep the layout as a row
     alignItems: "center", // Center items vertically
@@ -722,24 +787,20 @@ const styles = StyleSheet.create({
   },
   otherMessageContainer: {
     alignSelf: "flex-start",
-    borderRadius: 10,
-    paddingRight: 10,
-    paddingLeft: 10,
-    fontWeight: "semibold",
-    borderBottomWidth: 1,
-    borderBlockColor: "#D1EBEF",
+    marginRight:30,
   },
   messageText: {
-    fontSize: 20,
     fontWeight: "300",
-  },
-  myMessageText: {
-    textAlign: "right", // Aligns the text to the right
-    fontSize: 20,
-    fontWeight: "300",
+    marginLeft: 5,
+    fontSize: 19,
+    textAlign: "left", // Ensure proper text alignment
   },
   otherMessageText: {
-    color: "#333",
+    flex: 2,
+  },
+  stickerImage: {
+    width: 100,
+    height: 100,
   },
   messageTimestamp: {
     fontSize: 10,
@@ -810,15 +871,7 @@ const styles = StyleSheet.create({
     top: -15,
     left: -10,
   },
-  myEmotionContainer: {
-    position: "absolute", // Allows it to be positioned absolutely within the parent
-    padding: 4,
-    borderTopLeftRadius: 12, // Round the top left corner
-    borderBottomLeftRadius: 12, // Round the bottom left corner
-    borderTopRightRadius: 12, // No rounding on the top right corner
-    borderBottomRightRadius: 0, // Round the bottom right corner
-    top: -15, // Adjust the vertical position as needed
-  },
+
   otherEmotionContainer: {
     position: "absolute", // Allows it to be positioned absolutely within the parent
     padding: 4,
@@ -827,9 +880,6 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 0, // Round the bottom left corner
     top: -15, // Adjust the vertical position as needed
     left: -10, // Move it to the right side, adjust as needed
-  },
-  otherProfileContainer: {
-    marginRight: 3, // Adds space between the profile image and message for other users
   },
   emotionText: {
     fontSize: 12,
@@ -861,7 +911,6 @@ const styles = StyleSheet.create({
   cardImg: {
     width: 40,
     height: 40,
-    marginRight: 8,
     backgroundColor: "#FFADAD", // soft coral to complement pastel blue
     alignItems: "center",
     justifyContent: "center",
