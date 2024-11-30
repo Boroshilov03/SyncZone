@@ -16,6 +16,11 @@ import { supabase } from "../lib/supabase";
 import Header from "../components/Header";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import FeatherIcon from "react-native-vector-icons/Feather";
+import { Dimensions } from "react-native";
+
+const { height: screenHeight } = Dimensions.get("window"); // Get screen height
+
+
 
 const RecentCalls = ({ navigation }) => {
   const router = useRouter();
@@ -157,13 +162,12 @@ const styles = StyleSheet.create({
   },
   search: {
     position: "relative",
-    backgroundColor: "#efefef",
+    backgroundColor: "rgb(240, 240, 240)",
     justifyContent: "center",
     marginHorizontal: 12,
     alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgb(240, 240, 240)",
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 5,
@@ -175,6 +179,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 5,
     elevation: 3,
+    height: screenHeight * 0.05, // Dynamically set height as 6% of screen height
   },
   searchIcon: {
     position: "absolute",

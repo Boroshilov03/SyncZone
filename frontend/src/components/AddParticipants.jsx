@@ -13,6 +13,10 @@ import { Feather as FeatherIcon } from "@expo/vector-icons";
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
 import debounce from "lodash.debounce";
+import { Dimensions } from "react-native";
+
+const { height: screenHeight } = Dimensions.get("window"); // Get screen height
+
 
 const AddParticipants = ({
   onClose,
@@ -215,6 +219,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "center",
     marginBottom: 10,
+    height: screenHeight * 0.05, // Dynamically set height as 6% of screen height
   },
   searchInput: {
     height: 42,

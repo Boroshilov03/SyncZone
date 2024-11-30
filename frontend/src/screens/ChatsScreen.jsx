@@ -23,6 +23,10 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import Profile from "./ProfileScreen";
 import FavoriteUsers from "../components/favoriteUsers";
+import { Dimensions } from "react-native";
+
+const { height: screenHeight } = Dimensions.get("window"); // Get screen height
+
 
 const ChatsScreen = ({ navigation }) => {
   const [input, setInput] = useState("");
@@ -462,13 +466,12 @@ const styles = StyleSheet.create({
   },
   search: {
     position: "relative",
-    backgroundColor: "#efefef",
+    backgroundColor: "rgb(240, 240, 240)",
     justifyContent: "center",
     marginHorizontal: 12,
     alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgb(240, 240, 240)",
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 5,
@@ -480,6 +483,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 5,
     elevation: 3,
+    height: screenHeight * 0.05, // Dynamically set height as 6% of screen height
   },
   favorites: {
     display: "flex",

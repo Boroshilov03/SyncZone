@@ -15,6 +15,10 @@ import {
 import { debounce } from "lodash";
 import useStore from "../store/store";
 import { Feather as FeatherIcon } from "@expo/vector-icons";
+import { Dimensions } from "react-native";
+
+const { height: screenHeight } = Dimensions.get("window"); // Get screen height
+
 
 const AddContact = ({ toggleModal }) => {
   const [searchQuery, setSearchQuery] = useState(""); // Store search query
@@ -191,18 +195,18 @@ const AddContact = ({ toggleModal }) => {
         activeOpacity={0.7} // Feedback on press
         disabled={item.added} // Disable the button if the contact is already added
       >
-        <Image
-          source={
-            item.added
-              ? require("../../assets/icons/check_green.png") // Path to check icon
-              : require("../../assets/icons/plus_icon.png") // Path to plus icon
-          }
-          style={
-            item.added
-              ? { width: 18, height: 18, tintColor: "green" } // Size and color for check icon
-              : { width: 18, height: 18 } // Size for plus icon
-          }
-        />
+      <Image
+        source={
+          item.added
+            ? require("../../assets/icons/check_green.png") // Path to check icon
+            : require("../../assets/icons/plus_icon.png") // Path to plus icon
+        }
+        style={
+          item.added
+            ? { width: 18, height: 18, tintColor: "green" } // Size and color for check icon
+            : { width: 18, height: 18, tintColor: "#A9A9A9" } // Size and light grey color for plus icon
+        }
+      />
       </TouchableOpacity>
     </View>
   );
@@ -273,6 +277,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "center",
     marginBottom: 5,
+    height: screenHeight * 0.05, // Dynamically set height as 6% of screen height
   },
   searchInput: {
     height: 42,

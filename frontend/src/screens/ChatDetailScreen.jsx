@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between", // Space out items
     padding: 15, // Padding around the container
     borderColor: "rgba(209, 235, 239, 0.5)", // Semi-transparent border color
-    backgroundColor: "white",
+    backgroundColor: 'white',
     borderRadius: 10, // Rounded corners
     borderWidth: 1, // Border width
     shadowRadius: 4, // Soft shadow
@@ -838,6 +838,9 @@ const styles = StyleSheet.create({
   sendButton: {
     width: 40,
     height: 40,
+    alignItems: "center", // Center horizontally
+    justifyContent: "center", // Center vertically
+    alignSelf: "center",
   },
   secondaryButtonContainer: {
     flexDirection: "row",
@@ -846,10 +849,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  //secondaryButtonText: {
-  //fontSize: 16,
-  //left: -20,
-  //},
   secondaryButtonIcon: {
     width: 25,
     height: 25,
