@@ -8,10 +8,12 @@ import {
   TextInput,
   TouchableOpacity,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import { useRoute } from "@react-navigation/native";
 import { Dimensions } from "react-native";
+import useStore from "../store/store";
+
 
 const { height: screenHeight } = Dimensions.get("window"); // Get screen height
 
@@ -22,6 +24,9 @@ const MembersChatScreen = ({ navigation }) => {
   const [input, setInput] = useState("");
   const [selectedPeople, setSelectedPeople] = useState([]); // Track selected contact IDs
   const [selectedUsers, setSelectedUsers] = useState([]); // Track selected full user objects
+  const { user } = useStore();
+
+
 
   const handleCheckboxToggle = (person) => {
     // Toggle selection for this contact by ID and add/remove full user object
@@ -41,6 +46,31 @@ const MembersChatScreen = ({ navigation }) => {
       }
     });
   };
+
+  const groupContactsByLetter = (contacts) => {
+    if (!contacts || contacts.length === 0) return {}; // Return empty object if no contacts
+
+    // First, sort contacts alphabetically by their first name
+    const sortedContacts = contacts.sort((a, b) =>
+      a.profiles.first_name.localeCompare(b.profiles.first_name)
+    );
+
+    return sortedContacts.reduce((acc, contact) => {
+      const firstLetter = contact.profiles.first_name[0].toUpperCase();
+      if (!acc[firstLetter]) {
+        acc[firstLetter] = [];
+      }
+      acc[firstLetter].push(contact);
+      return acc;
+    }, {});
+  };
+
+    // Then render the grouped data
+    const groupedContacts = groupContactsByLetter(contacts || []);
+    const groupedData = Object.keys(groupedContacts).map((letter) => ({
+      letter,
+      contacts: groupedContacts[letter],
+    }));
 
   const renderContactItem = ({ item }) => (
     <View style={styles.contactItem}>
@@ -87,6 +117,35 @@ const MembersChatScreen = ({ navigation }) => {
       </TouchableOpacity>
     </View>
   );
+
+
+  // Filter contacts based on the search input
+  // Safely access `contacts` when calling `.filter()`
+  const filteredContacts = (contacts || []).filter(
+    (contact) =>
+      contact.profiles.username.toLowerCase().includes(input.toLowerCase()) ||
+      contact.profiles.first_name.toLowerCase().includes(input.toLowerCase()) ||
+      contact.profiles.last_name.toLowerCase().includes(input.toLowerCase())
+  );
+
+  // If no search input, show full contact list grouped by letter, otherwise show filtered contacts
+  const dataToRender = input.length > 0 ? filteredContacts : groupedData;
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      const { data, error } = await supabase
+        .from("favorites")
+        .select("contact_id")
+        .eq("user_id", user.id);
+      if (!error) {
+        // Store favorite contact IDs
+        setFavorites(data.map((fav) => fav.contact_id));
+      } else {
+        console.error("Error fetching favorites:", error);
+      }
+    };
+
+    fetchFavorites();
+  }, [user]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -144,7 +203,7 @@ const MembersChatScreen = ({ navigation }) => {
 
       {/* List of Contact Cards */}
       <FlatList
-        data={contacts}
+        data={filteredContacts}
         renderItem={renderContactItem}
         keyExtractor={(item) => item.profiles.id.toString()}
         contentContainerStyle={{ paddingBottom: 20 }}
