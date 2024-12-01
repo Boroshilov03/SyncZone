@@ -360,6 +360,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderRightWidth: 0,
     transform: [{ rotate: "50deg" }, { scaleX: -1 }],
+    top: -2,
   },
 });
 

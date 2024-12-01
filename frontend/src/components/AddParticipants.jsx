@@ -140,35 +140,52 @@ const AddParticipants = ({
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <TouchableOpacity
-                onPress={() => toggleContactSelection(item.id)}
-                style={styles.contactItem}
-              >
-                {item.avatar_url ? (
-                  <Image
-                    alt="Avatar"
-                    resizeMode="cover"
-                    source={{ uri: item.avatar_url }}
-                    style={styles.profileImage}
-                  />
-                ) : (
-                  <View style={[styles.cardImg]}>
-                    <Text style={styles.cardAvatarText}>
-                      {item.first_name[0].toUpperCase()}
-                    </Text>
-                  </View>
-                )}
-                <View style={styles.contactText}>
-                  <Text>
-                    {item.first_name} {item.last_name}
+              onPress={() => toggleContactSelection(item.id)} // Use your toggle logic
+              style={styles.contactItem}
+            >
+              {item.avatar_url ? (
+                <Image
+                  alt="Avatar"
+                  resizeMode="cover"
+                  source={{ uri: item.avatar_url }}
+                  style={styles.profileImage}
+                />
+              ) : (
+                <View style={[styles.cardImg]}>
+                  <Text style={styles.cardAvatarText}>
+                    {item.first_name[0].toUpperCase()}
                   </Text>
-                  <Text>@{item.username}</Text>
                 </View>
-                {selectedContacts.includes(item.id) ? (
-                  <FeatherIcon name="check-circle" size={20} color="green" />
-                ) : (
-                  <FeatherIcon name="circle" size={20} color="#ccc" />
-                )}
+              )}
+              <View style={styles.contactText}>
+                <Text>
+                  {item.first_name} {item.last_name}
+                </Text>
+                <Text>@{item.username}</Text>
+              </View>
+            
+              {/* Checkbox */}
+              <TouchableOpacity
+                style={styles.checkboxContainer}
+                onPress={() => toggleContactSelection(item.id)} // Handles the toggle logic
+              >
+                <View
+                  style={[
+                    styles.checkboxWrapper,
+                    {
+                      backgroundColor: selectedContacts.includes(item.id)
+                        ? "#B0D8FF"
+                        : "#ccc", // Selected state styling
+                    },
+                  ]}
+                >
+                  {selectedContacts.includes(item.id) && (
+                    <View style={styles.checkmark} /> // Displays checkmark for selected state
+                  )}
+                </View>
               </TouchableOpacity>
+            </TouchableOpacity>
+            
             )}
             ListEmptyComponent={() => (
               <Text style={styles.noResultsText}>
@@ -292,6 +309,33 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  checkboxContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 10,
+  },
+  checkboxWrapper: {
+    width: 25,
+    height: 25,
+    backgroundColor: "#ccc",
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.2,
+    elevation: 3,
+  },
+  checkmark: {
+    width: 8,
+    height: 15,
+    borderColor: "white",
+    borderWidth: 2,
+    borderTopWidth: 0,
+    top: -2,
+    borderRightWidth: 0,
+    transform: [{ rotate: "50deg" }, { scaleX: -1 }],
   },
 });
 
