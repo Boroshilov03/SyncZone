@@ -114,7 +114,7 @@ const RecentCalls = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header event="call" navigation={navigation} title="Recent Calls" />
+      <Header event="call" navigation={navigation} title="Calls" />
       <View style={styles.searchWrapper}>
         <View style={styles.search}>
           <View style={styles.searchIcon}>
@@ -173,7 +173,6 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderWidth: 1,
     borderColor: "#d1d1d1",
-    width: "90%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,

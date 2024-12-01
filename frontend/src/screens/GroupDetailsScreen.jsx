@@ -195,7 +195,7 @@ const GroupDetailsScreen = ({ navigation }) => {
   };
 
   const handleCheckboxToggle = (id) => {
-    // Toggle selection for this contact by adding/removing from setSelectedPeopleData array
+    // Toggle selection for this contact by addzing/removing from setSelectedPeopleData array
     setSelectedPeopleData((prevSelectedIds) => {
       if (prevSelectedIds.includes(id)) {
         return prevSelectedIds.filter((selectedId) => selectedId !== id); // Remove from array

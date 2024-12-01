@@ -164,7 +164,7 @@ const AddParticipants = ({
                   <Text>@{item.username}</Text>
                 </View>
                 {selectedContacts.includes(item.id) ? (
-                  <FeatherIcon name="check-circle" size={20} color="green" />
+                  <FeatherIcon name="check-circle" size={20} color="lightblue" />
                 ) : (
                   <FeatherIcon name="circle" size={20} color="#ccc" />
                 )}

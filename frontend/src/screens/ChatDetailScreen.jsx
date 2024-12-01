@@ -13,7 +13,7 @@ import {
   Platform,
   Animated,
 } from "react-native";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
 import useStore from "../store/store";
@@ -24,6 +24,10 @@ const noProfilePic = require("../../assets/icons/pfp_icon.png");
 import { LinearGradient } from "expo-linear-gradient";
 import ScheduleButton from "../../emotion/ScheduleButton";
 import OwnedStickersModal from "../components/OwnedStickersModal";
+import Icon from "react-native-vector-icons/FontAwesome";
+import uuid from "react-native-uuid";
+import { decode } from "base64-arraybuffer";
+import * as ImagePicker from "expo-image-picker";
 
 const ChatDetailScreen = () => {
   const { user } = useStore();
@@ -42,16 +46,104 @@ const ChatDetailScreen = () => {
   const typingTimeoutRef = useRef(null);
   const wsRef = useRef(null);
   const flatListRef = useRef(null);
-
   const [ownedStickersVisible, setOwnedStickersVisible] = useState(false);
+  const [attachmentPhoto, setAttachmentPhoto] = useState(null);
+  const [base64Photo, setBase64Photo] = useState(null);
 
   const toggleOwnedStickersModal = () => {
     setOwnedStickersVisible(!ownedStickersVisible);
   };
   useEffect(() => {
-    // Example API call to fetch profile picture
     fetchProfilePicture();
   }, []);
+
+  const pickImage = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission needed",
+        "Sorry, we need camera roll permissions to make this work!"
+      );
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+      base64: true,
+    });
+
+    if (!result.canceled) {
+      const asset = result.assets[0]; // Access the selected asset
+      setAttachmentPhoto(asset.uri);
+      setBase64Photo(asset.base64);
+    }
+    sendImage();
+  }, []);
+
+  // Function to send the selected image
+  const sendImage = async () => {
+    if (!base64Photo) {
+      Alert.alert("Error", "No photo selected.");
+      return;
+    }
+
+    const photoPath = `${uuid.v4()}.png`;
+    const decodedPhoto = decode(base64Photo);
+
+    try {
+      // Upload image
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("attachments")
+        .upload(photoPath, decodedPhoto, { contentType: "image/png" });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: publicUrlData, error: urlError } = supabase.storage
+        .from("attachments")
+        .getPublicUrl(photoPath);
+
+      if (urlError) throw urlError;
+
+      const imageUrl = publicUrlData.publicUrl;
+
+      // Create message
+      const newMessage = {
+        chat_id: chatId,
+        sender_id: user.id,
+        content: "", // Placeholder or text if needed
+      };
+
+      const { data: messageData, error: messageError } = await supabase
+        .from("messages")
+        .insert([newMessage])
+        .select();
+
+      if (messageError) throw messageError;
+
+      const messageId = messageData[0].id;
+
+      // Link attachment to message
+      const { error: attachmentError } = await supabase
+        .from("attachments")
+        .insert([
+          {
+            message_id: messageId,
+            image_url: imageUrl,
+          },
+        ]);
+
+      if (attachmentError) throw attachmentError;
+
+      console.log("Image sent successfully.");
+    } catch (err) {
+      console.error("Error sending image:", err);
+      Alert.alert("Error", "Failed to send image. Please try again.");
+    }
+  };
 
   const fetchProfilePicture = async (senderId) => {
     if (profilePics[senderId]) return; // Skip if already fetched
@@ -168,7 +260,7 @@ const ChatDetailScreen = () => {
       supabase.removeChannel(channel);
     };
   }, [chatId, user.id]);
-  
+
   const fetchStickerUrl = async (stickerId) => {
     try {
       const { data, error } = await supabase
@@ -176,7 +268,7 @@ const ChatDetailScreen = () => {
         .select("image_url") // Selecting the image_url field
         .eq("id", stickerId) // Match the sticker_id
         .single(); // Expecting a single result
-  
+
       if (error) {
         console.error("Error fetching sticker URL:", error);
         return null;
@@ -187,7 +279,7 @@ const ChatDetailScreen = () => {
       return null;
     }
   };
-  
+
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -195,7 +287,7 @@ const ChatDetailScreen = () => {
           .from("messages")
           .select(
             `*,
-            attachments(sticker_id),
+            attachments(sticker_id, image_url),
             emotion_analysis!message_id(
               sender_id,
               emotion,
@@ -204,38 +296,36 @@ const ChatDetailScreen = () => {
           )
           .eq("chat_id", chatId)
           .order("created_at", { ascending: false });
-  
+
         if (messagesError) throw messagesError;
-  
+
         const processedMessages = await Promise.all(
           messagesData.map(async (message) => {
             const emotionAnalyses = message.emotion_analysis || [];
-  
+
             const senderEmotion = emotionAnalyses.find(
               (e) => e.sender_id === message.sender_id
             );
             const receiverEmotion = emotionAnalyses.find(
               (e) => e.sender_id !== message.sender_id
             );
-  
+
             fetchProfilePicture(message.sender_id); // Fetch profile picture for each message
-  
+
             const attachmentsWithUrls = await Promise.all(
-              message.attachments.map(async (attachment) => {
-                if (attachment.sticker_id) {
-                  const stickerUrl = await fetchStickerUrl(attachment.sticker_id);
-                  
-                  console.log("Sticker URL:", stickerUrl); // Log the sticker URL here
-  
-                  return {
-                    ...attachment,
-                    sticker_url: stickerUrl, // Add the sticker_url to the attachment
-                  };
-                }
-                return attachment;
+              (message.attachments || []).map(async (attachment) => {
+                const stickerUrl = attachment.sticker_id
+                  ? await fetchStickerUrl(attachment.sticker_id)
+                  : "";
+
+                return {
+                  ...attachment,
+                  sticker_url: stickerUrl || "", // Default to empty string if null/undefined
+                  image_url: attachment.image_url || "", // Default to empty string if null/undefined
+                };
               })
             );
-  
+
             return {
               ...message,
               senderEmotion: senderEmotion
@@ -250,11 +340,11 @@ const ChatDetailScreen = () => {
                     score: receiverEmotion.accuracy,
                   }
                 : null,
-              attachments: attachmentsWithUrls, // Attach updated attachments with sticker_url
+              attachments: attachmentsWithUrls,
             };
           })
         );
-        console.log(processedMessages)
+
         setMessages(processedMessages);
         setLoading(false);
       } catch (err) {
@@ -263,10 +353,10 @@ const ChatDetailScreen = () => {
         setLoading(false);
       }
     };
-  
+
     fetchMessages();
   }, [chatId]);
-  
+
   const handleTyping = () => {
     if (!newMessage.trim()) return;
     supabase.channel(`chat-room-${chatId}`).send({
@@ -414,13 +504,15 @@ const ChatDetailScreen = () => {
       username: "L",
     };
     const { avatar_url, username } = senderProfile;
-  
+
     return (
       <View style={styles.messageWrapper}>
         <View
           style={[
             styles.messageContainer,
-            isMyMessage ? styles.myMessageContainer : styles.otherMessageContainer,
+            isMyMessage
+              ? styles.myMessageContainer
+              : styles.otherMessageContainer,
           ]}
         >
           <View
@@ -444,7 +536,7 @@ const ChatDetailScreen = () => {
                 </View>
               )
             ) : null}
-  
+
             {item.senderEmotion && (
               <View
                 style={[
@@ -463,7 +555,7 @@ const ChatDetailScreen = () => {
                 </Text>
               </View>
             )}
-  
+
             <View style={{ display: "flex" }}>
               {/* Render message content */}
               <Text
@@ -474,21 +566,23 @@ const ChatDetailScreen = () => {
               >
                 {item.content}
               </Text>
-  
+
               {/* Render sticker if available */}
-              {item.attachments && item.attachments.length > 0 && item.attachments.map((attachment, index) => {
-                if (attachment.sticker_url) {
+              {item.attachments &&
+                item.attachments.map((attachment, index) => {
+                  const uri = attachment.image_url || attachment.sticker_url; // Prefer image_url, fallback to sticker_url
+
                   return (
-                    <Image
-                      key={index}
-                      source={{ uri: attachment.sticker_url }}
-                      style={styles.stickerImage} // You can define a style for sticker size
-                    />
+                    uri && (
+                      <Image
+                        key={index}
+                        source={{ uri }}
+                        style={styles.stickerImage}
+                      />
+                    )
                   );
-                }
-                return null; // Return nothing if no sticker URL
-              })}
-  
+                })}
+
               {/* Message timestamp */}
               <Text style={styles.messageTimestamp}>
                 {new Date(item.created_at).toLocaleTimeString([], {
@@ -502,17 +596,13 @@ const ChatDetailScreen = () => {
       </View>
     );
   };
-  
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <LinearGradient
-        colors={['#ffffff', '#F1D491','#FFD8D8', '#ffffff']}
-        style={styles.innerContainer}
-      >
+      <View style={styles.innerContainer}>
         <SafeAreaView style={styles.innerContainer}>
           <View style={styles.profileContainer}>
             <TouchableOpacity
@@ -553,7 +643,6 @@ const ChatDetailScreen = () => {
                 {groupTitle ? groupTitle : username}
               </Text>
             </View>
-
             <TouchableOpacity style={styles.callIconContainer}>
               <Image
                 source={require("../../assets/icons/call-icon.png")}
@@ -596,6 +685,19 @@ const ChatDetailScreen = () => {
                 handleTyping();
               }}
             />
+            <TouchableOpacity onPress={pickImage}>
+              <Icon
+                name="photo"
+                size={23}
+                style={{
+                  marginHorizontal: 3,
+                  transform: [{ rotate: "0deg" }],
+                  marginRight: 5,
+                }}
+                color={"#616061"}
+              />
+            </TouchableOpacity>
+
             {/* Secondary Button */}
             <TouchableOpacity
               style={styles.secondaryButtonContainer}
@@ -604,6 +706,7 @@ const ChatDetailScreen = () => {
               <Image
                 source={require("../../assets/icons/gift-icon.png")}
                 style={styles.secondaryButtonIcon} // Add a style to control size and position
+                color={"#616061"}
               />
               <Text style={styles.secondaryButtonText}></Text>
 
@@ -615,27 +718,23 @@ const ChatDetailScreen = () => {
               />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleSendMessage}>
-              <LinearGradient
-                colors={["#A0D7E5", "#D1EBEF"]}
-                style={styles.sendButtonContainer}
-              >
-                <Image
-                  style={[
-                    styles.sendButton,
-                    {
-                      tintColor: "white",
-                      transform: [{ rotate: "-45deg" }],
-                      width: 20,
-                      height: 20,
-                    },
-                  ]}
-                  source={require("../../assets/icons/send_icon.png")}
-                />
-              </LinearGradient>
+              <Image
+                style={[
+                  styles.sendButton,
+                  {
+                    tintColor: "lightblue",
+                    // transform: [{ rotate: "0deg" }],
+                    width: 20,
+                    height: 20,
+                    marginRight: 10,
+                  },
+                ]}
+                source={require("../../assets/icons/send_icon.png")}
+              />
             </TouchableOpacity>
           </View>
         </SafeAreaView>
-      </LinearGradient>
+      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -672,20 +771,19 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     flex: 1,
-    padding: 10,
   },
 
   profileContainer: {
     flexDirection: "row", // Keep the layout as a row
+    width: "100%",
     alignItems: "center", // Center items vertically
     justifyContent: "space-between", // Space out items
-    padding: 15, // Padding around the container
-    borderColor: "rgba(209, 235, 239, 0.5)", // Semi-transparent border color
-    backgroundColor: 'white',
-    borderRadius: 10, // Rounded corners
-    borderWidth: 1, // Border width
-    shadowRadius: 4, // Soft shadow
-    elevation: 3, // For Android shadow effect
+    paddingTop: 25,
+    paddingHorizontal: 20,
+    paddingBottom: 15,
+    backgroundColor: "lightblue",
+    borderBottomRightRadius: 10,
+    borderBottomLeftRadius: 10,
   },
   backButton: {
     flex: 1,
@@ -711,7 +809,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "400",
-    color: "#333",
+    color: "black",
     marginLeft: 10,
   },
   callIconContainer: {
@@ -787,7 +885,7 @@ const styles = StyleSheet.create({
   },
   otherMessageContainer: {
     alignSelf: "flex-start",
-    marginRight:30,
+    marginRight: 30,
   },
   messageText: {
     fontWeight: "300",
@@ -821,7 +919,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 3,
-    marginBottom: 5,
+    marginBottom: 15,
   },
   input: {
     flex: 1,
@@ -834,10 +932,9 @@ const styles = StyleSheet.create({
     alignItems: "center", // Center horizontally
     justifyContent: "center", // Center vertically
     borderRadius: 20,
+    color: "black",
   },
   sendButton: {
-    width: 40,
-    height: 40,
     alignItems: "center", // Center horizontally
     justifyContent: "center", // Center vertically
     alignSelf: "center",
@@ -845,14 +942,13 @@ const styles = StyleSheet.create({
   secondaryButtonContainer: {
     flexDirection: "row",
     padding: 8,
-    marginRight: 10, // Added space between secondary button and send button
+    marginRight: 5, // Added space between secondary button and send button
     alignItems: "center",
     justifyContent: "center",
   },
   secondaryButtonIcon: {
     width: 25,
     height: 25,
-    marginRight: 5, // Space between icon and text
     alignItems: "center", // Center horizontally
     justifyContent: "center", // Center vertically
   },

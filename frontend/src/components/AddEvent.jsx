@@ -37,7 +37,6 @@ const AddEvent = ({ onClose }) => {
   const { user } = useStore();
   const [titleValue, settitleValue] = useState(""); // Title
   const [date, setDate] = useState(new Date()); // Date
-  const [showPicker, setShowPicker] = useState(false); // State to manage visibility
   const [showDatePicker, setShowDatePicker] = useState(false); // Toggle date picker
   const [startTime, setStartTime] = useState(new Date()); // Start time state
   const [endTime, setEndTime] = useState(new Date()); // End time state
@@ -45,7 +44,6 @@ const AddEvent = ({ onClose }) => {
   const [showEndTimePicker, setShowEndTimePicker] = useState(false); // State to show end time picker
   const [description, setDescription] = useState(""); // Description
   const [selectedContacts, setSelectedContacts] = useState(); // Initialize as an empty array
-  const [newMember, setNewMember] = useState(""); // Input for new member
   const [mood, setMood] = useState(null); // Selected mood
   const [modalVisible, setModalVisible] = useState(false);
   const [contacts, setContacts] = useState([]);

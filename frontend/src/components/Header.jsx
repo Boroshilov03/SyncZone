@@ -153,7 +153,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 20,
-    marginTop: 30,
     position: "relative",
   },
   titleContainer: {
@@ -163,9 +162,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: 20,
+    fontSize: 30,
     fontWeight: "bold",
     textAlign: "center",
+    color: "#444444",
   },
   profilePic: {
     width: 40,

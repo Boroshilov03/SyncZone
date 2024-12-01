@@ -27,7 +27,6 @@ import { Dimensions } from "react-native";
 
 const { height: screenHeight } = Dimensions.get("window"); // Get screen height
 
-
 const ChatsScreen = ({ navigation }) => {
   const [input, setInput] = useState("");
   const [profileVisible, setProfileVisible] = useState(false);
@@ -388,7 +387,7 @@ const ChatsScreen = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <Header event="message" navigation={navigation} title="Recent Chats" />
+      <Header event="message" navigation={navigation} title="Chats"/>
       <View style={styles.container}>
         <View style={styles.searchWrapper}>
           <View style={styles.search}>
@@ -477,7 +476,6 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderWidth: 1,
     borderColor: "#d1d1d1",
-    width: "90%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
@@ -492,9 +490,10 @@ const styles = StyleSheet.create({
     marginVertical: 12, // Added margin for spacing
   },
   favoritesTitle: {
-    fontWeight: "600",
-    fontSize: 18,
+    fontWeight: "500",
+    fontSize: 24,
     marginBottom: 8,
+    color: "#333333",
   },
   unreadBadge: {
     backgroundColor: "pink",
