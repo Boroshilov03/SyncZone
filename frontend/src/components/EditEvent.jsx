@@ -171,6 +171,27 @@ const EditEvent = ({ event, onClose }) => {
   
   
   const handleEditEvent = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("event")
+        .update({
+          title: titleValue,
+          mood: mood,
+          // Add other fields as needed
+        })
+        .eq("id", event.id)
+        .select();
+  
+      if (error) {
+        console.error("Error updating event:", error.message);
+      } else {
+        console.log("Event updated:", data);
+        await EditEventParticipants(event.id); // Ensure participants are updated
+        onClose(); // Close the modal
+      }
+    } catch (error) {
+      console.error("Error during event update:", error);
+    }
     // Function to format date as YYYY-MM-DD
     const formatDateForSubmission = (date) => {
       const year = date.getFullYear();
@@ -242,35 +263,65 @@ const EditEvent = ({ event, onClose }) => {
 
   const predefinedPFPs = [require("../../assets/icons/add_person.png")];
 
-  const handleModalClose = (contacts) => {
-    setSelectedContacts(contacts); // Save the selected contacts
+  const handleModalClose = (updatedContacts) => {
+    setSelectedContacts(updatedContacts); // Save the updated selected contacts
+    setContacts(
+      updatedContacts.map((id) =>
+        contacts.find((contact) => contact.id === id) || { id, first_name: "New User" }
+      )
+    );
     setModalVisible(false); // Close the modal
   };
+  
 
 
-  const EditEventParticipants = async (eventID) => {
+  const EditEventParticipants = async (eventID, selectedContacts) => {
     try {
-      // Iterate over the selectedContacts array
-      for (let participantId of selectedContacts) {
+      // Fetch existing participants
+      const { data: existingParticipants, error: fetchError } = await supabase
+        .from("event_participants")
+        .select("user_id")
+        .eq("event_id", eventID);
+  
+      if (fetchError) {
+        console.error("Error fetching participants:", fetchError.message);
+        return;
+      }
+  
+      // Get a list of IDs for existing participants
+      const existingParticipantIds = existingParticipants.map((p) => p.user_id);
+  
+      // Filter out duplicates
+const newParticipants = Array.isArray(selectedContacts)
+  ? selectedContacts.filter((id) => !existingParticipantIds.includes(id))
+  : [];
+
+  
+      // Only insert new participants
+      if (newParticipants.length > 0) {
         const { data, error } = await supabase
           .from("event_participants")
-          .insert({ user_id: participantId, event_id: eventID })
-          .select();
-
-        if (error) {
-          console.error(
-            `Error adding participant ${participantId}:`,
-            error.message
+          .insert(
+            newParticipants.map((userId) => ({
+              user_id: userId,
+              event_id: eventID,
+            }))
           );
+  
+        if (error) {
+          console.error("Error inserting participants:", error.message);
         } else {
-          console.log(`Participant ${participantId} added successfully:`, data);
+          console.log("Participants added successfully:", data);
         }
+      } else {
+        console.log("No new participants to add.");
       }
     } catch (error) {
-      console.error("Error adding selectedContacts:", error);
+      console.error("Unexpected error:", error);
     }
   };
-
+  
+  
 
   const handleTrashIconPress = () => {
     setDeletePopupVisible(true); // Show DeleteEvent popup
@@ -445,36 +496,35 @@ const EditEvent = ({ event, onClose }) => {
       <View style={styles.row}>
         <Text style={styles.label}>Guests:  </Text>
         <View style={styles.pfpContainer}>
-          {contacts && contacts.length > 0 ? (
-            <FlatList
-              data={contacts}
-              renderItem={({ item }) => {
-                return (
-                  <TouchableOpacity>
-                    {!item.avatar_url ? (
-                      <View style={[styles.cardImg]}>
-                        <Text style={styles.cardAvatarText}>
-                          {item.first_name[0].toUpperCase()}
-                        </Text>
-                      </View>
-                    ) : (
-                      <Image
-                        alt="Avatar"
-                        resizeMode="cover"
-                        source={{ uri: item.avatar_url }}
-                        style={styles.profileImage}
-                      />
-                    )}
-                  </TouchableOpacity>
-                );
-              }}
-              keyExtractor={(item, index) => index.toString()}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-            />
-          ) : (
-            <Text style={styles.none}>None</Text>
+        {contacts && contacts.length > 0 ? (
+        <FlatList
+          data={contacts}
+          renderItem={({ item }) => (
+            <TouchableOpacity>
+              {!item.avatar_url ? (
+                <View style={[styles.cardImg]}>
+                  <Text style={styles.cardAvatarText}>
+                    {item.first_name[0].toUpperCase()}
+                  </Text>
+                </View>
+              ) : (
+                <Image
+                  alt="Avatar"
+                  resizeMode="cover"
+                  source={{ uri: item.avatar_url }}
+                  style={styles.profileImage}
+                />
+              )}
+            </TouchableOpacity>
           )}
+          keyExtractor={(item, index) => index.toString()}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        />
+      ) : (
+        <Text style={styles.none}>None</Text>
+      )}
+
 
           <Modal
             animationType="none"
@@ -486,8 +536,8 @@ const EditEvent = ({ event, onClose }) => {
               <View style={styles.modalContainer}>
                 <AddParticipants
                   onClose={() => setModalVisible(false)}
-                  selectedContacts={selectedContacts || []} // Pass down the selected contacts
-                  setSelectedContacts={setSelectedContacts} // Allow child to update selected contacts
+                  selectedContacts={selectedContacts || []} // Initial selection
+                  setSelectedContacts={setSelectedContacts} // Update selection from child
                 />
               </View>
             </View>
