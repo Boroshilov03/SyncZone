@@ -627,10 +627,10 @@ const ChatDetailScreen = () => {
                     alt="Avatar"
                     resizeMode="cover"
                     source={{ uri: otherPFP }}
-                    style={styles.cardImg}
+                    style={styles.headerImage}
                   />
                 ) : (
-                  <View style={[styles.cardImg]}>
+                  <View style={[styles.headerImg]}>
                     <Text style={styles.cardAvatarText}>
                       {groupTitle
                         ? groupTitle[0].toUpperCase()
@@ -664,26 +664,27 @@ const ChatDetailScreen = () => {
             />
           )}
           {error && <Text style={styles.errorText}>{error}</Text>}
-
-          {!loading && !error && (
-            <FlatList
-              ref={flatListRef}
-              data={messages}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={renderMessage}
-              contentContainerStyle={styles.messageList}
-              inverted
-            />
-          )}
-          {typingUser && (
-            <View style={styles.mainTyping}>
-              <View style={styles.typingIndicatorBubble}>
-                <Text style={styles.typingIndicator}>
-                  {typingUser} is typing...
-                </Text>
+          <View style={{ flex: 1, marginBottom: 70}}>
+            {!loading && !error && (
+              <FlatList
+                ref={flatListRef}
+                data={messages}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderMessage}
+                contentContainerStyle={styles.messageList}
+                inverted
+              />
+            )}
+            {typingUser && (
+              <View style={styles.mainTyping}>
+                <View style={styles.typingIndicatorBubble}>
+                  <Text style={styles.typingIndicator}>
+                    {typingUser} is typing...
+                  </Text>
+                </View>
               </View>
-            </View>
-          )}
+            )}
+          </View>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
@@ -792,7 +793,6 @@ const styles = StyleSheet.create({
     backgroundColor: "lightblue",
     borderBottomRightRadius: 10,
     borderBottomLeftRadius: 10,
-
   },
   backButton: {
     flex: 1,
@@ -809,6 +809,7 @@ const styles = StyleSheet.create({
     flex: 2,
   },
   profileImage: {
+    position: "absolute",
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -866,7 +867,6 @@ const styles = StyleSheet.create({
   },
 
   messageWrapper: {
-    marginVertical: 5,
     marginHorizontal: 10,
   },
   messageList: {},
@@ -881,7 +881,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 3,
-    marginBottom: 10,
+    marginBottom: 20,
   },
   myMessageContainer: {
     alignSelf: "flex-end",
@@ -892,7 +892,6 @@ const styles = StyleSheet.create({
   },
   otherMessageContainer: {
     alignSelf: "flex-start",
-    marginRight: 30,
   },
   messageText: {
     fontWeight: "300",
@@ -901,7 +900,7 @@ const styles = StyleSheet.create({
     textAlign: "left", // Ensure proper text alignment
   },
   otherMessageText: {
-    flex: 2,
+    marginLeft: 45,
   },
   stickerImage: {
     width: 80,
@@ -951,8 +950,7 @@ const styles = StyleSheet.create({
     alignItems: "center", // Center horizontally
     justifyContent: "center", // Center vertically
     alignSelf: "center",
-    transform: [{ rotate: '-45deg' }], // Apply the 45 degree tilt
-
+    transform: [{ rotate: "-45deg" }], // Apply the 45 degree tilt
   },
   secondaryButtonContainer: {
     flexDirection: "row",
@@ -974,22 +972,20 @@ const styles = StyleSheet.create({
   },
   emotionContainer: {
     position: "absolute",
-    padding: 5,
-    borderTopLeftRadius: 12, // Only round the top left corner
-    borderBottomLeftRadius: 0, // Only round the bottom left corner
-    borderTopRightRadius: 12, // No rounding on the top right corner
-    borderBottomRightRadius: 12, // No rounding on the bottom right corner
-    top: -15,
-    left: -10,
-  },
-
-  otherEmotionContainer: {
-    position: "absolute", // Allows it to be positioned absolutely within the parent
+    paddingBottom: 1,
     padding: 4,
+    top: -15, // Adjust the vertical position as needed
+  },
+  myEmotionContainer: {
     borderTopLeftRadius: 12, // Round the top left corner
     borderTopRightRadius: 12, // No rounding on the top right corner
-    borderBottomLeftRadius: 0, // Round the bottom left corner
-    top: -15, // Adjust the vertical position as needed
+    borderBottomLeftRadius: 12, // Round the bottom left corner
+    right: -10, // Move it to the right side, adjust as needed
+  },
+  otherEmotionContainer: {
+    borderTopLeftRadius: 12, // Round the top left corner
+    borderTopRightRadius: 12, // No rounding on the top right corner
+    borderBottomRightRadius: 12,
     left: -10, // Move it to the right side, adjust as needed
   },
   emotionText: {
@@ -1019,7 +1015,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
   },
+  headerImg: {
+    width: 40,
+    height: 40,
+    backgroundColor: "#FFADAD", // soft coral to complement pastel blue
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+  },
   cardImg: {
+    position: "absolute",
+    width: 40,
+    height: 40,
+    backgroundColor: "#FFADAD", // soft coral to complement pastel blue
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+  },
+  headerImage: {
     width: 40,
     height: 40,
     backgroundColor: "#FFADAD", // soft coral to complement pastel blue
