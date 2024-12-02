@@ -772,18 +772,18 @@ const styles = StyleSheet.create({
   innerContainer: {
     flex: 1,
   },
-
   profileContainer: {
     flexDirection: "row", // Keep the layout as a row
     width: "100%",
     alignItems: "center", // Center items vertically
     justifyContent: "space-between", // Space out items
-    paddingTop: 25,
+    paddingTop: 40,
     paddingHorizontal: 20,
     paddingBottom: 15,
     backgroundColor: "lightblue",
     borderBottomRightRadius: 10,
     borderBottomLeftRadius: 10,
+
   },
   backButton: {
     flex: 1,
