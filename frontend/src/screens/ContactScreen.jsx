@@ -16,6 +16,7 @@ import {
   ScrollView,
   PanResponder,
   Button,
+  ActivityIndicator,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons"; // For chat and call icons
 import FeatherIcon from "react-native-vector-icons/Feather";
@@ -30,7 +31,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { Dimensions } from "react-native";
 
 const { height: screenHeight } = Dimensions.get("window"); // Get screen height
-
 
 // Fetch mutual contacts from Supabase
 const fetchMutualContacts = async ({ queryKey }) => {
@@ -518,7 +518,18 @@ const ContactScreen = ({ navigation }) => {
   );
 
   if (isLoading) {
-    return <Text>Loading...</Text>;
+    return (
+      <ActivityIndicator
+        size="large"
+        color="lightblue"
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
+        }}
+      />
+    );
   }
 
   if (error) {
@@ -648,7 +659,7 @@ const ContactScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 10,
     backgroundColor: "#fff",
     zIndex: 2,
   },
@@ -876,8 +887,8 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     fontSize: 20,
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
   },
   searchWrapper: {
     marginVertical: 15,
@@ -900,7 +911,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 5,
     elevation: 3,
-    height: screenHeight * 0.05, 
+    height: screenHeight * 0.05,
   },
   searchIcon: {
     marginRight: 10,

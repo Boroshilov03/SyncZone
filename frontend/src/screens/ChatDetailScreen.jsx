@@ -36,7 +36,6 @@ const ChatDetailScreen = () => {
   const { chatId, username, otherPFP, groupTitle } = route.params;
   const [senderPFP, setSenderPFP] = useState(null);
   const [messages, setMessages] = useState([]);
-  const animationValues = useRef([]); // Ref to track animation values for messages
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
@@ -94,14 +93,12 @@ const ChatDetailScreen = () => {
     const decodedPhoto = decode(base64Photo);
 
     try {
-      // Upload image
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("attachments")
         .upload(photoPath, decodedPhoto, { contentType: "image/png" });
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: publicUrlData, error: urlError } = supabase.storage
         .from("attachments")
         .getPublicUrl(photoPath);
@@ -110,11 +107,10 @@ const ChatDetailScreen = () => {
 
       const imageUrl = publicUrlData.publicUrl;
 
-      // Create message
       const newMessage = {
         chat_id: chatId,
         sender_id: user.id,
-        content: "", // Placeholder or text if needed
+        content: "",
       };
 
       const { data: messageData, error: messageError } = await supabase
@@ -126,17 +122,18 @@ const ChatDetailScreen = () => {
 
       const messageId = messageData[0].id;
 
-      // Link attachment to message
-      const { error: attachmentError } = await supabase
+      await supabase
         .from("attachments")
-        .insert([
-          {
-            message_id: messageId,
-            image_url: imageUrl,
-          },
-        ]);
+        .insert([{ message_id: messageId, image_url: imageUrl }]);
 
-      if (attachmentError) throw attachmentError;
+      setMessages((prevMessages) => [
+        {
+          ...newMessage,
+          id: messageId,
+          attachments: [{ image_url: imageUrl }],
+        },
+        ...prevMessages,
+      ]);
 
       console.log("Image sent successfully.");
     } catch (err) {
@@ -577,7 +574,11 @@ const ChatDetailScreen = () => {
                       <Image
                         key={index}
                         source={{ uri }}
-                        style={styles.stickerImage}
+                        style={[
+                          attachment.sticker_url
+                            ? styles.stickerImage // Fixed size for stickers
+                            : styles.attachmentImage, // Auto size for images
+                        ]}
                       />
                     )
                   );
@@ -650,9 +651,18 @@ const ChatDetailScreen = () => {
               />
             </TouchableOpacity>
           </View>
-
-          {loading && <ActivityIndicator size="large" color="#007BFF" />}
-
+          {loading && (
+            <ActivityIndicator
+              size="large"
+              color="lightblue"
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
+              }}
+            />
+          )}
           {error && <Text style={styles.errorText}>{error}</Text>}
 
           {!loading && !error && (
@@ -674,7 +684,6 @@ const ChatDetailScreen = () => {
               </View>
             </View>
           )}
-
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
@@ -770,7 +779,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   innerContainer: {
-    flex: 1,
+    flex: 2,
   },
 
   profileContainer: {
@@ -860,9 +869,7 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     marginHorizontal: 10,
   },
-  messageList: {
-    marginTop: 10,
-  },
+  messageList: {},
   messageContainer: {
     paddingHorizontal: 10,
     paddingVertical: 2,
@@ -874,7 +881,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 3,
-    marginBottom: 15,
+    marginBottom: 10,
   },
   myMessageContainer: {
     alignSelf: "flex-end",
@@ -897,8 +904,13 @@ const styles = StyleSheet.create({
     flex: 2,
   },
   stickerImage: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
+  },
+  attachmentImage: {
+    flex: 1,
+    aspectRatio: 1,
+    height: 200,
   },
   messageTimestamp: {
     fontSize: 10,
@@ -906,6 +918,8 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   inputContainer: {
+    position: "absolute",
+    bottom: 15,
     flexDirection: "row",
     alignItems: "center",
     padding: 10,
@@ -919,7 +933,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 3,
-    marginBottom: 15,
   },
   input: {
     flex: 1,

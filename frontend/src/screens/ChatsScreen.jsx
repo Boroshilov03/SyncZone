@@ -32,6 +32,7 @@ const ChatsScreen = ({ navigation }) => {
   const [profileVisible, setProfileVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
+  const [lastMessage, setLastMessage] = useState("")
   const { user } = useStore();
   const queryClient = useQueryClient();
 
@@ -53,14 +54,13 @@ const ChatsScreen = ({ navigation }) => {
       .from("chat_participants")
       .select("chat_id")
       .eq("user_id", user.id);
-
+  
     if (chatError) {
       throw new Error("Error fetching chat participants: " + chatError.message);
     }
-
-    //console.log("Chat Participants:", chatParticipants);
+  
     const chatIds = chatParticipants.map((chat) => chat.chat_id);
-
+  
     const { data, error } = await supabase
       .from("chats")
       .select(
@@ -81,27 +81,26 @@ const ChatsScreen = ({ navigation }) => {
       )
       .in("id", chatIds)
       .limit(20);
-
+  
     if (error) {
       throw new Error("Error fetching chats: " + error.message);
     }
-
+  
     // Fetch active banners for other participants
     for (const chat of data) {
       const participants = chat.chat_participants;
       const otherParticipants = participants.filter(
         (participant) => participant.user_id !== user.id
       );
-
+  
       for (const participant of otherParticipants) {
         const { data: activeBanner, error: bannerError } = await supabase
           .from("active_banner")
           .select("banner_id")
           .eq("user_id", participant.user_id)
           .single();
-
+  
         if (bannerError) {
-          // Suppress error logs by removing or commenting out the log
           participant.activeBanner = null;
         } else if (activeBanner) {
           const { data: bannerDetails, error: bannerDetailsError } =
@@ -110,23 +109,22 @@ const ChatsScreen = ({ navigation }) => {
               .select("image_url")
               .eq("id", activeBanner.banner_id)
               .single();
-
+  
           if (bannerDetailsError) {
-            // Suppress error logs by removing or commenting out the log
             participant.activeBanner = null;
           } else {
             participant.activeBanner = bannerDetails.image_url;
           }
         } else {
-          participant.activeBanner = null; // Explicitly set to null if no banner found
+          participant.activeBanner = null;
         }
       }
     }
-
+  
     return data
       .map((chat) => {
         const messages = chat.messages || [];
-
+  
         // Sort messages by creation date and pick the most recent one
         const lastMessage =
           messages.length > 0
@@ -134,21 +132,25 @@ const ChatsScreen = ({ navigation }) => {
                 (a, b) => new Date(b.created_at) - new Date(a.created_at)
               )[0]
             : null;
-
+  
         const unreadMessagesCount = messages.filter(
           (message) => !message.is_read && message.sender_id !== user.id
         ).length;
-
+  
+        const lastMessageContent =
+          lastMessage?.content?.trim() === "" ? "Attachment sent" : lastMessage?.content || "No messages yet";
+  
         return {
           ...chat,
-          lastMessageContent: lastMessage?.content || "No messages yet",
+          lastMessageContent,
           lastMessageSender: lastMessage?.sender_id,
-          lastMessageTime: lastMessage?.created_at, // Get the last message time
+          lastMessageTime: lastMessage?.created_at,
           unreadMessagesCount,
         };
       })
       .reverse(); // Reverse the chats list
   }
+  
 
   // Function to mark all messages as read in a chat
   async function markMessagesAsRead(chatId) {
@@ -387,7 +389,7 @@ const ChatsScreen = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <Header event="message" navigation={navigation} title="Chats"/>
+      <Header event="message" navigation={navigation} title="Chats" />
       <View style={styles.container}>
         <View style={styles.searchWrapper}>
           <View style={styles.search}>

@@ -17,7 +17,6 @@ import { Dimensions } from "react-native";
 
 const { height: screenHeight } = Dimensions.get("window"); // Get screen height
 
-
 const AddParticipants = ({
   onClose,
   selectedContacts,
@@ -25,7 +24,7 @@ const AddParticipants = ({
 }) => {
   const { user } = useStore();
   const [contacts, setContacts] = useState([]);
-  const [profiles, setProfiles] = useState([]);
+  const [filteredContacts, setFilteredContacts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -34,62 +33,58 @@ const AddParticipants = ({
     console.log(selectedContacts);
     onClose(selectedContacts); // Pass selectedContacts to the parent
   };
-  // Fetch user's existing contacts
+
+  // Fetch mutual contacts
   useEffect(() => {
     const fetchContacts = async () => {
       if (user && user.id) {
-        // Ensure user and user.id are available
-        const { data, error } = await supabase
-          .from("contacts")
-          .select("contact_id")
-          .eq("user_id", user.id);
-        if (error) {
-          console.error("Error fetching contacts:", error);
-        } else {
-          setContacts(data || []);
+        try {
+          setLoading(true);
+          setError(""); // Reset error message
+  
+          const { data, error } = await supabase
+            .from("contacts")
+            .select(
+              `profiles:contact_id (id, username, first_name, last_name, avatar_url)`
+            )
+            .or(`user_id.eq.${user.id},contact_id.eq.${user.id}`)
+            .neq("contact_id", user.id); // Exclude the logged-in user's ID
+  
+          if (error) {
+            console.error("Error fetching contacts:", error);
+            setError("Failed to fetch contacts. Please try again.");
+          } else {
+            // Extract profiles from the contacts data
+            const contactProfiles = data.map(contact => contact.profiles);
+            setContacts(contactProfiles || []);
+            setFilteredContacts(contactProfiles || []); // Set initial filtered contacts
+          }
+        } catch (err) {
+          console.error("Unexpected error during fetch:", err);
+          setError("Something went wrong. Please try again.");
+        } finally {
+          setLoading(false);
         }
-      } else {
-        console.log("User is not available");
       }
     };
-
+  
     fetchContacts();
   }, [user]);
 
-  // Function to fetch profiles based on the search query
-  const searchProfiles = async (query) => {
-    try {
-      setLoading(true);
-      setError(""); // Reset error on new search
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, username, first_name, last_name, avatar_url")
-        .ilike("username", `%${query}%`)
-        .neq("id", user.id); // Exclude the current user
-
-      if (error) {
-        console.error("Error searching profiles:", error);
-        setError("Failed to fetch profiles. Please try again.");
-      } else {
-        // Filter out contacts already in user's contacts
-        const filteredData = data.filter(
-          (profile) =>
-            !contacts.some((contact) => contact.contact_id === profile.id)
-        );
-        setProfiles(filteredData || []);
-      }
-    } catch (err) {
-      console.error("Unexpected error during search:", err);
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+  // Function to filter contacts based on the search query
+  const filterContacts = (query) => {
+    const filtered = contacts.filter(
+      (contact) =>
+        contact.first_name.toLowerCase().includes(query.toLowerCase()) ||
+        contact.last_name.toLowerCase().includes(query.toLowerCase()) ||
+        contact.username.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredContacts(filtered);
   };
 
-  // Debounce search function to reduce API calls
+  // Debounce search function to reduce unnecessary filtering
   const debouncedSearch = debounce((query) => {
-    searchProfiles(query);
+    filterContacts(query);
   }, 300); // Delay of 300ms
 
   // Handle text input changes
@@ -132,60 +127,59 @@ const AddParticipants = ({
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="lightblue" />
       ) : (
         <View style={styles.listContainer}>
           <FlatList
-            data={profiles}
+            data={filteredContacts}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <TouchableOpacity
-              onPress={() => toggleContactSelection(item.id)} // Use your toggle logic
-              style={styles.contactItem}
-            >
-              {item.avatar_url ? (
-                <Image
-                  alt="Avatar"
-                  resizeMode="cover"
-                  source={{ uri: item.avatar_url }}
-                  style={styles.profileImage}
-                />
-              ) : (
-                <View style={[styles.cardImg]}>
-                  <Text style={styles.cardAvatarText}>
-                    {item.first_name[0].toUpperCase()}
-                  </Text>
-                </View>
-              )}
-              <View style={styles.contactText}>
-                <Text>
-                  {item.first_name} {item.last_name}
-                </Text>
-                <Text>@{item.username}</Text>
-              </View>
-            
-              {/* Checkbox */}
-              <TouchableOpacity
-                style={styles.checkboxContainer}
-                onPress={() => toggleContactSelection(item.id)} // Handles the toggle logic
+                onPress={() => toggleContactSelection(item.id)} // Use your toggle logic
+                style={styles.contactItem}
               >
-                <View
-                  style={[
-                    styles.checkboxWrapper,
-                    {
-                      backgroundColor: selectedContacts.includes(item.id)
-                        ? "#B0D8FF"
-                        : "#ccc", // Selected state styling
-                    },
-                  ]}
-                >
-                  {selectedContacts.includes(item.id) && (
-                    <View style={styles.checkmark} /> // Displays checkmark for selected state
-                  )}
+                {item.avatar_url ? (
+                  <Image
+                    alt="Avatar"
+                    resizeMode="cover"
+                    source={{ uri: item.avatar_url }}
+                    style={styles.profileImage}
+                  />
+                ) : (
+                  <View style={[styles.cardImg]}>
+                    <Text style={styles.cardAvatarText}>
+                      {item.first_name[0].toUpperCase()}
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.contactText}>
+                  <Text>
+                    {item.first_name} {item.last_name}
+                  </Text>
+                  <Text>@{item.username}</Text>
                 </View>
-              </TouchableOpacity>
-            </TouchableOpacity>
             
+                {/* Checkbox */}
+                <TouchableOpacity
+                  style={styles.checkboxContainer}
+                  onPress={() => toggleContactSelection(item.id)} // Handles the toggle logic
+                >
+                  <View
+                    style={[ 
+                      styles.checkboxWrapper,
+                      {
+                        backgroundColor: selectedContacts.includes(item.id)
+                          ? "#B0D8FF"
+                          : "#ccc", // Selected state styling
+                      },
+                    ]}
+                  >
+                    {selectedContacts.includes(item.id) && (
+                      <View style={styles.checkmark} /> // Displays checkmark for selected state
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </TouchableOpacity>
             )}
             ListEmptyComponent={() => (
               <Text style={styles.noResultsText}>
@@ -293,7 +287,7 @@ const styles = StyleSheet.create({
   },
   closeButtonBottom: {
     position: "absolute",
-    backgroundColor: "#A9A9A9",
+    backgroundColor: "#FFADAD",
     padding: 10,
     borderRadius: 25,
     width: "30%",

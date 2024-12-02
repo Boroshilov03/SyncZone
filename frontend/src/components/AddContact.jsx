@@ -19,7 +19,6 @@ import { Dimensions } from "react-native";
 
 const { height: screenHeight } = Dimensions.get("window"); // Get screen height
 
-
 const AddContact = ({ toggleModal }) => {
   const [searchQuery, setSearchQuery] = useState(""); // Store search query
   const [profiles, setProfiles] = useState([]); // Store search results
@@ -195,18 +194,18 @@ const AddContact = ({ toggleModal }) => {
         activeOpacity={0.7} // Feedback on press
         disabled={item.added} // Disable the button if the contact is already added
       >
-      <Image
-        source={
-          item.added
-            ? require("../../assets/icons/check_green.png") // Path to check icon
-            : require("../../assets/icons/plus_icon.png") // Path to plus icon
-        }
-        style={
-          item.added
-            ? { width: 18, height: 18, tintColor: "green" } // Size and color for check icon
-            : { width: 18, height: 18, tintColor: "#A9A9A9" } // Size and light grey color for plus icon
-        }
-      />
+        <Image
+          source={
+            item.added
+              ? require("../../assets/icons/check_green.png") // Path to check icon
+              : require("../../assets/icons/plus_icon.png") // Path to plus icon
+          }
+          style={
+            item.added
+              ? { width: 18, height: 18, tintColor: "green" } // Size and color for check icon
+              : { width: 18, height: 18, tintColor: "#A9A9A9" } // Size and light grey color for plus icon
+          }
+        />
       </TouchableOpacity>
     </View>
   );
@@ -229,7 +228,7 @@ const AddContact = ({ toggleModal }) => {
       {loading ? (
         <ActivityIndicator
           size="large"
-          color="#007BFF"
+          color="lightblue"
           style={styles.loading}
         />
       ) : error ? (
