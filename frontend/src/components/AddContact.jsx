@@ -301,12 +301,7 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     marginHorizontal: 2,
     borderRadius: 20,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    backgroundColor: "#D1EBEF",
+    // backgroundColor: "#D1EBEF",
   },
   profileDetails: {
     flex: 1,

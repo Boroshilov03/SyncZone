@@ -517,20 +517,21 @@ const ContactScreen = ({ navigation }) => {
     </View>
   );
 
-  if (isLoading) {
-    return (
-      <ActivityIndicator
-        size="large"
-        color="lightblue"
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
-        }}
-      />
-    );
-  }
+if (isLoading) {
+  return (
+    <ActivityIndicator
+      size="large"
+      color="lightblue"
+      style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        marginTop: -40, // Adjust based on the size of the ActivityIndicator
+        marginLeft: -40, // Adjust based on the size of the ActivityIndicator
+      }}
+    />
+  );
+}
 
   if (error) {
     return <Text>Error: {error.message}</Text>;
@@ -694,7 +695,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 20,
+    marginTop: 40,
     zIndex: 3,
   },
   favoriteIcon: {
@@ -884,6 +885,7 @@ const styles = StyleSheet.create({
     marginRight: 15,
     width: "40%",
     alignSelf: "center",
+    top: 10,
   },
   closeButtonText: {
     fontSize: 20,

@@ -12,7 +12,7 @@ const Tab = createBottomTabNavigator();
 const iconMap = {
   Gifts: require("../../assets/icons/gift-icon.png"),
   Chats: require("../../assets/icons/chat-icon.png"),
-  Calls: require("../../assets/icons/call-icon.png"),
+  Calls: require("../../assets/icons/telephone.png"),
   Calendar: require("../../assets/icons/calendar-icon.png"),
 };
 
@@ -33,7 +33,7 @@ const colorMap = {
 const iconSizeMap = {
   Gifts: { width: 30, height: 25 },
   Chats: { width: 25, height: 23 },
-  Calls: { width: 25, height: 24 },
+  Calls: { width: 24, height: 24 },
   Calendar: { width: 28, height: 24 },
 };
 
