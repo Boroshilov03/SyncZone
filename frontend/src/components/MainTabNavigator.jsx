@@ -12,7 +12,7 @@ const Tab = createBottomTabNavigator();
 const iconMap = {
   Gifts: require("../../assets/icons/gift-icon.png"),
   Chats: require("../../assets/icons/chat-icon.png"),
-  Calls: require("../../assets/icons/call-icon.png"),
+  Calls: require("../../assets/icons/telephone.png"),
   Calendar: require("../../assets/icons/calendar-icon.png"),
 };
 

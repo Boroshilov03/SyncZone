@@ -645,7 +645,7 @@ const ChatDetailScreen = () => {
             </View>
             <TouchableOpacity style={styles.callIconContainer}>
               <Image
-                source={require("../../assets/icons/call-icon.png")}
+                source={require("../../assets/icons/telephone.png")}
                 style={styles.callIcon}
               />
             </TouchableOpacity>
