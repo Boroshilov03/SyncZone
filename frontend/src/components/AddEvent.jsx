@@ -72,6 +72,14 @@ const AddEvent = ({ onClose }) => {
   }, [selectedContacts]); // Trigger whenever selectedContacts changes
 
   const handleAddEvent = async () => {
+    const formatDateForDB = (date) => {
+      // Format date as YYYY-MM-DD to store in the database
+      return date.toISOString().split("T")[0];
+    };
+    const formatDateForDisplay = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString(); // Adjust format as needed
+    };
     const formatTime = (date) => {
       return date.toLocaleTimeString([], {
         hour: "2-digit",
@@ -80,6 +88,8 @@ const AddEvent = ({ onClose }) => {
         hour12: false,
       });
     };
+
+    const formattedDate = formatDateForDB(date); // Format the date
 
     const formattedStartTime = formatTime(startTime);
     const formattedEndTime = formatTime(endTime);
@@ -129,13 +139,21 @@ const AddEvent = ({ onClose }) => {
 
   const addEventParticipants = async (eventID) => {
     try {
-      // Iterate over the selectedContacts array
-      for (let participantId of selectedContacts) {
+      // Ensure selectedContacts is initialized as an empty array if it's undefined
+      const participants = selectedContacts || [];
+  
+      // Ensure the current user (self) is always included in selectedContacts
+      const participantsToAdd = participants.includes(user.id)
+        ? participants
+        : [...participants, user.id]; // Add user.id if it's not already included
+  
+      // Iterate over the participants array to add each participant
+      for (let participantId of participantsToAdd) {
         const { data, error } = await supabase
           .from("event_participants")
           .insert({ user_id: participantId, event_id: eventID })
           .select();
-
+  
         if (error) {
           console.error(
             `Error adding participant ${participantId}:`,
@@ -149,6 +167,8 @@ const AddEvent = ({ onClose }) => {
       console.error("Error adding selectedContacts:", error);
     }
   };
+  
+  
 
   const onDateChange = (event, selectedDate) => {
     // Close the picker when a date is selected or if dismissed

@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 20,
     position: "relative",
+    marginTop: 20,
   },
   titleContainer: {
     position: "absolute",
