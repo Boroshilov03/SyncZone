@@ -47,6 +47,8 @@ const AddEvent = ({ onClose }) => {
   const [mood, setMood] = useState(null); // Selected mood
   const [modalVisible, setModalVisible] = useState(false);
   const [contacts, setContacts] = useState([]);
+  const [selectedDate, setSelectedDate] = useState("");  // The date state
+
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -71,15 +73,35 @@ const AddEvent = ({ onClose }) => {
     fetchContacts();
   }, [selectedContacts]); // Trigger whenever selectedContacts changes
 
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);  // Update the selected date when user selects a date
+  };
+  
+  const handleSubmit = () => {
+    const formattedDate = formatDateForDB(selectedDate);  // Process the date
+  
+    // Save the event details, including the formatted date
+    const newEvent = {
+      title: eventTitle,
+      date: formattedDate,  // The formatted date will be saved here
+      description: eventDescription,
+      // other event details...
+    };
+  
+    // Save the event, possibly with an API call or local storage
+    saveEventToDB(newEvent);
+  };
+  
   const handleAddEvent = async () => {
     const formatDateForDB = (date) => {
-      // Format date as YYYY-MM-DD to store in the database
-      return date.toISOString().split("T")[0];
+      const adjustedDate = new Date(date);
+      adjustedDate.setDate(adjustedDate.getDate() - 1);
+      adjustedDate.setMinutes(adjustedDate.getMinutes() - adjustedDate.getTimezoneOffset());
+      
+      return adjustedDate.toISOString(); // Return as ISO string for consistency
     };
-    const formatDateForDisplay = (dateString) => {
-      const date = new Date(dateString);
-      return date.toLocaleDateString(); // Adjust format as needed
-    };
+    
     const formatTime = (date) => {
       return date.toLocaleTimeString([], {
         hour: "2-digit",
@@ -169,7 +191,6 @@ const AddEvent = ({ onClose }) => {
   };
   
   
-
   const onDateChange = (event, selectedDate) => {
     // Close the picker when a date is selected or if dismissed
     if (event.type === "set" && selectedDate) {
@@ -225,7 +246,7 @@ const AddEvent = ({ onClose }) => {
             style={styles.timeContainer}
           >
             <Image
-              source={require("../../assets/icons/time_icon.webp")} // Add your time icon path
+              source={require("../../assets/icons/time_icon.webp")}
               style={styles.timeIcon}
             />
             <Text style={styles.value}>
@@ -239,14 +260,14 @@ const AddEvent = ({ onClose }) => {
         {showStartTimePicker && (
           <DateTimePicker
             testID="startTimePicker"
-            value={startTime} // Pass the time state
-            mode="time" // Make sure the mode is set to "time"
-            is24Hour={false} // Set to false for 12-hour format or true for 24-hour format
-            display="spinner" // Optional display style
+            value={startTime}
+            mode="time"
+            is24Hour={false}
+            display="spinner"
             onChange={(event, selectedTime) => {
               const currentTime = selectedTime || startTime;
-              setShowStartTimePicker(false);
               setStartTime(currentTime);
+              setShowStartTimePicker(false);
             }}
           />
         )}
@@ -255,13 +276,13 @@ const AddEvent = ({ onClose }) => {
       {/* End Time */}
       <View style={styles.column}>
         <View style={styles.row}>
-          <Text style={styles.label}>End Time: </Text>
+          <Text style={styles.label}>End Time:</Text>
           <TouchableOpacity
             onPress={() => setShowEndTimePicker(!showEndTimePicker)}
             style={styles.timeContainer}
           >
             <Image
-              source={require("../../assets/icons/time_icon.webp")} // Add your time icon path
+              source={require("../../assets/icons/time_icon.webp")}
               style={styles.timeIcon}
             />
             <Text style={styles.value}>
@@ -275,19 +296,19 @@ const AddEvent = ({ onClose }) => {
         {showEndTimePicker && (
           <DateTimePicker
             testID="endTimePicker"
-            value={endTime} // Pass the time state
-            mode="time" // Make sure the mode is set to "time"
-            is24Hour={false} // Set to false for 12-hour format or true for 24-hour format
-            display="spinner" // Optional display style
+            value={endTime}
+            mode="time"
+            is24Hour={false}
+            display="spinner"
             onChange={(event, selectedTime) => {
               const currentTime = selectedTime || endTime;
-              setShowEndTimePicker(false);
               setEndTime(currentTime);
+              setShowEndTimePicker(false);
             }}
           />
         )}
       </View>
-
+      
       <TextInput
         style={styles.input}
         placeholder="Description"
