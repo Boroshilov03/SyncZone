@@ -659,7 +659,7 @@ const ChatDetailScreen = () => {
                 position: "absolute",
                 top: "50%",
                 left: "50%",
-                transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
+                // transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
               }}
             />
           )}
@@ -826,8 +826,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   callIcon: {
-    width: 27,
-    height: 25,
+    width: 25.5,
+    height: 25.5,
   },
   typingIndicator: {
     fontSize: 12,
@@ -951,6 +951,8 @@ const styles = StyleSheet.create({
     alignItems: "center", // Center horizontally
     justifyContent: "center", // Center vertically
     alignSelf: "center",
+    transform: [{ rotate: '-45deg' }], // Apply the 45 degree tilt
+
   },
   secondaryButtonContainer: {
     flexDirection: "row",

@@ -27,14 +27,26 @@ import { Dimensions } from "react-native";
 
 const { height: screenHeight } = Dimensions.get("window"); // Get screen height
 
+
 const ChatsScreen = ({ navigation }) => {
   const [input, setInput] = useState("");
   const [profileVisible, setProfileVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedContact, setSelectedContact] = useState(null);
+  // const [selectedContact, setSelectedContact] = useState(null);
   const [lastMessage, setLastMessage] = useState("")
   const { user } = useStore();
   const queryClient = useQueryClient();
+  const [pressedCardId, setPressedCardId] = useState(null); // Track which card is pressed
+  const [selectedContact, setSelectedContact] = useState({});
+  
+  // Reset the pressed card state when navigating to a new screen
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setPressedCardId(null); // Reset when coming back to the screen
+    });
+    return unsubscribe; // Cleanup listener when component unmounts or screen changes
+  }, [navigation]);
+
 
   const {
     data: chats = [],
@@ -280,9 +292,21 @@ const ChatsScreen = ({ navigation }) => {
             groupTitle: item.group_title,
           });
           markMessagesAsRead(item.id); // Mark messages as read upon opening
+          setPressedCardId(item.id); // Set the pressed card ID
         }}
+        onPressIn={() => setPressedCardId(item.id)} // Set the pressed card ID when pressing
+        onPressOut={() => setPressedCardId(null)} // Reset when press is released
+        activeOpacity={1} // Prevent opacity changes
       >
-        <View style={[styles.card, isLastItem && { marginBottom: 70 }]}>
+        <View
+          style={[ 
+            styles.card, 
+            isLastItem && { marginBottom: 70 }, 
+            {
+              backgroundColor: pressedCardId === item.id ? "#e2f5f8" : "#D1EBEF", // Change color only for the pressed card
+            }
+          ]}
+        >
           <TouchableOpacity
             onPress={() => {
               setProfileVisible(true);
@@ -317,7 +341,7 @@ const ChatsScreen = ({ navigation }) => {
                 </View>
               </View>
             </Modal>
-
+  
             {/* Avatar with Active Banner */}
             <View style={styles.avatarContainer}>
               {displayPhoto ? (
@@ -344,7 +368,7 @@ const ChatsScreen = ({ navigation }) => {
               )}
             </View>
           </TouchableOpacity>
-
+  
           <View style={styles.cardBody}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>{displayName}</Text>
@@ -588,17 +612,14 @@ const styles = StyleSheet.create({
     padding: 12,
     marginVertical: 4,
     backgroundColor: "#D1EBEF",
-    borderRadius: 25,
+    borderRadius: 20,
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
-    width: "95%", // Set width to 100% to match the container
+    width: "95%",
     alignSelf: "center",
   },
   cardBody: {
