@@ -47,6 +47,9 @@ const AddEvent = ({ onClose }) => {
   const [mood, setMood] = useState(null); // Selected mood
   const [modalVisible, setModalVisible] = useState(false);
   const [contacts, setContacts] = useState([]);
+  const [selectedDate, setSelectedDate] = useState("");  // The date state
+  const [titleError, setTitleError] = useState(""); // Title validation error
+
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -71,15 +74,44 @@ const AddEvent = ({ onClose }) => {
     fetchContacts();
   }, [selectedContacts]); // Trigger whenever selectedContacts changes
 
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);  // Update the selected date when user selects a date
+  };
+  
+  const handleSubmit = () => {
+    const formattedDate = formatDateForDB(selectedDate);  // Process the date
+  
+    // Save the event details, including the formatted date
+    const newEvent = {
+      title: eventTitle,
+      date: formattedDate,  // The formatted date will be saved here
+      description: eventDescription,
+      // other event details...
+    };
+  
+    // Save the event, possibly with an API call or local storage
+    saveEventToDB(newEvent);
+  };
+  
   const handleAddEvent = async () => {
+        // Title validation
+        if (titleValue.trim() === "") {
+          setTitleError("Title is required.");
+          return;
+        } else if (titleValue.length > 20) {
+          setTitleError("Title cannot exceed 20 characters.");
+          return;
+        } else {
+          setTitleError(""); // Clear error if valid
+        }
     const formatDateForDB = (date) => {
-      // Format date as YYYY-MM-DD to store in the database
-      return date.toISOString().split("T")[0];
+      const adjustedDate = new Date(date);
+      adjustedDate.setDate(adjustedDate.getDate() - 1);
+      adjustedDate.setMinutes(adjustedDate.getMinutes() - adjustedDate.getTimezoneOffset());
+      return adjustedDate.toISOString(); // Return as ISO string for consistency
     };
-    const formatDateForDisplay = (dateString) => {
-      const date = new Date(dateString);
-      return date.toLocaleDateString(); // Adjust format as needed
-    };
+  
     const formatTime = (date) => {
       return date.toLocaleTimeString([], {
         hour: "2-digit",
@@ -89,8 +121,7 @@ const AddEvent = ({ onClose }) => {
       });
     };
 
-    const formattedDate = formatDateForDB(date); // Format the date
-
+    const formattedDate = formatDateForDB(date);
     const formattedStartTime = formatTime(startTime);
     const formattedEndTime = formatTime(endTime);
 
@@ -103,6 +134,12 @@ const AddEvent = ({ onClose }) => {
       selectedContacts,
       mood,
     });
+
+     // Check time constraint: startTime must be before endTime
+  if (startTime >= endTime) {
+    alert("Start time must be before end time."); // Alert the user about the invalid time
+    return; // Prevent submitting the event if time is invalid
+  }
 
     try {
       const { data, error } = await supabase
@@ -169,7 +206,6 @@ const AddEvent = ({ onClose }) => {
   };
   
   
-
   const onDateChange = (event, selectedDate) => {
     // Close the picker when a date is selected or if dismissed
     if (event.type === "set" && selectedDate) {
@@ -187,14 +223,19 @@ const AddEvent = ({ onClose }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>New Event</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Event Title"
-        value={titleValue}
-        onChangeText={settitleValue}
-      />
+    <Text style={styles.title}>New Event</Text>
+  
+    {titleError ? <Text style={styles.errorText}>{titleError}</Text> : null}
+  
+    <TextInput
+      style={[
+        styles.input,
+        titleError ? styles.inputError : null, // Red border on error
+      ]}
+      placeholder="Event Title"
+      value={titleValue}
+      onChangeText={(text) => settitleValue(text)} // Track changes but validate on submission
+    />
 
       <View style={styles.row}>
         <Text style={styles.label}>Date: </Text>
@@ -216,6 +257,7 @@ const AddEvent = ({ onClose }) => {
         )}
       </View>
 
+
       {/* Start Time */}
       <View style={styles.column}>
         <View style={styles.row}>
@@ -225,7 +267,7 @@ const AddEvent = ({ onClose }) => {
             style={styles.timeContainer}
           >
             <Image
-              source={require("../../assets/icons/time_icon.webp")} // Add your time icon path
+              source={require("../../assets/icons/time_icon.webp")}
               style={styles.timeIcon}
             />
             <Text style={styles.value}>
@@ -239,14 +281,14 @@ const AddEvent = ({ onClose }) => {
         {showStartTimePicker && (
           <DateTimePicker
             testID="startTimePicker"
-            value={startTime} // Pass the time state
-            mode="time" // Make sure the mode is set to "time"
-            is24Hour={false} // Set to false for 12-hour format or true for 24-hour format
-            display="spinner" // Optional display style
+            value={startTime}
+            mode="time"
+            is24Hour={false}
+            display="spinner"
             onChange={(event, selectedTime) => {
               const currentTime = selectedTime || startTime;
-              setShowStartTimePicker(false);
               setStartTime(currentTime);
+              setShowStartTimePicker(false);
             }}
           />
         )}
@@ -255,13 +297,13 @@ const AddEvent = ({ onClose }) => {
       {/* End Time */}
       <View style={styles.column}>
         <View style={styles.row}>
-          <Text style={styles.label}>End Time: </Text>
+          <Text style={styles.label}>End Time:</Text>
           <TouchableOpacity
             onPress={() => setShowEndTimePicker(!showEndTimePicker)}
             style={styles.timeContainer}
           >
             <Image
-              source={require("../../assets/icons/time_icon.webp")} // Add your time icon path
+              source={require("../../assets/icons/time_icon.webp")}
               style={styles.timeIcon}
             />
             <Text style={styles.value}>
@@ -275,19 +317,19 @@ const AddEvent = ({ onClose }) => {
         {showEndTimePicker && (
           <DateTimePicker
             testID="endTimePicker"
-            value={endTime} // Pass the time state
-            mode="time" // Make sure the mode is set to "time"
-            is24Hour={false} // Set to false for 12-hour format or true for 24-hour format
-            display="spinner" // Optional display style
+            value={endTime}
+            mode="time"
+            is24Hour={false}
+            display="spinner"
             onChange={(event, selectedTime) => {
               const currentTime = selectedTime || endTime;
-              setShowEndTimePicker(false);
               setEndTime(currentTime);
+              setShowEndTimePicker(false);
             }}
           />
         )}
       </View>
-
+      
       <TextInput
         style={styles.input}
         placeholder="Description"
@@ -410,6 +452,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "center",
   },
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    marginBottom: 8, // Space below the error message
+  },
   input: {
     height: 40,
     borderColor: "grey",
@@ -419,6 +466,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: "#fff",
     width: "100%",
+  },
+  inputError: {
+    borderColor: "red", // Red border on error
   },
   row: {
     flexDirection: "row",

@@ -153,10 +153,10 @@ const AddParticipants = ({
                   </View>
                 )}
                 <View style={styles.contactText}>
-                  <Text>
-                    {item.first_name} {item.last_name}
+                <Text style={styles.profileName}>
+                {item.first_name} {item.last_name}
                   </Text>
-                  <Text>@{item.username}</Text>
+                  <Text style={styles.contactUsername}>@{item.username}</Text>
                 </View>
             
                 {/* Checkbox */}
@@ -253,9 +253,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
     width: "100%", // Ensure item takes full width
+  },
+  profileName: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#333",
   },
   contactText: {
     flex: 1,
@@ -298,6 +301,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 5,
+  },
+  contactUsername: {
+    fontSize: 14,
+    color: "#666",
   },
   closeButtonText: {
     color: "white",

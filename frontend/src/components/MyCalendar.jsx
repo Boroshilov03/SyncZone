@@ -79,13 +79,17 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
   useEffect(() => {
     if (events.length) {
       const currentDate = new Date(); // Get the current date
+      const adjustedCurrentDate = new Date();
+      adjustedCurrentDate.setDate(adjustedCurrentDate.getDate() - 1); // Move back one day
+      adjustedCurrentDate.setHours(0, 0, 0, 0); // Reset to the beginning of the day
+
 
       // Group events by date and filter out past events
       const groupedAgendaItems = events
         .filter((event) => {
           const eventDate = new Date(event.date);
           return (
-            eventDate >= new Date(currentDate.setHours(0, 0, 0, 0)) &&
+            eventDate >= adjustedCurrentDate && 
             isSameMonth(parseISO(event.date), selectedMonth)
           );
         })
