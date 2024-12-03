@@ -122,6 +122,7 @@ const EditEvent = ({ event, onClose }) => {
 
   const [mood, setMood] = useState(event.mood); // Selected mood
   const [deletePopupVisible, setDeletePopupVisible] = useState(false); // Controls visibility of DeleteEvent
+  const [titleError, setTitleError] = useState(""); // Title validation error
 
 
   useEffect(() => {
@@ -199,6 +200,16 @@ const EditEvent = ({ event, onClose }) => {
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`; // Format: YYYY-MM-DD
     };
+            // Title validation
+            if (titleValue.trim() === "") {
+              setTitleError("Title is required.");
+              return;
+            } else if (titleValue.length > 20) {
+              setTitleError("Title cannot exceed 20 characters.");
+              return;
+            } else {
+              setTitleError(""); // Clear error if valid
+            }
 
     // Function to format time as HH:mm:ss
     const formatTimeForSubmission = (date) => {
@@ -211,6 +222,13 @@ const EditEvent = ({ event, onClose }) => {
     // Formatting the start and end times
     const formattedStartTime = formatTimeForSubmission(startTime);
     const formattedEndTime = formatTimeForSubmission(endTime);
+
+     // Check time constraint: startTime must be before endTime
+     if (startTime >= endTime) {
+      alert("Start time must be before end time."); // Alert the user about the invalid time
+      return; // Prevent submitting the event if time is invalid
+    }
+
 
     try {
       console.log(
@@ -341,6 +359,7 @@ const newParticipants = Array.isArray(selectedContacts)
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
+        
         {/* Title Container */}
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Edit Event</Text>
@@ -624,6 +643,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "center",
     flex: 1,
+  },
+  inputError: {
+    borderColor: "red", // Red border on error
+  },
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    marginBottom: 8, // Space below the error message
   },
   trashIcon: {
     width: 20,

@@ -48,6 +48,7 @@ const AddEvent = ({ onClose }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [contacts, setContacts] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");  // The date state
+  const [titleError, setTitleError] = useState(""); // Title validation error
 
 
   useEffect(() => {
@@ -94,14 +95,23 @@ const AddEvent = ({ onClose }) => {
   };
   
   const handleAddEvent = async () => {
+        // Title validation
+        if (titleValue.trim() === "") {
+          setTitleError("Title is required.");
+          return;
+        } else if (titleValue.length > 20) {
+          setTitleError("Title cannot exceed 20 characters.");
+          return;
+        } else {
+          setTitleError(""); // Clear error if valid
+        }
     const formatDateForDB = (date) => {
       const adjustedDate = new Date(date);
       adjustedDate.setDate(adjustedDate.getDate() - 1);
       adjustedDate.setMinutes(adjustedDate.getMinutes() - adjustedDate.getTimezoneOffset());
-      
       return adjustedDate.toISOString(); // Return as ISO string for consistency
     };
-    
+  
     const formatTime = (date) => {
       return date.toLocaleTimeString([], {
         hour: "2-digit",
@@ -111,8 +121,7 @@ const AddEvent = ({ onClose }) => {
       });
     };
 
-    const formattedDate = formatDateForDB(date); // Format the date
-
+    const formattedDate = formatDateForDB(date);
     const formattedStartTime = formatTime(startTime);
     const formattedEndTime = formatTime(endTime);
 
@@ -125,6 +134,12 @@ const AddEvent = ({ onClose }) => {
       selectedContacts,
       mood,
     });
+
+     // Check time constraint: startTime must be before endTime
+  if (startTime >= endTime) {
+    alert("Start time must be before end time."); // Alert the user about the invalid time
+    return; // Prevent submitting the event if time is invalid
+  }
 
     try {
       const { data, error } = await supabase
@@ -208,14 +223,19 @@ const AddEvent = ({ onClose }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>New Event</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Event Title"
-        value={titleValue}
-        onChangeText={settitleValue}
-      />
+    <Text style={styles.title}>New Event</Text>
+  
+    {titleError ? <Text style={styles.errorText}>{titleError}</Text> : null}
+  
+    <TextInput
+      style={[
+        styles.input,
+        titleError ? styles.inputError : null, // Red border on error
+      ]}
+      placeholder="Event Title"
+      value={titleValue}
+      onChangeText={(text) => settitleValue(text)} // Track changes but validate on submission
+    />
 
       <View style={styles.row}>
         <Text style={styles.label}>Date: </Text>
@@ -236,6 +256,7 @@ const AddEvent = ({ onClose }) => {
           />
         )}
       </View>
+
 
       {/* Start Time */}
       <View style={styles.column}>
@@ -431,6 +452,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "center",
   },
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    marginBottom: 8, // Space below the error message
+  },
   input: {
     height: 40,
     borderColor: "grey",
@@ -440,6 +466,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: "#fff",
     width: "100%",
+  },
+  inputError: {
+    borderColor: "red", // Red border on error
   },
   row: {
     flexDirection: "row",

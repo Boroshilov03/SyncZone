@@ -1,10 +1,10 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import React from "react";
 import { Image, Text, StyleSheet, View } from "react-native";
+import ChatsScreen from "../screens/ChatsScreen";
 import GiftsScreen from "../screens/GiftsScreen";
 import CallsScreen from "../screens/CallsScreen";
 import CalendarScreen from "../screens/CalendarScreen";
-import ChatsScreen from "../screens/ChatsScreen";
 import RecentCalls from "../screens/RecentCalls";
 
 const Tab = createBottomTabNavigator();
@@ -40,6 +40,7 @@ const iconSizeMap = {
 function MainTabNavigator({ navigation }) {
   return (
     <Tab.Navigator
+    initialRouteName="Chats" // Set "Chats" as the default screen
       screenOptions={({ route }) => ({
         tabBarShowLabel: false,
         tabBarStyle: [
