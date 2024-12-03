@@ -84,6 +84,7 @@ const ChatDetailScreen = () => {
 
   // Function to send the selected image
   const sendImage = async () => {
+    console.log("sending image")
     if (!base64Photo) {
       Alert.alert("Error", "No photo selected.");
       return;
@@ -372,41 +373,52 @@ const ChatDetailScreen = () => {
     }, 2000);
   };
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
+ const handleSendMessage = async () => {
+  if (!newMessage.trim()) return;
 
-    const messageContent = newMessage.trim();
-    setNewMessage("");
+  const messageContent = newMessage.trim();
+  setNewMessage(""); // Reset input field
 
-    const result = await processMessageWithEmotion(
-      messageContent,
-      user.id,
-      chatId,
-      wsRef.current
-    );
+  // Process the message with emotion analysis
+  const result = await processMessageWithEmotion(
+    messageContent,
+    user.id,
+    chatId,
+    wsRef.current
+  );
 
-    if (result) {
-      // Update local state with the new message and emotion
-      setMessages((prevMessages) => [
-        {
-          ...result.message,
-          senderEmotion: result.emotionAnalysis.emotion,
-          receiverEmotion: null, // Will be updated when receiver processes it
-        },
-        ...prevMessages,
-      ]);
+  if (result) {
+    // Log the messages state before updating
+    console.log("Messages before update:", messages);
 
-      // Broadcast new message to other users
-      supabase.channel(`chat-room-${chatId}`).send({
-        type: "broadcast",
-        event: "new-message",
-        payload: {
-          ...result.message,
-          senderEmotion: result.emotionAnalysis.emotion,
-        },
-      });
-    }
-  };
+    // Update local state with the new message and emotion
+    setMessages((prevMessages) => {
+      const newMessage = {
+        ...result.message,
+        senderEmotion: result.emotionAnalysis.emotion,
+        receiverEmotion: null, // Will be updated later
+      };
+
+      // Log the messages state after updating the state
+      console.log("New message being added:", newMessage);
+      
+      return [newMessage, ...prevMessages];
+    });
+
+    // Broadcast the new message to other users
+    supabase.channel(`chat-room-${chatId}`).send({
+      type: "broadcast",
+      event: "new-message",
+      payload: {
+        ...result.message,
+        senderEmotion: result.emotionAnalysis.emotion,
+      },
+    });
+
+    // Log the messages state after the broadcast
+    console.log("Messages after update:", messages);
+  }
+};
 
   const emotionColorMap = {
     // Positive Emotions - Bright Colors
@@ -725,6 +737,7 @@ const ChatDetailScreen = () => {
                 visible={ownedStickersVisible}
                 onClose={() => setOwnedStickersVisible(false)}
                 chatID={chatId}
+                setMessages={setMessages}
               />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleSendMessage}>
