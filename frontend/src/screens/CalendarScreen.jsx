@@ -45,7 +45,7 @@ const CalendarScreen = ({ navigation, route }) => {
   };
 
   return (
-    <View style={styles.safeArea}>
+    <View style={[styles.safeArea]}>
       <Header
         toggleAddEventModal={toggleAddEventModal}
         event="calendar"

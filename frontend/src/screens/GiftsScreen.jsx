@@ -7,13 +7,18 @@ import {
   Image,
   SafeAreaView,
   Alert,
+  Animated, // Import Animated
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef  } from "react";
 import { supabase } from "../lib/supabase"; // Import Supabase client for Database Operations
 import useStore from "../store/store"; // Import store for state management
 import Header from "../components/Header"; //Import Header Component
-import BannerCategory from "../../assets/icons/BannerCat.png";
-import BannerStickers from "../../assets/icons/BannerStickers.png";
+//import BannerCategory from "../../assets/icons/BannerCat.png";
+//import BannerStickers from "../../assets/icons/BannerStickers.png";
+import { Pacifico_400Regular } from "@expo-google-fonts/pacifico"; // Import Pacifico font
+import { Poppins_400Regular } from "@expo-google-fonts/poppins"; // Import Poppins font
+import { useFonts } from "expo-font";
+import { LinearGradient } from "expo-linear-gradient";
 
 const GiftsScreen = ({ navigation }) => {
   const { user } = useStore(); // Retrieve the user from the store
@@ -23,6 +28,17 @@ const GiftsScreen = ({ navigation }) => {
   const [showOwned, setShowOwned] = useState(false); // State for toggle switch
   const [user_banners, setUserBanners] = useState(new Set()); // Set to track owned banners
   const [user_stickers, setUserStickers] = useState(new Set()); // Set to track owned stickers
+
+  // Animated values for button scale and success message
+  const scaleAnim = useRef(new Animated.Value(1)).current; // Start with normal size
+  const opacityAnim = useRef(new Animated.Value(0)).current; // Start with hidden success message
+
+
+    // Load fonts
+  const [fontsLoaded] = useFonts({
+    Pacifico: Pacifico_400Regular,
+    Poppins: Poppins_400Regular,
+  });
 
   // Fetch and log user ID, banners (IDs), stickers (IDs), user_banners (IDs), and user_stickers (IDs)
   useEffect(() => {
@@ -127,7 +143,6 @@ const GiftsScreen = ({ navigation }) => {
   };
 
   const handleGetBanner = async (bannerId) => {
-    // Function to handle acquiring a banner
     if (!userId) return;
 
     const { data, error: checkError } = await supabase // Check if the user already owns this banner
@@ -138,10 +153,7 @@ const GiftsScreen = ({ navigation }) => {
 
     if (checkError) {
       console.error("Error checking user_banners:", checkError.message);
-      Alert.alert(
-        "Error",
-        "Failed to check banner ownership. Please try again."
-      );
+      Alert.alert("Error", "Failed to check banner ownership. Please try again.");
       return;
     }
 
@@ -152,14 +164,36 @@ const GiftsScreen = ({ navigation }) => {
 
     const { error } = await supabase // Insert the banner acquisition into the user_banners table
       .from("user_banners")
-      .insert([{ user_id: userId, banner_id: bannerId }]); // Insert new ownership record
+      .insert([{ user_id: userId, banner_id: bannerId }]);
 
     if (error) {
       console.error("Error inserting into user_banners:", error.message);
       Alert.alert("Error", "Failed to acquire banner. Please try again.");
     } else {
-      Alert.alert("Success", "You have acquired the banner!"); // Notify success
-      console.log("Acquired Banner ID:", bannerId); // Log the acquired banner ID
+      // Success Animation for button and success message
+      Animated.sequence([
+        // Scale up the button
+        Animated.timing(scaleAnim, {
+          toValue: 1.2,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        // Scale back to normal size
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      // Show the success message with opacity animation
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+
+      Alert.alert("Success", "You have acquired the banner!");
       setUserBanners((prev) => new Set(prev).add(bannerId)); // Update owned banners in state
     }
   };
@@ -203,29 +237,33 @@ const GiftsScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <Header
-        event="shop"
-        navigation={navigation}
-        title="Shop"
-        toggleSwitch={toggleSwitch}
-        switchValue={showOwned}
-      />
-      <ScrollView contentContainerStyle={styles.container}>
-        {/* Banners Category Box */}
-        <View style={styles.categoryContainer}>
-          <Image
-            source={BannerCategory}
-            style={styles.categoryImage}
-            resizeMode="contain"
-          />
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContainer}
-        >
-          <View style={styles.itemsContainer}>
+    <LinearGradient
+      colors={["#FFE4E1", "#FFC1CC", "#FFB6C1"]}
+      style={{ flex: 1 }}
+    >
+      {/* Header */}
+      <View style={styles.headerContainer}>
+        <Header
+          event="shop"
+          navigation={navigation}
+          title="Shop"
+          toggleSwitch={toggleSwitch}
+          switchValue={showOwned}
+        />
+      </View>
+  
+      {/* Main Vertical ScrollView */}
+      <ScrollView contentContainerStyle={styles.verticalScrollContainer}>
+        {/* Banners Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.bannersTitle}>BANNERS</Text>
+  
+          {/* Horizontal ScrollView for Banners */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={true}
+            contentContainerStyle={styles.scrollContainer}
+          >
             {banners.map((banner) => {
               const isOwned = user_banners.has(banner.id);
               return showOwned ? (
@@ -257,33 +295,33 @@ const GiftsScreen = ({ navigation }) => {
                     style={[styles.button, styles.getButton]}
                     onPress={() => handleGetBanner(banner.id)}
                   >
-                      <Text style={styles.buttonText}>Get</Text>
+                    <Animated.Text
+                      style={[styles.buttonText, { transform: [{ scale: scaleAnim }] }]}
+                    >
+                      Get
+                    </Animated.Text>
                   </TouchableOpacity>
                 </View>
               ) : null;
             })}
+          </ScrollView>
   
-            {/* Show "More Banners Coming Soon..." only if all banners are owned */}
-            {!showOwned && banners.filter(banner => !user_banners.has(banner.id)).length === 0 && (
-              <Text style={styles.moreMessage}>More Banners Coming Soon...</Text>
-            )}
-          </View>
-        </ScrollView>
-  
-        {/* Stickers Category Box */}
-        <View style={styles.categoryContainer}>
-          <Image
-            source={BannerStickers}
-            style={styles.categoryImage}
-            resizeMode="contain"
-          />
+          {/* Show "More Banners Coming Soon..." only if all banners are owned */}
+          {!showOwned && banners.filter(banner => !user_banners.has(banner.id)).length === 0 && (
+            <Text style={styles.moreMessage}>More Banners Coming Soon...</Text>
+          )}
         </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContainer}
-        >
-          <View style={styles.itemsContainer}>
+  
+        {/* Stickers Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.stickersTitle}>STICKERS</Text>
+  
+          {/* Horizontal ScrollView for Stickers */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContainer}
+          >
             {stickers.map((sticker) => {
               const isOwned = user_stickers.has(sticker.id);
               return showOwned ? (
@@ -320,123 +358,122 @@ const GiftsScreen = ({ navigation }) => {
                 </View>
               ) : null;
             })}
+          </ScrollView>
   
-            {/* Show "More Stickers Coming Soon..." only if all stickers are owned */}
-            {!showOwned && stickers.filter(sticker => !user_stickers.has(sticker.id)).length === 0 && (
-              <Text style={styles.moreMessage}>More Stickers Coming Soon...</Text>
-            )}
-          </View>
-        </ScrollView>
+          {/* Show "More Stickers Coming Soon..." only if all stickers are owned */}
+          {!showOwned && stickers.filter(sticker => !user_stickers.has(sticker.id)).length === 0 && (
+            <Text style={styles.moreMessage}>More Stickers Coming Soon...</Text>
+          )}
+        </View>
       </ScrollView>
-    </View>
+  
+      {/* Success Message Animation */}
+      <Animated.View
+        style={[
+          styles.successMessageContainer,
+          { opacity: opacityAnim }, // Success message visibility
+        ]}
+      >
+        <Text style={styles.successMessage}>Banner Acquired!</Text>
+      </Animated.View>
+    </LinearGradient>
   );
   
-  };
+};
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
+  headerContainer: {
+    position: "relative",
+    zIndex: 1,
+    top: -4,
+  },
 
+  sectionContainer: {
+    marginBottom: 40, // Space between sections
   },
-  categoryContainer: {
-    //Style for boxes for Banners and Stickers
-    //marginBottom: 8, //Adds vertical margin (Space above and below)
-    //padding: 10, // Adds Padding inside the box
-    //borderWidth: 1, // Defines the border's width as 1 pixel.
-    //borderColor: "#ccc", // Sets the border color to a loght gray
-    //borderRadius: 8, // Rounds the corners of the box.
-    //marginHorizontal: 10,
+  bannersTitle: {
+    fontFamily: "Pacifico",
+    fontSize: 40,
+    color: "#FF69B4",
+    textAlign: "center",
+    marginBottom: 0,
+    textShadowColor: "#FFC0CB",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    top: -20,
+    zIndex: 1,
   },
-  categoryHeader: {
-    flexDirection: "row",
-    alignItems: "center", // Aligns image and text vertically
+  stickersTitle: {
+    fontFamily: "Pacifico",
+    fontSize: 40,
+    color: "#FF69B4", // Light purple color for stickers
+    textAlign: "center",
+    marginBottom: -10,
+    top: -20,
+    textShadowColor: "#FF69B4", // Subtle purple shadow
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
-  categoryImage: {
-    width: 380, // Adjust width as needed
-    height: 180, // Adjust height as needed
-    marginTop: -35,
-    marginBottom: -25,
-    borderRadius: 20,
-    right:-10,
-    
+  verticalScrollContainer: {
+    paddingVertical: 0,
+    paddingHorizontal: 1,
   },
-  categoryText: {
-    // Style adds text to display Catefgory names (Banners/Stickers)
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-moreMessage: {
-  fontSize: 16,
-  fontWeight: "bold",
-  color: "#888", // Subtle gray color
-  textAlign: "center",
-  marginTop: 20, // Adds margin to the top to separate from items
-  marginBottom: 20, // Space at the bottom
-  width: "100%", // Ensures it takes up the full width
-},
   scrollContainer: {
-    // USed for SCrollView for contain items
-    flexDirection: "row", // Horizontal
-    paddingVertical: 10, // vertical space
-  },
-  itemsContainer: {
-    //Individual item box
-    flexDirection: "row", 
-    shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 1.5 },
-    shadowOpacity: 0.25, 
-    shadowRadius: 2,
-    elevation: 3,
-    marginLeft: 10,
-    marginBottom: 10, 
-    
+    flexDirection: "row", // Items will be displayed horizontally
+    alignItems: "center",
   },
   itemFrame: {
-    // image displayed for each banner or sticker
-    backgroundColor: "#D1EBEF", //light blue
+    backgroundColor: "#FFE4E1",
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    marginRight: 10,
-    padding: 10,
+    borderColor: "#FFE4E1",
+    borderRadius: 20,
+    marginRight: 20, // Space between items horizontally
+    padding: 15,
     alignItems: "center",
-
+    width: 130,
+    shadowColor: "#FFC0CB",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   image: {
     width: 90,
     height: 90,
+    borderRadius: 10,
   },
   bannerName: {
     marginVertical: 5,
-    fontSize: 16,
+    fontSize: 20,
+    color: "#7A6FDC",
+    fontWeight: "bold",
     textAlign: "center",
   },
   button: {
-    marginTop: 5,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
+    marginTop: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 15,
+    borderRadius: 20,
   },
   getButton: {
-    backgroundColor: "#F6D6EE",
-    shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 1.5 },
-    shadowOpacity: 0.25, 
-    shadowRadius: 3,
-    elevation: 3,
+    backgroundColor: "#FF69B4",
   },
   ownedButton: {
-    backgroundColor: "#adb5bd",
-    shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 1.5 },
-    shadowOpacity: 0.25, 
-    shadowRadius: 3,
-    elevation: 3,
+    backgroundColor: "#F8BBD0",
   },
   buttonText: {
-    fontWeight: "lightbold",
+    color: "#FFFFFF",
+    fontWeight: "bold",
   },
 
+  moreMessage: {
+    textAlign: "center",
+    fontSize: 18,
+    color: "#FF69B4",
+    fontWeight: "bold",
+    marginTop: 20,
+  },
 });
+
 
 export default GiftsScreen;
