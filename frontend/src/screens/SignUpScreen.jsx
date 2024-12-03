@@ -50,6 +50,7 @@ export default function SignupScreen({ navigation }) {
     description: null,
     time: null,
   });
+
   const [timezone, setTimezone] = useState(null);
   const [lat, setLat] = useState(null);
   const [lon, setLon] = useState(null);
@@ -61,7 +62,6 @@ export default function SignupScreen({ navigation }) {
   const handleInputChange = useCallback((name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }, []);
-
 
   const fetchWeatherAndTime = useCallback(async (lat, lon) => {
     try {

@@ -38,7 +38,7 @@ const ChatsScreen = ({ navigation }) => {
   const queryClient = useQueryClient();
   const [pressedCardId, setPressedCardId] = useState(null); // Track which card is pressed
   const [selectedContact, setSelectedContact] = useState({});
-  
+
   // Reset the pressed card state when navigating to a new screen
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -66,13 +66,13 @@ const ChatsScreen = ({ navigation }) => {
       .from("chat_participants")
       .select("chat_id")
       .eq("user_id", user.id);
-  
+
     if (chatError) {
       throw new Error("Error fetching chat participants: " + chatError.message);
     }
-  
+
     const chatIds = chatParticipants.map((chat) => chat.chat_id);
-  
+
     const { data, error } = await supabase
       .from("chats")
       .select(
@@ -93,25 +93,25 @@ const ChatsScreen = ({ navigation }) => {
       )
       .in("id", chatIds)
       .limit(20);
-  
+
     if (error) {
       throw new Error("Error fetching chats: " + error.message);
     }
-  
+
     // Fetch active banners for other participants
     for (const chat of data) {
       const participants = chat.chat_participants;
       const otherParticipants = participants.filter(
         (participant) => participant.user_id !== user.id
       );
-  
+
       for (const participant of otherParticipants) {
         const { data: activeBanner, error: bannerError } = await supabase
           .from("active_banner")
           .select("banner_id")
           .eq("user_id", participant.user_id)
           .single();
-  
+
         if (bannerError) {
           participant.activeBanner = null;
         } else if (activeBanner) {
@@ -121,7 +121,7 @@ const ChatsScreen = ({ navigation }) => {
               .select("image_url")
               .eq("id", activeBanner.banner_id)
               .single();
-  
+
           if (bannerDetailsError) {
             participant.activeBanner = null;
           } else {
@@ -132,26 +132,26 @@ const ChatsScreen = ({ navigation }) => {
         }
       }
     }
-  
+
     return data
       .map((chat) => {
         const messages = chat.messages || [];
-  
+
         // Sort messages by creation date and pick the most recent one
         const lastMessage =
           messages.length > 0
             ? messages.sort(
-                (a, b) => new Date(b.created_at) - new Date(a.created_at)
-              )[0]
+              (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            )[0]
             : null;
-  
+
         const unreadMessagesCount = messages.filter(
           (message) => !message.is_read && message.sender_id !== user.id
         ).length;
-  
+
         const lastMessageContent =
           lastMessage?.content?.trim() === "" ? "Attachment sent" : lastMessage?.content || "No messages yet";
-  
+
         return {
           ...chat,
           lastMessageContent,
@@ -162,7 +162,7 @@ const ChatsScreen = ({ navigation }) => {
       })
       .reverse(); // Reverse the chats list
   }
-  
+
 
   // Function to mark all messages as read in a chat
   async function markMessagesAsRead(chatId) {
@@ -299,9 +299,9 @@ const ChatsScreen = ({ navigation }) => {
         activeOpacity={1} // Prevent opacity changes
       >
         <View
-          style={[ 
-            styles.card, 
-            isLastItem && { marginBottom: 70 }, 
+          style={[
+            styles.card,
+            isLastItem && { marginBottom: 70 },
             {
               backgroundColor: pressedCardId === item.id ? "#e2f5f8" : "#D1EBEF", // Change color only for the pressed card
             }
@@ -341,7 +341,7 @@ const ChatsScreen = ({ navigation }) => {
                 </View>
               </View>
             </Modal>
-  
+
             {/* Avatar with Active Banner */}
             <View style={styles.avatarContainer}>
               {displayPhoto ? (
@@ -368,16 +368,16 @@ const ChatsScreen = ({ navigation }) => {
               )}
             </View>
           </TouchableOpacity>
-  
+
           <View style={styles.cardBody}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>{displayName}</Text>
               <Text style={styles.cardTimestamp}>
                 {item.lastMessageTime
                   ? new Date(item.lastMessageTime).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
                   : ""}
               </Text>
             </View>
