@@ -250,10 +250,6 @@ export default function SignupScreen({ navigation }) {
         },
       });
 
-      // Log Supabase response to see if signup was successful or not
-      // console.log("Supabase SignUp Data:", data);
-      // console.log("Supabase SignUp Error:", error);
-
       if (error) {
         Alert.alert("Error", error.message);
         setLoading(false);
