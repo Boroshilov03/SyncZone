@@ -16,6 +16,7 @@ import {
   ScrollView,
   PanResponder,
   Button,
+  ActivityIndicator,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons"; // For chat and call icons
 import FeatherIcon from "react-native-vector-icons/Feather";
@@ -27,6 +28,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Profile from "./ProfileScreen";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { Dimensions } from "react-native";
+
+const { height: screenHeight } = Dimensions.get("window"); // Get screen height
 
 // Fetch mutual contacts from Supabase
 const fetchMutualContacts = async ({ queryKey }) => {
@@ -513,9 +517,21 @@ const ContactScreen = ({ navigation }) => {
     </View>
   );
 
-  if (isLoading) {
-    return <Text>Loading...</Text>;
-  }
+if (isLoading) {
+  return (
+    <ActivityIndicator
+      size="large"
+      color="lightblue"
+      style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        marginTop: -40, // Adjust based on the size of the ActivityIndicator
+        marginLeft: -40, // Adjust based on the size of the ActivityIndicator
+      }}
+    />
+  );
+}
 
   if (error) {
     return <Text>Error: {error.message}</Text>;
@@ -644,7 +660,7 @@ const ContactScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 10,
     backgroundColor: "#fff",
     zIndex: 2,
   },
@@ -679,7 +695,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 20,
+    marginTop: 40,
     zIndex: 3,
   },
   favoriteIcon: {
@@ -869,11 +885,12 @@ const styles = StyleSheet.create({
     marginRight: 15,
     width: "40%",
     alignSelf: "center",
+    top: 10,
   },
   closeButtonText: {
     fontSize: 20,
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
   },
   searchWrapper: {
     marginVertical: 15,
@@ -896,6 +913,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 5,
     elevation: 3,
+    height: screenHeight * 0.05,
   },
   searchIcon: {
     marginRight: 10,

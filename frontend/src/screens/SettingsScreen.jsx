@@ -18,7 +18,7 @@ const profilePic = require("../../assets/icons/pfp_icon.png");
 import { useRoute } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
+import { useFocusEffect } from "@react-navigation/native"; // Import useFocusEffect
 
 export default function Example({ navigation }) {
   const { setUser, setAccessToken, setRefreshToken, user } = useStore();
@@ -66,7 +66,8 @@ export default function Example({ navigation }) {
       .single();
 
     if (error) {
-      if (error.code === "PGRST116") { // No rows returned for single query
+      if (error.code === "PGRST116") {
+        // No rows returned for single query
         setActiveBannerData(null); // Set active banner data to null if no active banner
       } else {
         console.error("Error fetching active banner:", error.message);
@@ -91,7 +92,6 @@ export default function Example({ navigation }) {
       setActiveBannerData(null); // Explicitly set to null if no data returned
     }
   };
-
 
   useFocusEffect(
     React.useCallback(() => {
@@ -150,14 +150,20 @@ export default function Example({ navigation }) {
                     style={styles.bannerImage}
                   />
                 )}
-                <Image
-                  accessibilityLabel=""
-                  source={{
-                    uri: profilephoto || profilePic.uri,
-                  }}
-                  style={styles.profileAvatar}
-                />
-
+                {profilephoto ? (
+                  <Image
+                    alt="Avatar"
+                    resizeMode="cover"
+                    source={{ uri: profilephoto }}
+                    style={styles.profileImage}
+                  />
+                ) : (
+                  <View style={[styles.cardImg]}>
+                    <Text style={styles.cardAvatarText}>
+                      {user.user_metadata?.first_name[0].toUpperCase()}
+                    </Text>
+                  </View>
+                )}
                 <View style={styles.profileBody}>
                   <Text style={styles.profileName}>
                     {user.user_metadata?.first_name || ""}{" "}
@@ -165,13 +171,12 @@ export default function Example({ navigation }) {
                   </Text>
 
                   <Text style={styles.profileHandle}>
-                    {user.user_metadata?.username || "Unknown User"}
+                    @{user.user_metadata?.username || "Unknown User"}
                   </Text>
                   <Text style={styles.profileHandle}>
-                    email: {user.email || "Unknown User"}
+                    {user.email || "Unknown User"}
                   </Text>
                 </View>
-
                 <FeatherIcon color="#bcbcbc" name="chevron-right" size={22} />
               </TouchableOpacity>
             </View>
@@ -349,7 +354,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   bannerImage: {
-    position: 'absolute',
+    position: "absolute",
     width: 80, // Slightly wider than the profile picture
     height: 80, // Fixed height to fit the banner
     top: 7, // Adjust this value to position the banner above the profile picture
@@ -358,13 +363,26 @@ const styles = StyleSheet.create({
     borderRadius: 20, // Adjust to create a smoother edge
     justifyContent: "center",
     alignItems: "center",
-
   },
-  profileAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 9999,
-    marginRight: 12,
+  profileImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  cardImg: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
+    backgroundColor: "#FFADAD",
+    alignItems: "center",
+    justifyContent: "center",
   },
   profileBody: {
     marginRight: "auto",
@@ -375,7 +393,7 @@ const styles = StyleSheet.create({
     color: "#292929",
   },
   profileHandle: {
-    marginTop: 2,
+    marginTop: 1,
     fontSize: 16,
     fontWeight: "400",
     color: "#858585",

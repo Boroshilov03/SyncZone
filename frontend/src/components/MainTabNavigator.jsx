@@ -12,7 +12,7 @@ const Tab = createBottomTabNavigator();
 const iconMap = {
   Gifts: require("../../assets/icons/gift-icon.png"),
   Chats: require("../../assets/icons/chat-icon.png"),
-  Calls: require("../../assets/icons/call-icon.png"),
+  Calls: require("../../assets/icons/telephone.png"),
   Calendar: require("../../assets/icons/calendar-icon.png"),
 };
 
@@ -30,18 +30,11 @@ const colorMap = {
   Calendar: "#E6A919",
 };
 
-const labelMap = {
-  Gifts: "Shop",
-  Chats: "Chat",
-  Calls: "Call",
-  Calendar: "Calendar",
-};
-
 const iconSizeMap = {
   Gifts: { width: 30, height: 25 },
-  Chats: { width: 25, height: 22 },
-  Calls: { width: 25, height: 24 },
-  Calendar: { width: 30, height: 25 },
+  Chats: { width: 25, height: 23 },
+  Calls: { width: 24, height: 24 },
+  Calendar: { width: 28, height: 24 },
 };
 
 function MainTabNavigator({ navigation }) {
@@ -70,7 +63,6 @@ function MainTabNavigator({ navigation }) {
           const icon = iconMap[route.name];
           const backgroundColor = backgroundColorMap[route.name];
           const color = colorMap[route.name];
-          const label = labelMap[route.name];
           const { width, height } = iconSizeMap[route.name];
 
           return (
@@ -91,9 +83,6 @@ function MainTabNavigator({ navigation }) {
                   focused && { tintColor: color },
                 ]}
               />
-              {focused && (
-                <Text style={[styles.label, { color }]}>{label}</Text>
-              )}
             </View>
           );
         },
@@ -123,14 +112,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  label: {
-    fontSize: 13,
-    marginLeft: 3,
-  },
   activeBubble: {
     borderRadius: 20,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 7,
     elevation: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },

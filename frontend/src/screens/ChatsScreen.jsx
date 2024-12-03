@@ -23,14 +23,30 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import Profile from "./ProfileScreen";
 import FavoriteUsers from "../components/favoriteUsers";
+import { Dimensions } from "react-native";
+
+const { height: screenHeight } = Dimensions.get("window"); // Get screen height
+
 
 const ChatsScreen = ({ navigation }) => {
   const [input, setInput] = useState("");
   const [profileVisible, setProfileVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedContact, setSelectedContact] = useState(null);
+  // const [selectedContact, setSelectedContact] = useState(null);
+  const [lastMessage, setLastMessage] = useState("")
   const { user } = useStore();
   const queryClient = useQueryClient();
+  const [pressedCardId, setPressedCardId] = useState(null); // Track which card is pressed
+  const [selectedContact, setSelectedContact] = useState({});
+  
+  // Reset the pressed card state when navigating to a new screen
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setPressedCardId(null); // Reset when coming back to the screen
+    });
+    return unsubscribe; // Cleanup listener when component unmounts or screen changes
+  }, [navigation]);
+
 
   const {
     data: chats = [],
@@ -50,14 +66,13 @@ const ChatsScreen = ({ navigation }) => {
       .from("chat_participants")
       .select("chat_id")
       .eq("user_id", user.id);
-
+  
     if (chatError) {
       throw new Error("Error fetching chat participants: " + chatError.message);
     }
-
-    //console.log("Chat Participants:", chatParticipants);
+  
     const chatIds = chatParticipants.map((chat) => chat.chat_id);
-
+  
     const { data, error } = await supabase
       .from("chats")
       .select(
@@ -78,27 +93,26 @@ const ChatsScreen = ({ navigation }) => {
       )
       .in("id", chatIds)
       .limit(20);
-
+  
     if (error) {
       throw new Error("Error fetching chats: " + error.message);
     }
-
+  
     // Fetch active banners for other participants
     for (const chat of data) {
       const participants = chat.chat_participants;
       const otherParticipants = participants.filter(
         (participant) => participant.user_id !== user.id
       );
-
+  
       for (const participant of otherParticipants) {
         const { data: activeBanner, error: bannerError } = await supabase
           .from("active_banner")
           .select("banner_id")
           .eq("user_id", participant.user_id)
           .single();
-
+  
         if (bannerError) {
-          // Suppress error logs by removing or commenting out the log
           participant.activeBanner = null;
         } else if (activeBanner) {
           const { data: bannerDetails, error: bannerDetailsError } =
@@ -107,23 +121,22 @@ const ChatsScreen = ({ navigation }) => {
               .select("image_url")
               .eq("id", activeBanner.banner_id)
               .single();
-
+  
           if (bannerDetailsError) {
-            // Suppress error logs by removing or commenting out the log
             participant.activeBanner = null;
           } else {
             participant.activeBanner = bannerDetails.image_url;
           }
         } else {
-          participant.activeBanner = null; // Explicitly set to null if no banner found
+          participant.activeBanner = null;
         }
       }
     }
-
+  
     return data
       .map((chat) => {
         const messages = chat.messages || [];
-
+  
         // Sort messages by creation date and pick the most recent one
         const lastMessage =
           messages.length > 0
@@ -131,21 +144,25 @@ const ChatsScreen = ({ navigation }) => {
                 (a, b) => new Date(b.created_at) - new Date(a.created_at)
               )[0]
             : null;
-
+  
         const unreadMessagesCount = messages.filter(
           (message) => !message.is_read && message.sender_id !== user.id
         ).length;
-
+  
+        const lastMessageContent =
+          lastMessage?.content?.trim() === "" ? "Attachment sent" : lastMessage?.content || "No messages yet";
+  
         return {
           ...chat,
-          lastMessageContent: lastMessage?.content || "No messages yet",
+          lastMessageContent,
           lastMessageSender: lastMessage?.sender_id,
-          lastMessageTime: lastMessage?.created_at, // Get the last message time
+          lastMessageTime: lastMessage?.created_at,
           unreadMessagesCount,
         };
       })
       .reverse(); // Reverse the chats list
   }
+  
 
   // Function to mark all messages as read in a chat
   async function markMessagesAsRead(chatId) {
@@ -275,9 +292,21 @@ const ChatsScreen = ({ navigation }) => {
             groupTitle: item.group_title,
           });
           markMessagesAsRead(item.id); // Mark messages as read upon opening
+          setPressedCardId(item.id); // Set the pressed card ID
         }}
+        onPressIn={() => setPressedCardId(item.id)} // Set the pressed card ID when pressing
+        onPressOut={() => setPressedCardId(null)} // Reset when press is released
+        activeOpacity={1} // Prevent opacity changes
       >
-        <View style={[styles.card, isLastItem && { marginBottom: 70 }]}>
+        <View
+          style={[ 
+            styles.card, 
+            isLastItem && { marginBottom: 70 }, 
+            {
+              backgroundColor: pressedCardId === item.id ? "#e2f5f8" : "#D1EBEF", // Change color only for the pressed card
+            }
+          ]}
+        >
           <TouchableOpacity
             onPress={() => {
               setProfileVisible(true);
@@ -312,7 +341,7 @@ const ChatsScreen = ({ navigation }) => {
                 </View>
               </View>
             </Modal>
-
+  
             {/* Avatar with Active Banner */}
             <View style={styles.avatarContainer}>
               {displayPhoto ? (
@@ -339,7 +368,7 @@ const ChatsScreen = ({ navigation }) => {
               )}
             </View>
           </TouchableOpacity>
-
+  
           <View style={styles.cardBody}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>{displayName}</Text>
@@ -384,7 +413,7 @@ const ChatsScreen = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <Header event="message" navigation={navigation} title="Recent Chats" />
+      <Header event="message" navigation={navigation} title="Chats" />
       <View style={styles.container}>
         <View style={styles.searchWrapper}>
           <View style={styles.search}>
@@ -462,24 +491,23 @@ const styles = StyleSheet.create({
   },
   search: {
     position: "relative",
-    backgroundColor: "#efefef",
+    backgroundColor: "rgb(240, 240, 240)",
     justifyContent: "center",
     marginHorizontal: 12,
     alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgb(240, 240, 240)",
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 5,
     borderWidth: 1,
     borderColor: "#d1d1d1",
-    width: "90%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 5,
     elevation: 3,
+    height: screenHeight * 0.05, // Dynamically set height as 6% of screen height
   },
   favorites: {
     display: "flex",
@@ -488,9 +516,10 @@ const styles = StyleSheet.create({
     marginVertical: 12, // Added margin for spacing
   },
   favoritesTitle: {
-    fontWeight: "600",
-    fontSize: 18,
+    fontWeight: "500",
+    fontSize: 24,
     marginBottom: 8,
+    color: "#333333",
   },
   unreadBadge: {
     backgroundColor: "pink",
@@ -583,17 +612,14 @@ const styles = StyleSheet.create({
     padding: 12,
     marginVertical: 4,
     backgroundColor: "#D1EBEF",
-    borderRadius: 25,
+    borderRadius: 20,
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
-    width: "95%", // Set width to 100% to match the container
+    width: "95%",
     alignSelf: "center",
   },
   cardBody: {

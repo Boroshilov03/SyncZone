@@ -8,12 +8,16 @@ import {
   TextInput,
   TouchableOpacity,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRoute } from "@react-navigation/native";
 import useStore from "../store/store";
 import { supabase } from "../lib/supabase";
+import * as ImagePicker from "expo-image-picker";
+import { Alert } from "react-native";
+import { decode } from "base64-arraybuffer";
+import uuid from "react-native-uuid";
 
 const GroupDetailsScreen = ({ navigation }) => {
   const route = useRoute();
@@ -21,6 +25,34 @@ const GroupDetailsScreen = ({ navigation }) => {
   const { contacts, selectedUsers, selectedPeople } = route.params;
   const [input, setInput] = useState("");
   const [selectedPeopleData, setSelectedPeopleData] = useState(selectedPeople); // Track selected contact IDs in an array
+  const [groupPhoto, setGroupPhoto] = useState(null);
+  const [base64Photo, setBase64Photo] = useState(null);
+
+  const pickImage = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission needed",
+        "Sorry, we need camera roll permissions to make this work!"
+      );
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+      base64: true,
+    });
+
+    if (!result.canceled) {
+      const asset = result.assets[0]; // Access the selected asset
+      setGroupPhoto(asset.uri);
+      setBase64Photo(asset.base64);
+    }
+  }, []);
+
   const createChat = async (selectedPeopleData) => {
     try {
       // Combine user ID with selected participants to form the group participants
@@ -93,10 +125,68 @@ const GroupDetailsScreen = ({ navigation }) => {
         .insert(participants);
 
       if (participantsError) throw new Error("Error adding participants.");
+      let galleryUrl = null;
+
+      if (base64Photo) {
+        const photoPath = `${uuid.v4()}.png`; // Use subfolder for organization
+      
+        try {
+          const decodedPhoto = decode(base64Photo);
+      
+          const { data: uploadData, error: uploadError } =
+            await supabase.storage
+              .from("groupgallery")
+              .upload(photoPath, decodedPhoto, {
+                contentType: "image/png",
+              });
+      
+          if (uploadError) {
+            console.error("Upload Error:", uploadError);
+            Alert.alert("Error", `Upload failed: ${uploadError.message}`);
+            return;
+          }
+      
+          // Fetch public URL after successful upload
+          const { data: publicUrlData, error: urlError } = await supabase.storage
+            .from("groupgallery")
+            .getPublicUrl(photoPath);
+      
+          if (urlError) {
+            console.error("Public URL Error:", urlError);
+            Alert.alert("Error", `Unable to retrieve URL: ${urlError.message}`);
+            return;
+          }
+      
+          galleryUrl = publicUrlData.publicUrl;
+          console.log("Image URL:", galleryUrl);
+        } catch (uploadCatchError) {
+          console.error("Unexpected Error:", uploadCatchError);
+          Alert.alert("Error", "An unexpected error occurred.");
+        }
+      }
+
+      // Update the profiles table with the avatar URL
+      const { error: updateGalleryError } = await supabase
+        .from("chats")
+        .update({ group_photo: galleryUrl })
+        .eq("id", newChat[0].id);
+
+      if (updateGalleryError) {
+        console.error(
+          "Error updating chat with photo URL:",
+          updateGalleryError
+        );
+        Alert.alert(
+          "Error",
+          "Failed to update group photo: " + updateGalleryError.message
+        );
+      } else {
+        console.log("Group photo updated successfully.");
+      }
 
       navigation.navigate("ChatDetail", {
         chatId: newChat[0].id,
-        otherPFP: null,
+        otherPFP: galleryUrl,
         groupTitle: input,
       });
     } catch (error) {
@@ -105,7 +195,7 @@ const GroupDetailsScreen = ({ navigation }) => {
   };
 
   const handleCheckboxToggle = (id) => {
-    // Toggle selection for this contact by adding/removing from setSelectedPeopleData array
+    // Toggle selection for this contact by addzing/removing from setSelectedPeopleData array
     setSelectedPeopleData((prevSelectedIds) => {
       if (prevSelectedIds.includes(id)) {
         return prevSelectedIds.filter((selectedId) => selectedId !== id); // Remove from array
@@ -117,7 +207,20 @@ const GroupDetailsScreen = ({ navigation }) => {
 
   const renderContactItem = ({ item }) => (
     <View style={styles.contactItem}>
-      <Image source={{ uri: item.avatar_url }} style={styles.profileImage} />
+      {item.avatar_url ? (
+        <Image
+          alt="Avatar"
+          resizeMode="cover"
+          source={{ uri: item.avatar_url }}
+          style={styles.profileImage}
+        />
+      ) : (
+        <View style={[styles.cardImg]}>
+          <Text style={styles.cardAvatarText}>
+            {item.first_name[0].toUpperCase()}
+          </Text>
+        </View>
+      )}
       <View style={styles.wrapperCol}>
         <View style={styles.wrapperRow}>
           <Text style={styles.contactText}>{item.first_name}</Text>
@@ -181,11 +284,16 @@ const GroupDetailsScreen = ({ navigation }) => {
 
       <View style={styles.groupchatContainer}>
         {/* Group Chat Picture */}
-        <Image
-          source={require("../../assets/icons/group_chat.png")} // Replace with the actual image path
-          style={styles.groupChatImage}
-        />
-
+        {groupPhoto ? (
+          <Image source={{ uri: groupPhoto }} style={styles.groupChatImage} />
+        ) : (
+          <TouchableOpacity onPress={pickImage}>
+            <Image
+              source={require("../../assets/icons/group_chat.png")}
+              style={styles.groupChatImage}
+            />
+          </TouchableOpacity>
+        )}
         {/* Group Name Text Input */}
         <TextInput
           style={styles.groupNameInput}
@@ -300,10 +408,24 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   profileImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     marginRight: 10,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  cardImg: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+    backgroundColor: "#FFADAD",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
   },
   membersTitleContainer: {
     marginBottom: 10, // Space between the title and the list

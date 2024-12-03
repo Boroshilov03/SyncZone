@@ -8,9 +8,15 @@ import {
   TextInput,
   TouchableOpacity,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import { useRoute } from "@react-navigation/native";
+import { Dimensions } from "react-native";
+import useStore from "../store/store";
+
+
+const { height: screenHeight } = Dimensions.get("window"); // Get screen height
+
 
 const MembersChatScreen = ({ navigation }) => {
   const route = useRoute();
@@ -18,6 +24,9 @@ const MembersChatScreen = ({ navigation }) => {
   const [input, setInput] = useState("");
   const [selectedPeople, setSelectedPeople] = useState([]); // Track selected contact IDs
   const [selectedUsers, setSelectedUsers] = useState([]); // Track selected full user objects
+  const { user } = useStore();
+
+
 
   const handleCheckboxToggle = (person) => {
     // Toggle selection for this contact by ID and add/remove full user object
@@ -38,12 +47,47 @@ const MembersChatScreen = ({ navigation }) => {
     });
   };
 
+  const groupContactsByLetter = (contacts) => {
+    if (!contacts || contacts.length === 0) return {}; // Return empty object if no contacts
+
+    // First, sort contacts alphabetically by their first name
+    const sortedContacts = contacts.sort((a, b) =>
+      a.profiles.first_name.localeCompare(b.profiles.first_name)
+    );
+
+    return sortedContacts.reduce((acc, contact) => {
+      const firstLetter = contact.profiles.first_name[0].toUpperCase();
+      if (!acc[firstLetter]) {
+        acc[firstLetter] = [];
+      }
+      acc[firstLetter].push(contact);
+      return acc;
+    }, {});
+  };
+
+    // Then render the grouped data
+    const groupedContacts = groupContactsByLetter(contacts || []);
+    const groupedData = Object.keys(groupedContacts).map((letter) => ({
+      letter,
+      contacts: groupedContacts[letter],
+    }));
+
   const renderContactItem = ({ item }) => (
     <View style={styles.contactItem}>
-      <Image
-        source={{ uri: item.profiles.avatar_url }}
-        style={styles.profileImage}
-      />
+      {item.profiles.avatar_url ? (
+        <Image
+          alt="Avatar"
+          resizeMode="cover"
+          source={{ uri: item.profiles.avatar_url }}
+          style={styles.profileImage}
+        />
+      ) : (
+        <View style={[styles.cardImg]}>
+          <Text style={styles.cardAvatarText}>
+            {item.profiles.first_name[0].toUpperCase()}
+          </Text>
+        </View>
+      )}
       <View style={styles.wrapperCol}>
         <View style={styles.wrapperRow}>
           <Text style={styles.contactText}>{item.profiles.first_name}</Text>
@@ -73,6 +117,35 @@ const MembersChatScreen = ({ navigation }) => {
       </TouchableOpacity>
     </View>
   );
+
+
+  // Filter contacts based on the search input
+  // Safely access `contacts` when calling `.filter()`
+  const filteredContacts = (contacts || []).filter(
+    (contact) =>
+      contact.profiles.username.toLowerCase().includes(input.toLowerCase()) ||
+      contact.profiles.first_name.toLowerCase().includes(input.toLowerCase()) ||
+      contact.profiles.last_name.toLowerCase().includes(input.toLowerCase())
+  );
+
+  // If no search input, show full contact list grouped by letter, otherwise show filtered contacts
+  const dataToRender = input.length > 0 ? filteredContacts : groupedData;
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      const { data, error } = await supabase
+        .from("favorites")
+        .select("contact_id")
+        .eq("user_id", user.id);
+      if (!error) {
+        // Store favorite contact IDs
+        setFavorites(data.map((fav) => fav.contact_id));
+      } else {
+        console.error("Error fetching favorites:", error);
+      }
+    };
+
+    fetchFavorites();
+  }, [user]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -130,7 +203,7 @@ const MembersChatScreen = ({ navigation }) => {
 
       {/* List of Contact Cards */}
       <FlatList
-        data={contacts}
+        data={filteredContacts}
         renderItem={renderContactItem}
         keyExtractor={(item) => item.profiles.id.toString()}
         contentContainerStyle={{ paddingBottom: 20 }}
@@ -198,6 +271,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 5,
     elevation: 3,
+    height: screenHeight * 0.05, // Dynamically set height as 6% of screen height
   },
   searchIcon: {
     marginRight: 10,
@@ -209,10 +283,24 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   profileImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     marginRight: 10,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  cardImg: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+    backgroundColor: "#FFADAD",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
   },
   contactItem: {
     marginTop: 8,
@@ -272,6 +360,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderRightWidth: 0,
     transform: [{ rotate: "50deg" }, { scaleX: -1 }],
+    top: -2,
   },
 });
 

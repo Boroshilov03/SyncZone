@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Modal, ScrollView, Image, TouchableOpacity, Ale
 import { supabase } from "../lib/supabase"; // Import Supabase client
 import useStore from "../store/store"; // Importing the store
 
-const OwnedStickersModal = ({ visible, onClose }) => {
+const OwnedStickersModal = ({ visible, onClose, chatID}) => {
   const { user } = useStore(); // Get the current user
   const [ownedStickers, setOwnedStickers] = useState([]); // State to store the user's owned stickers
   const [loading, setLoading] = useState(true); // State to manage loading status
@@ -86,9 +86,48 @@ const OwnedStickersModal = ({ visible, onClose }) => {
     }
   }, [visible]);
 
-  const handleStickerPress = (stickerId) => {
-    console.log("Sticker ID:", stickerId);
-    // Replace with functionality to use the sticker ID
+  const handleStickerPress = async(stickerId, chatID) => {
+    console.log("Sticker ID:", stickerId, chatID, user.id);
+    try {
+      // Step 1: Create a new message in the messages table (even if it's just for a sticker)
+      const { data: messageData, error: messageError } = await supabase
+        .from('messages')
+        .insert([
+          {
+            chat_id: chatID,
+            sender_id: user.id,
+            content: '', // Leave content empty if it's just a sticker
+          }
+        ])
+        .select();
+  
+      if (messageError) {
+        console.error('Error creating message:', messageError);
+        return;
+      }
+      console.log(messageData)
+      console.log( messageData[0].id)
+      const messageId = messageData[0].id; // Get the newly created message ID
+  
+      // Step 2: Add the sticker as an attachment linked to the new message
+      const { data: attachmentData, error: attachmentError } = await supabase
+        .from('attachments')
+        .insert([
+          {
+            message_id: messageId,
+            sticker_id: stickerId,
+            image_url: ''
+          }
+        ]);
+  
+      if (attachmentError) {
+        console.error('Error attaching sticker:', attachmentError);
+      } else {
+        console.log('Sticker attached successfully:', attachmentData);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    }
   };
 
   const handleClose = () => {
@@ -125,7 +164,7 @@ const OwnedStickersModal = ({ visible, onClose }) => {
                 ownedStickers.map(sticker => (
                   <TouchableOpacity
                     key={sticker.id}
-                    onPress={() => handleStickerPress(sticker.id)}
+                    onPress={() => handleStickerPress(sticker.id, chatID)}
                     style={styles.stickerContainer}
                   >
                     <Image source={{ uri: sticker.image_url }} style={styles.stickerImage} />

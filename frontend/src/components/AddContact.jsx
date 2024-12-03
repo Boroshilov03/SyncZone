@@ -14,8 +14,10 @@ import {
 } from "react-native";
 import { debounce } from "lodash";
 import useStore from "../store/store";
-import { Feather as FeatherIcon } from "@expo/vector-icons"; 
+import { Feather as FeatherIcon } from "@expo/vector-icons";
+import { Dimensions } from "react-native";
 
+const { height: screenHeight } = Dimensions.get("window"); // Get screen height
 
 const AddContact = ({ toggleModal }) => {
   const [searchQuery, setSearchQuery] = useState(""); // Store search query
@@ -54,7 +56,7 @@ const AddContact = ({ toggleModal }) => {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, first_name, last_name")
+        .select("id, username, first_name, last_name, avatar_url")
         .ilike("username", `%${query}%`)
         .neq("id", user.id); // Ensure you exclude the current user
 
@@ -91,121 +93,144 @@ const AddContact = ({ toggleModal }) => {
   };
 
   // Function to add a contact
-const handleAdd = async (contactID) => {
-  if (!user) {
-    console.error("User is not logged in.");
-    return; // Exit if the user is not logged in
-  }
-
-  console.log("Adding user with ID:", contactID);
-  console.log("My ID:", user.id);
-
-  // Optimistically disable the button by marking the contact as added
-  setProfiles((prevProfiles) =>
-    prevProfiles.map((profile) =>
-      profile.id === contactID ? { ...profile, added: true } : profile
-    )
-  );
-
-  try {
-    // Insert the first entry: user_id and contact_id
-    const { data: firstEntryData, error: firstEntryError } = await supabase
-      .from("contacts")
-      .insert({ user_id: user.id, contact_id: contactID })
-      .select();
-
-    if (firstEntryError) {
-      throw new Error(firstEntryError.message); // Throw error to handle below
+  const handleAdd = async (contactID) => {
+    if (!user) {
+      console.error("User is not logged in.");
+      return; // Exit if the user is not logged in
     }
 
-    // Insert the second entry: contact_id and user_id
-    const { data: secondEntryData, error: secondEntryError } = await supabase
-      .from("contacts")
-      .insert({ user_id: contactID, contact_id: user.id })
-      .select();
+    console.log("Adding user with ID:", contactID);
+    console.log("My ID:", user.id);
 
-    if (secondEntryError) {
-      // If the second add fails, revert the optimistic update and log error
-      console.error("Error adding contact (reverse):", secondEntryError.message);
-      setError("Failed to add contact (reverse). Please try again.");
+    // Optimistically disable the button by marking the contact as added
+    setProfiles((prevProfiles) =>
+      prevProfiles.map((profile) =>
+        profile.id === contactID ? { ...profile, added: true } : profile
+      )
+    );
 
-      // Revert the optimistic update
+    try {
+      // Insert the first entry: user_id and contact_id
+      const { data: firstEntryData, error: firstEntryError } = await supabase
+        .from("contacts")
+        .insert({ user_id: user.id, contact_id: contactID })
+        .select();
+
+      if (firstEntryError) {
+        throw new Error(firstEntryError.message); // Throw error to handle below
+      }
+
+      // Insert the second entry: contact_id and user_id
+      const { data: secondEntryData, error: secondEntryError } = await supabase
+        .from("contacts")
+        .insert({ user_id: contactID, contact_id: user.id })
+        .select();
+
+      if (secondEntryError) {
+        // If the second add fails, revert the optimistic update and log error
+        console.error(
+          "Error adding contact (reverse):",
+          secondEntryError.message
+        );
+        setError("Failed to add contact (reverse). Please try again.");
+
+        // Revert the optimistic update
+        setProfiles((prevProfiles) =>
+          prevProfiles.map((profile) =>
+            profile.id === contactID ? { ...profile, added: false } : profile
+          )
+        );
+      } else {
+        console.log(
+          "Both contacts added successfully:",
+          firstEntryData,
+          secondEntryData
+        );
+        setContacts((prevContacts) => [
+          ...prevContacts,
+          { contact_id: contactID },
+          { contact_id: user.id }, // Add the reverse entry if necessary
+        ]); // Update contacts state
+      }
+    } catch (error) {
+      console.error("Error adding contact:", error.message);
+      setError("Failed to add contact. Please try again.");
+
+      // If any add fails, revert the optimistic update
       setProfiles((prevProfiles) =>
         prevProfiles.map((profile) =>
           profile.id === contactID ? { ...profile, added: false } : profile
         )
       );
-    } else {
-      console.log("Both contacts added successfully:", firstEntryData, secondEntryData);
-      setContacts((prevContacts) => [
-        ...prevContacts,
-        { contact_id: contactID },
-        { contact_id: user.id }, // Add the reverse entry if necessary
-      ]); // Update contacts state
     }
-  } catch (error) {
-    console.error("Error adding contact:", error.message);
-    setError("Failed to add contact. Please try again.");
+  };
 
-    // If any add fails, revert the optimistic update
-    setProfiles((prevProfiles) =>
-      prevProfiles.map((profile) =>
-        profile.id === contactID ? { ...profile, added: false } : profile
-      )
-    );
-  }
-};
-
-
-// Render each profile in the FlatList
-const renderProfile = ({ item }) => (
-  <View style={styles.profileCard}>
-    <View style={styles.profileDetails}>
-      <Text style={styles.profileName}>
-        {item.first_name} {item.last_name}
-      </Text>
-      <Text style={styles.profileUsername}>@{item.username}</Text>
+  // Render each profile in the FlatList
+  const renderProfile = ({ item }) => (
+    <View style={styles.profileCard}>
+      {item.avatar_url ? (
+        <Image
+          alt="Avatar"
+          resizeMode="cover"
+          source={{ uri: item.avatar_url }}
+          style={styles.profileImage}
+        />
+      ) : (
+        <View style={[styles.cardImg]}>
+          <Text style={styles.cardAvatarText}>
+            {item.first_name[0].toUpperCase()}
+          </Text>
+        </View>
+      )}
+      <View style={styles.profileDetails}>
+        <Text style={styles.profileName}>
+          {item.first_name} {item.last_name}
+        </Text>
+        <Text style={styles.profileUsername}>@{item.username}</Text>
+      </View>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => handleAdd(item.id)} // Pass only the contact ID
+        activeOpacity={0.7} // Feedback on press
+        disabled={item.added} // Disable the button if the contact is already added
+      >
+        <Image
+          source={
+            item.added
+              ? require("../../assets/icons/check_green.png") // Path to check icon
+              : require("../../assets/icons/plus_icon.png") // Path to plus icon
+          }
+          style={
+            item.added
+              ? { width: 18, height: 18, tintColor: "green" } // Size and color for check icon
+              : { width: 18, height: 18, tintColor: "#A9A9A9" } // Size and light grey color for plus icon
+          }
+        />
+      </TouchableOpacity>
     </View>
-    <TouchableOpacity
-      style={styles.addButton}
-      onPress={() => handleAdd(item.id)} // Pass only the contact ID
-      activeOpacity={0.7} // Feedback on press
-      disabled={item.added} // Disable the button if the contact is already added
-    >
-      <Image
-        source={
-          item.added
-            ? require("../../assets/icons/check_green.png") // Path to check icon
-            : require("../../assets/icons/plus_icon.png") // Path to plus icon
-        }
-        style={
-          item.added
-            ? { width: 18, height: 18, tintColor: 'green' } // Size and color for check icon
-            : { width: 18, height: 18 } // Size for plus icon
-        }
-      />
-    </TouchableOpacity>
-  </View>
-);
-
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Add Contact</Text> 
+      <Text style={styles.title}>Add Contact</Text>
       <View style={styles.searchContainer}>
-      <View style={styles.searchIcon}>
-        <FeatherIcon color="#848484" name="search" size={17} />
-      </View>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Search by username..."
-        placeholderTextColor="#B0B0B0" // Set a lighter color for the placeholder
-        value={searchQuery}
-        onChangeText={handleSearchChange}
-      />
+        <View style={styles.searchIcon}>
+          <FeatherIcon color="#848484" name="search" size={17} />
+        </View>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by username..."
+          placeholderTextColor="#B0B0B0" // Set a lighter color for the placeholder
+          value={searchQuery}
+          onChangeText={handleSearchChange}
+        />
       </View>
       {loading ? (
-        <ActivityIndicator size="large" color="#007BFF" style={styles.loading} />
+        <ActivityIndicator
+          size="large"
+          color="lightblue"
+          style={styles.loading}
+        />
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : profiles.length > 0 ? (
@@ -251,6 +276,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "center",
     marginBottom: 5,
+    height: screenHeight * 0.05, // Dynamically set height as 6% of screen height
   },
   searchInput: {
     height: 42,
@@ -258,11 +284,11 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 5,
     paddingVertical: 5,
-    width: '100%',
+    width: "100%",
   },
   searchIcon: {
     paddingRight: 2,
-    justifyContent: 'center', // Center vertically within the icon container
+    justifyContent: "center", // Center vertically within the icon container
   },
   loading: {
     marginTop: 20,
@@ -272,14 +298,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 10,
-    margin: 5,
+    marginVertical: 5,
+    marginHorizontal: 2,
     borderRadius: 20,
-    elevation: 3, 
-    shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    backgroundColor: "#D1EBEF",
+    // backgroundColor: "#D1EBEF",
   },
   profileDetails: {
     flex: 1,
@@ -297,7 +319,7 @@ const styles = StyleSheet.create({
   addButton: {
     paddingVertical: 5,
     paddingHorizontal: 5,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   addButtonText: {
     color: "#fff",
@@ -315,6 +337,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "red",
     fontWeight: "bold",
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 3,
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  cardImg: {
+    width: 40,
+    height: 40,
+    marginRight: 3,
+    backgroundColor: "#FFADAD",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
   },
 });
 
