@@ -412,7 +412,7 @@ const ChatsScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+    <View style={{ flex: 1, position: "relative", zIndex: 1, backgroundColor: "#fff" }}>
       <Header event="message" navigation={navigation} title="Chats" />
       <View style={styles.container}>
         <View style={styles.searchWrapper}>
