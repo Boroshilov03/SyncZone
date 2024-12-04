@@ -122,6 +122,7 @@ const EditEvent = ({ event, onClose }) => {
   const [mood, setMood] = useState(event.mood); // Selected mood
   const [deletePopupVisible, setDeletePopupVisible] = useState(false); // Controls visibility of DeleteEvent
   const [titleError, setTitleError] = useState(""); // Title validation error
+  const [descriptionError, setDescriptionError] = useState(""); // Title validation error
 
   const fetchData = async () => {
     try {
@@ -186,27 +187,6 @@ const EditEvent = ({ event, onClose }) => {
   }, [selectedContacts]); // Trigger whenever selectedContacts changes
 
   const handleEditEvent = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("event")
-        .update({
-          title: titleValue,
-          mood: mood,
-          // Add other fields as needed
-        })
-        .eq("id", event.id)
-        .select();
-
-      if (error) {
-        console.error("Error updating event:", error.message);
-      } else {
-        console.log("Event updated:", data);
-        await EditEventParticipants(event.id); // Ensure participants are updated
-        onClose(); // Close the modal
-      }
-    } catch (error) {
-      console.error("Error during event update:", error);
-    }
     // Function to format date as YYYY-MM-DD
     const formatDateForSubmission = (date) => {
       const year = date.getFullYear();
@@ -223,6 +203,14 @@ const EditEvent = ({ event, onClose }) => {
       return;
     } else {
       setTitleError(""); // Clear error if valid
+    }
+
+    // Title validation
+    if (description.length > 30) {
+      setDescriptionError("Description cannot exceed 20 characters.");
+      return;
+    } else {
+      setDescriptionError(""); // Clear error if valid
     }
 
     // Function to format time as HH:mm:ss
@@ -384,8 +372,13 @@ const EditEvent = ({ event, onClose }) => {
       </View>
 
       <View style={styles.inputContainer}>
+        {titleError ? <Text style={styles.errorText}>{titleError}</Text> : null}
+
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            titleError ? styles.inputError : null, // Red border on error
+          ]}
           placeholder="Event Title"
           value={titleValue}
           onChangeText={settitleValue}
@@ -500,8 +493,14 @@ const EditEvent = ({ event, onClose }) => {
         )}
       </View>
 
+      {descriptionError ? (
+        <Text style={styles.errorText}>{descriptionError}</Text>
+      ) : null}
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          descriptionError ? styles.inputError : null, // Red border on error
+        ]}
         placeholder="Description"
         value={description}
         onChangeText={setDescription}

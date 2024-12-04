@@ -29,6 +29,7 @@ import Profile from "./ProfileScreen";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { Dimensions } from "react-native";
+import SplashScreen from "./SplashScreen";
 
 const { height: screenHeight } = Dimensions.get("window"); // Get screen height
 
@@ -519,17 +520,16 @@ const ContactScreen = ({ navigation }) => {
 
 if (isLoading) {
   return (
-    <ActivityIndicator
-      size="large"
-      color="lightblue"
-      style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        marginTop: -40, // Adjust based on the size of the ActivityIndicator
-        marginLeft: -40, // Adjust based on the size of the ActivityIndicator
-      }}
-    />
+    <SplashScreen/>
+    // <ActivityIndicator
+    //   size="large"
+    //   color="lightblue"
+    //   style={{
+    //     position: "absolute",
+    //     top: "50%",
+    //     left: "50%",
+    //   }}
+    // />
   );
 }
 
@@ -609,7 +609,7 @@ if (isLoading) {
             autoCorrect={false}
             clearButtonMode="while-editing"
             onChangeText={(val) => setInput(val)}
-            placeholder="Search by Name"
+            placeholder="Search"
             placeholderTextColor="#848484"
             returnKeyType="done"
             style={styles.searchControl}
@@ -716,11 +716,10 @@ const styles = StyleSheet.create({
     tintColor: "black",
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 30,
     fontWeight: "bold",
-    color: "black",
-    flex: 1,
     textAlign: "center",
+    color: "#444444",
   },
   addPersonButton: {
     paddingRight: 10,
@@ -899,30 +898,32 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   search: {
+    position: "relative",
+    backgroundColor: "rgb(240, 240, 240)",
+    justifyContent: "center",
+    marginHorizontal: 12,
+    alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgb(240, 240, 240)",
     borderRadius: 25,
-    paddingHorizontal: 15,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
     borderWidth: 1,
     borderColor: "#d1d1d1",
-    width: "90%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 5,
     elevation: 3,
-    height: screenHeight * 0.05,
   },
   searchIcon: {
-    marginRight: 10,
+    marginLeft: 10,
   },
   searchControl: {
     flex: 1,
-    height: 30,
     fontSize: 16,
     color: "#333",
+    marginLeft: 5,
   },
 
   flatList: {

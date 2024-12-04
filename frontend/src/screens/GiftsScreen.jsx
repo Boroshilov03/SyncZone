@@ -238,7 +238,7 @@ const GiftsScreen = ({ navigation }) => {
 
   return (
     <LinearGradient
-      colors={["#FFE4E1", "#FFC1CC", "#FFB6C1"]}
+      colors={[ "#FFE4E1","#fff" ]}
       style={{ flex: 1 }}
     >
       {/* Header */}
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     // fontFamily: "Pacifico",
     fontSize: 40,
     fontWeight: 'bold',
-    color: "#FF69B4",
+    color: "gray",
     textAlign: "center",
     borderWidth: 1,
     borderColor: "#FFE4E1",

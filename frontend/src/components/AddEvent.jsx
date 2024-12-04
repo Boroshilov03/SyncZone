@@ -47,9 +47,9 @@ const AddEvent = ({ onClose }) => {
   const [mood, setMood] = useState(null); // Selected mood
   const [modalVisible, setModalVisible] = useState(false);
   const [contacts, setContacts] = useState([]);
-  const [selectedDate, setSelectedDate] = useState("");  // The date state
+  const [selectedDate, setSelectedDate] = useState(""); // The date state
   const [titleError, setTitleError] = useState(""); // Title validation error
-
+  const [descriptionError, setDescriptionError] = useState(""); // Title validation error
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -74,44 +74,53 @@ const AddEvent = ({ onClose }) => {
     fetchContacts();
   }, [selectedContacts]); // Trigger whenever selectedContacts changes
 
-
   const handleDateChange = (date) => {
-    setSelectedDate(date);  // Update the selected date when user selects a date
+    setSelectedDate(date); // Update the selected date when user selects a date
   };
-  
+
   const handleSubmit = () => {
-    const formattedDate = formatDateForDB(selectedDate);  // Process the date
-  
+    const formattedDate = formatDateForDB(selectedDate); // Process the date
+
     // Save the event details, including the formatted date
     const newEvent = {
       title: eventTitle,
-      date: formattedDate,  // The formatted date will be saved here
+      date: formattedDate, // The formatted date will be saved here
       description: eventDescription,
       // other event details...
     };
-  
+
     // Save the event, possibly with an API call or local storage
     saveEventToDB(newEvent);
   };
-  
+
   const handleAddEvent = async () => {
-        // Title validation
-        if (titleValue.trim() === "") {
-          setTitleError("Title is required.");
-          return;
-        } else if (titleValue.length > 20) {
-          setTitleError("Title cannot exceed 20 characters.");
-          return;
-        } else {
-          setTitleError(""); // Clear error if valid
-        }
+    // Title validation
+    if (titleValue.trim() === "") {
+      setTitleError("Title is required.");
+      return;
+    } else if (titleValue.length > 20) {
+      setTitleError("Title cannot exceed 20 characters.");
+      return;
+    } else {
+      setTitleError(""); // Clear error if valid
+    }
+
+    // Title validation
+    if (description.length > 30) {
+      setDescriptionError("Description cannot exceed 20 characters.");
+      return;
+    } else {
+      setDescriptionError(""); // Clear error if valid
+    }
     const formatDateForDB = (date) => {
       const adjustedDate = new Date(date);
       adjustedDate.setDate(adjustedDate.getDate() - 1);
-      adjustedDate.setMinutes(adjustedDate.getMinutes() - adjustedDate.getTimezoneOffset());
+      adjustedDate.setMinutes(
+        adjustedDate.getMinutes() - adjustedDate.getTimezoneOffset()
+      );
       return adjustedDate.toISOString(); // Return as ISO string for consistency
     };
-  
+
     const formatTime = (date) => {
       return date.toLocaleTimeString([], {
         hour: "2-digit",
@@ -135,11 +144,11 @@ const AddEvent = ({ onClose }) => {
     //   mood,
     // });
 
-     // Check time constraint: startTime must be before endTime
-  if (startTime >= endTime) {
-    alert("Start time must be before end time."); // Alert the user about the invalid time
-    return; // Prevent submitting the event if time is invalid
-  }
+    // Check time constraint: startTime must be before endTime
+    if (startTime >= endTime) {
+      alert("Start time must be before end time."); // Alert the user about the invalid time
+      return; // Prevent submitting the event if time is invalid
+    }
 
     try {
       const { data, error } = await supabase
@@ -178,19 +187,19 @@ const AddEvent = ({ onClose }) => {
     try {
       // Ensure selectedContacts is initialized as an empty array if it's undefined
       const participants = selectedContacts || [];
-  
+
       // Ensure the current user (self) is always included in selectedContacts
       const participantsToAdd = participants.includes(user.id)
         ? participants
         : [...participants, user.id]; // Add user.id if it's not already included
-  
+
       // Iterate over the participants array to add each participant
       for (let participantId of participantsToAdd) {
         const { data, error } = await supabase
           .from("event_participants")
           .insert({ user_id: participantId, event_id: eventID })
           .select();
-  
+
         if (error) {
           console.error(
             `Error adding participant ${participantId}:`,
@@ -204,8 +213,7 @@ const AddEvent = ({ onClose }) => {
       console.error("Error adding selectedContacts:", error);
     }
   };
-  
-  
+
   const onDateChange = (event, selectedDate) => {
     // Close the picker when a date is selected or if dismissed
     if (event.type === "set" && selectedDate) {
@@ -223,19 +231,19 @@ const AddEvent = ({ onClose }) => {
 
   return (
     <View style={styles.container}>
-    <Text style={styles.title}>New Event</Text>
-  
-    {titleError ? <Text style={styles.errorText}>{titleError}</Text> : null}
-  
-    <TextInput
-      style={[
-        styles.input,
-        titleError ? styles.inputError : null, // Red border on error
-      ]}
-      placeholder="Event Title"
-      value={titleValue}
-      onChangeText={(text) => settitleValue(text)} // Track changes but validate on submission
-    />
+      <Text style={styles.title}>New Event</Text>
+
+      {titleError ? <Text style={styles.errorText}>{titleError}</Text> : null}
+
+      <TextInput
+        style={[
+          styles.input,
+          titleError ? styles.inputError : null, // Red border on error
+        ]}
+        placeholder="Event Title"
+        value={titleValue}
+        onChangeText={(text) => settitleValue(text)} // Track changes but validate on submission
+      />
 
       <View style={styles.row}>
         <Text style={styles.label}>Date: </Text>
@@ -256,7 +264,6 @@ const AddEvent = ({ onClose }) => {
           />
         )}
       </View>
-
 
       {/* Start Time */}
       <View style={styles.column}>
@@ -329,9 +336,14 @@ const AddEvent = ({ onClose }) => {
           />
         )}
       </View>
-      
+      {descriptionError ? (
+        <Text style={styles.errorText}>{descriptionError}</Text>
+      ) : null}
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          descriptionError ? styles.inputError : null, // Red border on error
+        ]}
         placeholder="Description"
         value={description}
         onChangeText={setDescription}
@@ -343,7 +355,7 @@ const AddEvent = ({ onClose }) => {
         <Text style={styles.addText}>Add Guests</Text>
       </TouchableOpacity>
       <View style={styles.row}>
-        <Text style={styles.label}>Guests:  </Text>
+        <Text style={styles.label}>Guests: </Text>
         <View style={styles.pfpContainer}>
           {contacts && contacts.length > 0 ? (
             <FlatList
