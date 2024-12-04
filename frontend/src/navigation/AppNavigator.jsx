@@ -1,9 +1,9 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
-import ChatsScreen from "../screens/ChatsScreen";
-import ChatDetailScreen from "../screens/ChatDetailScreen";
 import SignInScreen from "../screens/SignInScreen";
 import SignUpScreen from "../screens/SignUpScreen";
+import ChatsScreen from "../screens/ChatsScreen";
+import ChatDetailScreen from "../screens/ChatDetailScreen";
 import GiftsScreen from "../screens/GiftsScreen";
 import CallsScreen from "../screens/CallsScreen";
 import CalendarScreen from "../screens/CalendarScreen";

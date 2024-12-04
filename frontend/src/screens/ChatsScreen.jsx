@@ -24,6 +24,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Profile from "./ProfileScreen";
 import FavoriteUsers from "../components/favoriteUsers";
 import { Dimensions } from "react-native";
+import SplashScreen from "./SplashScreen";
 
 const { height: screenHeight } = Dimensions.get("window"); // Get screen height
 
@@ -403,7 +404,7 @@ const ChatsScreen = ({ navigation }) => {
   };
 
   if (isLoading) {
-    return <Text>Loading...</Text>;
+    return <SplashScreen/>;
   }
 
   if (error) {
@@ -411,7 +412,7 @@ const ChatsScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+    <View style={{ flex: 1, position: "relative", zIndex: 1, backgroundColor: "#fff" }}>
       <Header event="message" navigation={navigation} title="Chats" />
       <View style={styles.container}>
         <View style={styles.searchWrapper}>
@@ -424,7 +425,7 @@ const ChatsScreen = ({ navigation }) => {
               autoCorrect={false}
               clearButtonMode="while-editing"
               onChangeText={(val) => setInput(val)}
-              placeholder="Search.."
+              placeholder="Search"
               placeholderTextColor="#848484"
               returnKeyType="done"
               style={styles.searchControl}
@@ -498,7 +499,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 25,
     paddingHorizontal: 15,
-    paddingVertical: 5,
+    paddingVertical: 2,
     borderWidth: 1,
     borderColor: "#d1d1d1",
     shadowColor: "#000",
@@ -506,7 +507,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 5,
     elevation: 3,
-    height: screenHeight * 0.05, // Dynamically set height as 6% of screen height
   },
   favorites: {
     display: "flex",
@@ -536,13 +536,13 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     left: 0,
-    width: 40,
+    marginLeft: 20,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 2,
   },
   searchControl: {
-    paddingLeft: 34, // Ensure space for the icon
+    paddingLeft: 35, // Ensure space for the icon
     width: "100%",
     fontSize: 16, // Adjust this font size to make the text and placeholder visible
     fontWeight: "500",

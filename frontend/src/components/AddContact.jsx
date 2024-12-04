@@ -219,7 +219,7 @@ const AddContact = ({ toggleModal }) => {
         </View>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by username..."
+          placeholder="Search by username"
           placeholderTextColor="#B0B0B0" // Set a lighter color for the placeholder
           value={searchQuery}
           onChangeText={handleSearchChange}

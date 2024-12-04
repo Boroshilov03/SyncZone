@@ -17,7 +17,6 @@ import useStore from "../store/store";
 import DeleteEvent from "../components/DeleteEvent";
 import AddParticipants from "./AddParticipants";
 
-
 const getMoodColor = (mood) => {
   switch (mood) {
     case "blue":
@@ -118,80 +117,76 @@ const EditEvent = ({ event, onClose }) => {
   const [selectedContacts, setSelectedContacts] = useState([]); // Initialize as an empty array
   const [modalVisible, setModalVisible] = useState(false);
   const [contacts, setContacts] = useState([]);
-  const [users, setUsers] = useState([])
+  const [users, setUsers] = useState([]);
 
   const [mood, setMood] = useState(event.mood); // Selected mood
   const [deletePopupVisible, setDeletePopupVisible] = useState(false); // Controls visibility of DeleteEvent
+  const [titleError, setTitleError] = useState(""); // Title validation error
+  const [descriptionError, setDescriptionError] = useState(""); // Title validation error
 
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch user IDs from the "event_participants" table
-        const { data: userIds, error: userError } = await supabase
-          .from("event_participants")
-          .select("user_id")
-          .eq("event_id", event.id);
-  
-        if (userError) {
-          console.error("Error fetching user IDs:", userError.message);
-          return;
-        }
-  
-        if (userIds) {
-          // Map userIds to extract user_id array
-          const ids = userIds.map((item) => item.user_id);
-          setUsers(ids);
-  
-          // Fetch contacts from "profiles" table based on user IDs
-          const { data: contactsData, error: contactsError } = await supabase
-            .from("profiles")
-            .select("id, first_name, avatar_url")
-            .in("id", ids)
-            .neq("id", user.id)  
-  
-          if (contactsError) {
-            console.error("Error fetching contacts:", contactsError.message);
-          } else {
-            setContacts(contactsData);
-            const contactIds = userIds.map((item) => item.user_id);
-            setSelectedContacts(contactIds);
-          }
-      
-        }
-      } catch (error) {
-        console.error("Unexpected error:", error);
-      }
-    };
-  
-    // Fetch data only when `selectedContacts` changes
-    fetchData();
-    
-  }, [event.id]); // Dependency on event.id
-  
-  
-  const handleEditEvent = async () => {
+  const fetchData = async () => {
     try {
-      const { data, error } = await supabase
-        .from("event")
-        .update({
-          title: titleValue,
-          mood: mood,
-          // Add other fields as needed
-        })
-        .eq("id", event.id)
-        .select();
-  
-      if (error) {
-        console.error("Error updating event:", error.message);
-      } else {
-        console.log("Event updated:", data);
-        await EditEventParticipants(event.id); // Ensure participants are updated
-        onClose(); // Close the modal
+      const { data: userIds, error: userError } = await supabase
+        .from("event_participants")
+        .select("user_id")
+        .eq("event_id", event.id);
+
+      if (userError) {
+        console.error("Error fetching user IDs:", userError.message);
+        return;
+      }
+
+      if (userIds) {
+        const ids = userIds.map((item) => item.user_id);
+        setUsers(ids);
+
+        const { data: contactsData, error: contactsError } = await supabase
+          .from("profiles")
+          .select("id, first_name, avatar_url")
+          .in("id", ids)
+          .neq("id", user.id);
+
+        if (contactsError) {
+          console.error("Error fetching contacts:", contactsError.message);
+        } else {
+          setContacts(contactsData);
+          const contactIds = userIds.map((item) => item.user_id);
+          setSelectedContacts(contactIds);
+        }
       }
     } catch (error) {
-      console.error("Error during event update:", error);
+      console.error("Unexpected error:", error);
     }
+  };
+
+  useEffect(() => {
+    fetchData(); // Call the function within useEffect
+  }, [event.id]);
+
+  useEffect(() => {
+    const fetchContacts = async () => {
+      if (selectedContacts.length === 0) return;
+      try {
+        // Fetch contacts from "profiles" table by user_id
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, first_name, avatar_url")
+          .in("id", selectedContacts)
+          .neq("id", user.id);
+        if (error) {
+          console.error("Error fetching contacts:", error.message);
+        } else {
+          setContacts(data); // Store the contacts with avatar_url
+        }
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
+      }
+    };
+
+    fetchContacts();
+  }, [selectedContacts]); // Trigger whenever selectedContacts changes
+
+  const handleEditEvent = async () => {
     // Function to format date as YYYY-MM-DD
     const formatDateForSubmission = (date) => {
       const year = date.getFullYear();
@@ -199,6 +194,24 @@ const EditEvent = ({ event, onClose }) => {
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`; // Format: YYYY-MM-DD
     };
+    // Title validation
+    if (titleValue.trim() === "") {
+      setTitleError("Title is required.");
+      return;
+    } else if (titleValue.length > 20) {
+      setTitleError("Title cannot exceed 20 characters.");
+      return;
+    } else {
+      setTitleError(""); // Clear error if valid
+    }
+
+    // Title validation
+    if (description.length > 30) {
+      setDescriptionError("Description cannot exceed 20 characters.");
+      return;
+    } else {
+      setDescriptionError(""); // Clear error if valid
+    }
 
     // Function to format time as HH:mm:ss
     const formatTimeForSubmission = (date) => {
@@ -211,6 +224,12 @@ const EditEvent = ({ event, onClose }) => {
     // Formatting the start and end times
     const formattedStartTime = formatTimeForSubmission(startTime);
     const formattedEndTime = formatTimeForSubmission(endTime);
+
+    // Check time constraint: startTime must be before endTime
+    if (startTime >= endTime) {
+      alert("Start time must be before end time."); // Alert the user about the invalid time
+      return; // Prevent submitting the event if time is invalid
+    }
 
     try {
       console.log(
@@ -252,28 +271,15 @@ const EditEvent = ({ event, onClose }) => {
     }
   };
 
-
   const onDateChange = (event, selectedDate) => {
     // Close the picker when a date is selected or if dismissed
-    if (event.type === 'set' && selectedDate) {
+    if (event.type === "set" && selectedDate) {
       setDate(selectedDate); // Update the date
     }
     setShowDatePicker(false); // Close the picker in all cases
   };
 
   const predefinedPFPs = [require("../../assets/icons/add_person.png")];
-
-  const handleModalClose = (updatedContacts) => {
-    setSelectedContacts(updatedContacts); // Save the updated selected contacts
-    setContacts(
-      updatedContacts.map((id) =>
-        contacts.find((contact) => contact.id === id) || { id, first_name: "New User" }
-      )
-    );
-    setModalVisible(false); // Close the modal
-  };
-  
-
 
   const EditEventParticipants = async (eventID, selectedContacts) => {
     try {
@@ -282,21 +288,20 @@ const EditEvent = ({ event, onClose }) => {
         .from("event_participants")
         .select("user_id")
         .eq("event_id", eventID);
-  
+
       if (fetchError) {
         console.error("Error fetching participants:", fetchError.message);
         return;
       }
-  
+
       // Get a list of IDs for existing participants
       const existingParticipantIds = existingParticipants.map((p) => p.user_id);
-  
-      // Filter out duplicates
-const newParticipants = Array.isArray(selectedContacts)
-  ? selectedContacts.filter((id) => !existingParticipantIds.includes(id))
-  : [];
 
-  
+      // Filter out duplicates
+      const newParticipants = Array.isArray(selectedContacts)
+        ? selectedContacts.filter((id) => !existingParticipantIds.includes(id))
+        : [];
+
       // Only insert new participants
       if (newParticipants.length > 0) {
         const { data, error } = await supabase
@@ -307,7 +312,7 @@ const newParticipants = Array.isArray(selectedContacts)
               event_id: eventID,
             }))
           );
-  
+
         if (error) {
           console.error("Error inserting participants:", error.message);
         } else {
@@ -320,8 +325,6 @@ const newParticipants = Array.isArray(selectedContacts)
       console.error("Unexpected error:", error);
     }
   };
-  
-  
 
   const handleTrashIconPress = () => {
     setDeletePopupVisible(true); // Show DeleteEvent popup
@@ -369,8 +372,13 @@ const newParticipants = Array.isArray(selectedContacts)
       </View>
 
       <View style={styles.inputContainer}>
+        {titleError ? <Text style={styles.errorText}>{titleError}</Text> : null}
+
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            titleError ? styles.inputError : null, // Red border on error
+          ]}
           placeholder="Event Title"
           value={titleValue}
           onChangeText={settitleValue}
@@ -380,23 +388,22 @@ const newParticipants = Array.isArray(selectedContacts)
       <View style={styles.row}>
         <Text style={styles.label}>Date: </Text>
         <Image
-          source={require("../../assets/icons/date_icon.png")} 
-          style={styles.dateIcon} 
+          source={require("../../assets/icons/date_icon.png")}
+          style={styles.dateIcon}
         />
         <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-          <Text>{date.toLocaleDateString()}</Text> 
+          <Text>{date.toLocaleDateString()}</Text>
         </TouchableOpacity>
         {showDatePicker && (
-        <DateTimePicker
-          testID="dateTimePicker"
-          value={date} // Use the date state
-          mode="date"
-          display="calendar"
-          onChange={onDateChange} // Handles date changes
-        />
+          <DateTimePicker
+            testID="dateTimePicker"
+            value={date} // Use the date state
+            mode="date"
+            display="calendar"
+            onChange={onDateChange} // Handles date changes
+          />
         )}
       </View>
-
 
       {/* Start Time */}
       <View style={styles.column}>
@@ -430,7 +437,10 @@ const newParticipants = Array.isArray(selectedContacts)
               if (selectedTime) {
                 // Adjusting for proper AM/PM handling
                 const parsedTime = new Date(startTime);
-                parsedTime.setHours(selectedTime.getHours(), selectedTime.getMinutes());
+                parsedTime.setHours(
+                  selectedTime.getHours(),
+                  selectedTime.getMinutes()
+                );
                 setStartTime(parsedTime);
               }
               setShowStartTimePicker(false);
@@ -471,7 +481,10 @@ const newParticipants = Array.isArray(selectedContacts)
               if (selectedTime) {
                 // Adjusting for proper AM/PM handling
                 const parsedTime = new Date(endTime);
-                parsedTime.setHours(selectedTime.getHours(), selectedTime.getMinutes());
+                parsedTime.setHours(
+                  selectedTime.getHours(),
+                  selectedTime.getMinutes()
+                );
                 setEndTime(parsedTime);
               }
               setShowEndTimePicker(false);
@@ -480,51 +493,56 @@ const newParticipants = Array.isArray(selectedContacts)
         )}
       </View>
 
+      {descriptionError ? (
+        <Text style={styles.errorText}>{descriptionError}</Text>
+      ) : null}
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          descriptionError ? styles.inputError : null, // Red border on error
+        ]}
         placeholder="Description"
         value={description}
         onChangeText={setDescription}
       />
 
-<TouchableOpacity
+      <TouchableOpacity
         onPress={() => setModalVisible(true)}
         style={styles.addParticipantsButton}
       >
         <Text style={styles.addText}>Edit Guests</Text>
       </TouchableOpacity>
       <View style={styles.row}>
-        <Text style={styles.label}>Guests:  </Text>
+        <Text style={styles.label}>Guests: </Text>
         <View style={styles.pfpContainer}>
-        {contacts && contacts.length > 0 ? (
-        <FlatList
-          data={contacts}
-          renderItem={({ item }) => (
-            <TouchableOpacity>
-              {!item.avatar_url ? (
-                <View style={[styles.cardImg]}>
-                  <Text style={styles.cardAvatarText}>
-                    {item.first_name[0].toUpperCase()}
-                  </Text>
-                </View>
-              ) : (
-                <Image
-                  alt="Avatar"
-                  resizeMode="cover"
-                  source={{ uri: item.avatar_url }}
-                  style={styles.profileImage}
-                />
+          {contacts && contacts.length > 0 ? (
+            <FlatList
+              data={contacts}
+              renderItem={({ item }) => (
+                <TouchableOpacity>
+                  {!item.avatar_url ? (
+                    <View style={[styles.cardImg]}>
+                      <Text style={styles.cardAvatarText}>
+                        {item.first_name[0].toUpperCase()}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Image
+                      alt="Avatar"
+                      resizeMode="cover"
+                      source={{ uri: item.avatar_url }}
+                      style={styles.profileImage}
+                    />
+                  )}
+                </TouchableOpacity>
               )}
-            </TouchableOpacity>
+              keyExtractor={(item, index) => index.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            />
+          ) : (
+            <Text style={styles.none}>None</Text>
           )}
-          keyExtractor={(item, index) => index.toString()}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        />
-      ) : (
-        <Text style={styles.none}>None</Text>
-      )}
-
 
           <Modal
             animationType="none"
@@ -582,7 +600,7 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     top: "22%",
-    alignSelf: 'center',
+    alignSelf: "center",
     width: "80%",
     maxWidth: 400,
     backgroundColor: "white",
@@ -624,6 +642,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "center",
     flex: 1,
+  },
+  inputError: {
+    borderColor: "red", // Red border on error
+  },
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    marginBottom: 8, // Space below the error message
   },
   trashIcon: {
     width: 20,

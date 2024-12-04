@@ -53,6 +53,25 @@ const GroupDetailsScreen = ({ navigation }) => {
     }
   }, []);
 
+  const validateAndCreateChat = () => {
+    // Group name cannot be blank
+    if (!input.trim()) {
+      Alert.alert("Invalid Group Name", "Group name cannot be blank.");
+      return;
+    }else if (input.length > 15) {
+      Alert.alert("Invalid Group Name", "Group name cannot be more than 15 characters.");
+      return;
+    }
+  
+    // Group must consist of more than 2 members
+    if (selectedPeopleData.length < 2) {
+      Alert.alert("Invalid Group", "A group must have at least 3 members including you.");
+      return;
+    }
+  
+    createChat(selectedPeopleData);
+  };
+  
   const createChat = async (selectedPeopleData) => {
     try {
       // Combine user ID with selected participants to form the group participants
@@ -324,7 +343,7 @@ const GroupDetailsScreen = ({ navigation }) => {
         end={{ x: 1, y: 1 }}
         style={styles.gradientContainer}
       >
-        <TouchableOpacity onPress={() => createChat(selectedPeopleData)}>
+        <TouchableOpacity onPress={validateAndCreateChat}>
           <Text style={styles.saveButtonText}>Create</Text>
         </TouchableOpacity>
       </LinearGradient>
@@ -380,13 +399,10 @@ const styles = StyleSheet.create({
 
   groupNameInput: {
     flex: 1, // Make the input take available space
-    height: 40,
     borderRadius: 20,
-    // backgroundColor: "#fff",
     paddingHorizontal: 15,
     fontSize: 22,
     color: "#333",
-    // borderWidth: 1,
     borderColor: "#ccc",
   },
   backButton: {
@@ -401,11 +417,10 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 30,
     fontWeight: "bold",
-    color: "black",
-    flex: 1,
     textAlign: "center",
+    color: "#444444",
   },
   profileImage: {
     width: 40,

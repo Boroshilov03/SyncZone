@@ -79,11 +79,12 @@ const ChatDetailScreen = () => {
       setAttachmentPhoto(asset.uri);
       setBase64Photo(asset.base64);
     }
-    sendImage();
+    // sendImage();
   }, []);
 
   // Function to send the selected image
   const sendImage = async () => {
+    console.log("sending image");
     if (!base64Photo) {
       Alert.alert("Error", "No photo selected.");
       return;
@@ -111,6 +112,7 @@ const ChatDetailScreen = () => {
         chat_id: chatId,
         sender_id: user.id,
         content: "",
+        created_at: new Date().toISOString(), // Add a proper timestamp
       };
 
       const { data: messageData, error: messageError } = await supabase
@@ -134,7 +136,7 @@ const ChatDetailScreen = () => {
         },
         ...prevMessages,
       ]);
-
+      setAttachmentPhoto(null);
       console.log("Image sent successfully.");
     } catch (err) {
       console.error("Error sending image:", err);
@@ -373,38 +375,50 @@ const ChatDetailScreen = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() && !attachmentPhoto) return;
 
-    const messageContent = newMessage.trim();
-    setNewMessage("");
+    if (attachmentPhoto) {
+      await sendImage(); // Send the image if there's an attachment
+    }
 
-    const result = await processMessageWithEmotion(
-      messageContent,
-      user.id,
-      chatId,
-      wsRef.current
-    );
+    if (newMessage.trim()) {
+      const messageContent = newMessage.trim();
+      setNewMessage(""); // Reset input field
 
-    if (result) {
-      // Update local state with the new message and emotion
-      setMessages((prevMessages) => [
-        {
-          ...result.message,
-          senderEmotion: result.emotionAnalysis.emotion,
-          receiverEmotion: null, // Will be updated when receiver processes it
-        },
-        ...prevMessages,
-      ]);
+      // Process the message with emotion analysis
+      const result = await processMessageWithEmotion(
+        messageContent,
+        user.id,
+        chatId,
+        wsRef.current
+      );
 
-      // Broadcast new message to other users
-      supabase.channel(`chat-room-${chatId}`).send({
-        type: "broadcast",
-        event: "new-message",
-        payload: {
-          ...result.message,
-          senderEmotion: result.emotionAnalysis.emotion,
-        },
-      });
+      if (result) {
+        console.log("Messages before update:", messages);
+
+        setMessages((prevMessages) => {
+          const newMessage = {
+            ...result.message,
+            senderEmotion: result.emotionAnalysis.emotion,
+            receiverEmotion: null,
+          };
+
+          console.log("New message being added:", newMessage);
+
+          return [newMessage, ...prevMessages];
+        });
+
+        supabase.channel(`chat-room-${chatId}`).send({
+          type: "broadcast",
+          event: "new-message",
+          payload: {
+            ...result.message,
+            senderEmotion: result.emotionAnalysis.emotion,
+          },
+        });
+
+        console.log("Messages after update:", messages);
+      }
     }
   };
 
@@ -508,8 +522,8 @@ const ChatDetailScreen = () => {
           style={[
             styles.messageContainer,
             isMyMessage
-              ? styles.myMessageContainer
-              : styles.otherMessageContainer,
+              ? [styles.myMessageContainer, { borderBottomRightRadius: 0 }] // Removes top-right radius for the tail effect
+              : [styles.otherMessageContainer, { borderBottomLeftRadius: 0 }],
           ]}
         >
           <View
@@ -517,9 +531,11 @@ const ChatDetailScreen = () => {
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
+              padding: 4,
+              borderRadius: 15,
             }}
           >
-            {!isMyMessage ? (
+            {!isMyMessage && groupTitle ? (
               avatar_url ? (
                 <Image
                   source={{ uri: avatar_url }}
@@ -555,32 +571,44 @@ const ChatDetailScreen = () => {
 
             <View style={{ display: "flex" }}>
               {/* Render message content */}
-              <Text
-                style={[
-                  styles.messageText,
-                  isMyMessage ? styles.myMessageText : styles.otherMessageText,
-                ]}
-              >
-                {item.content}
-              </Text>
+              {item.content ? (
+                <Text
+                  style={[
+                    styles.messageText,
+                    isMyMessage
+                      ? styles.myMessageText
+                      : styles.otherMessageText,
+                  ]}
+                >
+                  {item.content}
+                </Text>
+              ) : null}
 
               {/* Render sticker if available */}
               {item.attachments &&
                 item.attachments.map((attachment, index) => {
                   const uri = attachment.image_url || attachment.sticker_url; // Prefer image_url, fallback to sticker_url
 
-                  return (
-                    uri && (
-                      <Image
-                        key={index}
-                        source={{ uri }}
-                        style={[
-                          attachment.sticker_url
-                            ? styles.stickerImage // Fixed size for stickers
-                            : styles.attachmentImage, // Auto size for images
-                        ]}
-                      />
-                    )
+                  return uri && isMyMessage ? (
+                    <Image
+                      key={index}
+                      source={{ uri }}
+                      style={[
+                        attachment.sticker_url
+                          ? styles.stickerImage // Fixed size for stickers
+                          : styles.attachmentImage, // Auto size for images
+                      ]}
+                    />
+                  ) : (
+                    <Image
+                      key={index}
+                      source={{ uri }}
+                      style={[
+                        attachment.sticker_url
+                          ? styles.otherStickerImage // Fixed size for stickers
+                          : styles.otherAttachmentImage, // Auto size for images
+                      ]}
+                    />
                   );
                 })}
 
@@ -654,7 +682,7 @@ const ChatDetailScreen = () => {
           {loading && (
             <ActivityIndicator
               size="large"
-              color="lightblue"
+              color="#A0D7E5"
               style={{
                 position: "absolute",
                 top: "50%",
@@ -664,7 +692,7 @@ const ChatDetailScreen = () => {
             />
           )}
           {error && <Text style={styles.errorText}>{error}</Text>}
-          <View style={{ flex: 1, marginBottom: 70}}>
+          <View style={{ flex: 1, marginBottom: 70 }}>
             {!loading && !error && (
               <FlatList
                 ref={flatListRef}
@@ -685,7 +713,22 @@ const ChatDetailScreen = () => {
               </View>
             )}
           </View>
+
           <View style={styles.inputContainer}>
+            {attachmentPhoto && (
+              <View style={styles.attachmentPreviewContainer}>
+                <Image
+                  source={{ uri: attachmentPhoto }}
+                  style={styles.attachmentPreviewImage}
+                />
+                <TouchableOpacity
+                  style={styles.removeAttachmentButton}
+                  onPress={() => setAttachmentPhoto(null)}
+                >
+                  <Text style={styles.removeAttachmentText}>x</Text>
+                </TouchableOpacity>
+              </View>
+            )}
             <TextInput
               style={styles.input}
               placeholder="Type a message"
@@ -707,7 +750,6 @@ const ChatDetailScreen = () => {
                 color={"#616061"}
               />
             </TouchableOpacity>
-
             {/* Secondary Button */}
             <TouchableOpacity
               style={styles.secondaryButtonContainer}
@@ -725,6 +767,7 @@ const ChatDetailScreen = () => {
                 visible={ownedStickersVisible}
                 onClose={() => setOwnedStickersVisible(false)}
                 chatID={chatId}
+                setMessages={setMessages}
               />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleSendMessage}>
@@ -732,8 +775,7 @@ const ChatDetailScreen = () => {
                 style={[
                   styles.sendButton,
                   {
-                    tintColor: "lightblue",
-                    // transform: [{ rotate: "0deg" }],
+                    tintColor: "#A0D7E5",
                     width: 20,
                     height: 20,
                     marginRight: 10,
@@ -790,7 +832,7 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingHorizontal: 20,
     paddingBottom: 15,
-    backgroundColor: "lightblue",
+    backgroundColor: "#D1EBEF",
     borderBottomRightRadius: 10,
     borderBottomLeftRadius: 10,
   },
@@ -809,7 +851,6 @@ const styles = StyleSheet.create({
     flex: 2,
   },
   profileImage: {
-    position: "absolute",
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -871,9 +912,7 @@ const styles = StyleSheet.create({
   },
   messageList: {},
   messageContainer: {
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: 15,
     backgroundColor: "white",
     borderWidth: 1,
     borderColor: "#D1EBEF",
@@ -899,17 +938,26 @@ const styles = StyleSheet.create({
     fontSize: 19,
     textAlign: "left", // Ensure proper text alignment
   },
-  otherMessageText: {
-    marginLeft: 45,
-  },
+  otherMessageText: {},
   stickerImage: {
     width: 80,
     height: 80,
+  },
+  otherStickerImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 13,
   },
   attachmentImage: {
     flex: 1,
     aspectRatio: 1,
     height: 200,
+    borderRadius: 13,
+  },
+  otherAttachmentImage: {
+    aspectRatio: 1,
+    height: 200,
+    borderRadius: 13,
   },
   messageTimestamp: {
     fontSize: 10,
@@ -972,21 +1020,21 @@ const styles = StyleSheet.create({
   },
   emotionContainer: {
     position: "absolute",
-    paddingBottom: 1,
-    padding: 4,
+    paddingBottom: 2,
+    paddingTop: 2,
+    paddingHorizontal: 6,
     top: -15, // Adjust the vertical position as needed
   },
   myEmotionContainer: {
     borderTopLeftRadius: 12, // Round the top left corner
     borderTopRightRadius: 12, // No rounding on the top right corner
     borderBottomLeftRadius: 12, // Round the bottom left corner
-    right: -10, // Move it to the right side, adjust as needed
+    right: 0, // Move it to the right side, adjust as needed
   },
   otherEmotionContainer: {
     borderTopLeftRadius: 12, // Round the top left corner
     borderTopRightRadius: 12, // No rounding on the top right corner
     borderBottomRightRadius: 12,
-    left: -10, // Move it to the right side, adjust as needed
   },
   emotionText: {
     fontSize: 12,
@@ -1024,7 +1072,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   cardImg: {
-    position: "absolute",
     width: 40,
     height: 40,
     backgroundColor: "#FFADAD", // soft coral to complement pastel blue
@@ -1044,6 +1091,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#FFFFFF", // keeping the text white for readability
+  },
+  attachmentPreviewContainer: {
+    flexDirection: "row",
+  },
+  attachmentPreviewImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 10,
+  },
+  removeAttachmentButton: {
+    position: "absolute",
+    backgroundColor: "#ff4d4d",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: "50%",
+  },
+  removeAttachmentText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
 

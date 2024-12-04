@@ -192,7 +192,7 @@ const MembersChatScreen = ({ navigation }) => {
             autoCorrect={false}
             clearButtonMode="while-editing"
             onChangeText={(val) => setInput(val)}
-            placeholder="Search by Name"
+            placeholder="Search"
             placeholderTextColor="#848484"
             returnKeyType="done"
             style={styles.searchControl}
@@ -244,11 +244,10 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 30,
     fontWeight: "bold",
-    color: "black",
-    flex: 1,
     textAlign: "center",
+    color: "#444444",
   },
   searchWrapper: {
     marginVertical: 15,
@@ -257,30 +256,32 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   search: {
+    position: "relative",
+    backgroundColor: "rgb(240, 240, 240)",
+    justifyContent: "center",
+    marginHorizontal: 15,
+    alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgb(240, 240, 240)",
     borderRadius: 25,
     paddingHorizontal: 15,
-    paddingVertical: 5,
+    paddingVertical: 2,
     borderWidth: 1,
     borderColor: "#d1d1d1",
-    width: "90%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 5,
     elevation: 3,
-    height: screenHeight * 0.05, // Dynamically set height as 6% of screen height
   },
   searchIcon: {
-    marginRight: 10,
+    marginLeft: 10,
   },
   searchControl: {
     flex: 1,
-    height: 30,
     fontSize: 16,
     color: "#333",
+    marginLeft: 5,
   },
   profileImage: {
     width: 40,

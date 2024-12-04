@@ -79,13 +79,16 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
   useEffect(() => {
     if (events.length) {
       const currentDate = new Date(); // Get the current date
+      const adjustedCurrentDate = new Date();
+      adjustedCurrentDate.setDate(adjustedCurrentDate.getDate() - 1); // Move back one day
+      adjustedCurrentDate.setHours(0, 0, 0, 0); // Reset to the beginning of the day
 
       // Group events by date and filter out past events
       const groupedAgendaItems = events
         .filter((event) => {
           const eventDate = new Date(event.date);
           return (
-            eventDate >= new Date(currentDate.setHours(0, 0, 0, 0)) &&
+            eventDate >= adjustedCurrentDate &&
             isSameMonth(parseISO(event.date), selectedMonth)
           );
         })
@@ -246,11 +249,9 @@ const MyExpandableCalendar = ({ toggleEditEventModal }) => {
           firstDay={1}
           theme={{
             selectedDayBackgroundColor: "#A7C7E7",
-            todayTextColor: "#1E90FF",
             dayTextColor: "#333",
             monthTextColor: "#000",
             arrowColor: "#1E90FF",
-            dotColor: "#1E90FF",
           }}
         />
         <AgendaList
@@ -281,7 +282,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 3 }, // Moves shadow more towards bottom
     elevation: 3,
-  },  
+  },
   itemTitle: {
     fontSize: 20,
     fontWeight: "600", // Changed from 'semibold' to '600' for compatibility

@@ -113,7 +113,7 @@ const RecentCalls = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
+<View style={{ flex: 1, position: "relative", zIndex: 1, backgroundColor: "#fff" }}>
       <Header event="call" navigation={navigation} title="Calls" />
       <View style={styles.searchWrapper}>
         <View style={styles.search}>

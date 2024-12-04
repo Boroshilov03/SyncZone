@@ -23,13 +23,12 @@ import GradientText from "react-native-gradient-texts";
 import OwnedBannersModal from "../components/OwnedBannersModal";
 import useStore from "../store/store";
 import { supabase } from "../lib/supabase";
-import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
+import { useFocusEffect } from "@react-navigation/native"; // Import useFocusEffect
 import * as ImagePicker from "expo-image-picker";
 import uuid from "react-native-uuid";
 import { decode } from "base64-arraybuffer";
 
 const ProfileSettings = ({ navigation, route }) => {
-
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [base64Photo, setBase64Photo] = useState(null);
   const { contactInfo } = route.params; // Access contactInfo correctly
@@ -75,7 +74,8 @@ const ProfileSettings = ({ navigation, route }) => {
       const fetchLatestUserData = async () => {
         const { data, error } = await supabase.auth.getUser();
         if (data) setUser(data);
-        if (error) console.error("Error fetching latest user data:", error.message);
+        if (error)
+          console.error("Error fetching latest user data:", error.message);
       };
       fetchLatestUserData();
     }, [])
@@ -188,7 +188,7 @@ const ProfileSettings = ({ navigation, route }) => {
 
       // Remove image from Supabase storage
       if (contactInfo.contactPFP) {
-        const photoPath = contactInfo.contactPFP.split('/').pop(); // Get the file path from URL
+        const photoPath = contactInfo.contactPFP.split("/").pop(); // Get the file path from URL
         const { error: deleteError } = await supabase.storage
           .from("avatars")
           .remove([photoPath]);
@@ -238,7 +238,8 @@ const ProfileSettings = ({ navigation, route }) => {
       .single();
 
     if (error) {
-      if (error.code === "PGRST116") { // No rows returned for single query
+      if (error.code === "PGRST116") {
+        // No rows returned for single query
         setActiveBannerData(null); // Set active banner data to null if no active banner
       } else {
         console.error("Error fetching active banner:", error.message);
@@ -301,8 +302,6 @@ const ProfileSettings = ({ navigation, route }) => {
 
   // Use useFocusEffect to refetch active banner on screen focus
 
-
-
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 
   const panResponder = PanResponder.create({
@@ -322,7 +321,6 @@ const ProfileSettings = ({ navigation, route }) => {
     return null; // You can return a loading spinner or similar
   }
 
-
   return (
     <SafeAreaView
       style={[styles.container, { marginTop: Constants.statusBarHeight }]}
@@ -340,7 +338,6 @@ const ProfileSettings = ({ navigation, route }) => {
           <Pressable style={styles.pic} onPress={() => setModalVisible(true)}>
             {activeBannerData && (
               <Image
-
                 source={{ uri: activeBannerData.image_url }}
                 style={styles.bannerImage} // New style for the banner image
               />
@@ -363,7 +360,7 @@ const ProfileSettings = ({ navigation, route }) => {
           </Text>
           <Text style={styles.user}>@{contactInfo.contactUsername}</Text>
           <View style={styles.actbox}>
-            <Text style={styles.act}>Show Activity Status</Text>
+            <Text style={styles.act}>Show Location</Text>
             <Switch
               trackColor={{ false: "#ccc", true: "#4caf50" }}
               thumbColor={isEnabled ? "#fff" : "#fff"}
@@ -407,7 +404,9 @@ const ProfileSettings = ({ navigation, route }) => {
               </View>
               <Pressable style={styles.pfpButtons}>
                 <View style={styles.upload}>
-                  <Text style={styles.uploadText} onPress={pickImage}>Upload Image</Text>
+                  <Text style={styles.uploadText} onPress={pickImage}>
+                    Upload Image
+                  </Text>
                 </View>
                 <View style={styles.banButton}>
                   <TouchableOpacity
@@ -421,7 +420,9 @@ const ProfileSettings = ({ navigation, route }) => {
                   </TouchableOpacity>
                 </View>
                 <View style={styles.right}>
-                  <Text style={styles.removeText} onPress={removeImage}>Remove Image</Text>
+                  <Text style={styles.removeText} onPress={removeImage}>
+                    Remove Image
+                  </Text>
                 </View>
               </Pressable>
             </View>
@@ -436,12 +437,7 @@ const ProfileSettings = ({ navigation, route }) => {
               </View>
               <Pressable style={styles.modalButtons}>
                 <Pressable style={styles.left}>
-                  <Text
-                    style={styles.lText}
-
-                  >
-                    Delete
-                  </Text>
+                  <Text style={styles.lText}>Delete</Text>
                 </Pressable>
                 <View style={styles.right}>
                   <Text style={styles.rText} onPress={() => setVisible(false)}>
@@ -452,63 +448,71 @@ const ProfileSettings = ({ navigation, route }) => {
             </View>
           </View>
         </Modal>
-
-        <View style={styles.fields}>
-          {[
-            { label: "Username", value: username, setValue: setUsername },
-            { label: "Email", value: email, setValue: setEmail, editable: false, disabled: true },
-            {
-              label: "Password",
-              value: password,
-              setValue: setPassword,
-              secureTextEntry: true,
-            },
-            { label: "First Name", value: firstName, setValue: setFirstName },
-            { label: "Last Name", value: lastName, setValue: setLastName },
-
-            // Add more fields as needed
-          ].map((field, index) => (
-            <View key={index} style={styles.verticallySpaced}>
-              <Input
-                label={field.label}
-                value={field.value}
-                onChangeText={field.setValue}
-                labelStyle={{
-                  position: "absolute",
-                  top: -25,
-                  left: 25,
-                  color: "#616061",
-                }}
-                leftIcon={{
-                  type: "font-awesome",
-                  name:
-                    field.label === "Password"
-                      ? "lock"
-                      : field.label === "Email"
+        <View style={styles.fieldsWrapper}>
+          <View style={styles.fields}>
+            {[
+              { label: "Username", value: username, setValue: setUsername },
+              {
+                label: "Email",
+                value: email,
+                setValue: setEmail,
+                editable: false,
+                disabled: true,
+              },
+              {
+                label: "Password",
+                value: password,
+                setValue: setPassword,
+                secureTextEntry: true,
+              },
+              { label: "First Name", value: firstName, setValue: setFirstName },
+              { label: "Last Name", value: lastName, setValue: setLastName },
+              { label: "Location", value: location, setValue: setLocation },
+              // Add more fields as needed
+            ].map((field, index) => (
+              <View key={index} style={styles.verticallySpaced}>
+                <Input
+                  label={field.label}
+                  value={field.value}
+                  onChangeText={field.setValue}
+                  labelStyle={{
+                    position: "absolute",
+                    top: -25,
+                    left: 25,
+                    color: "#616061",
+                  }}
+                  leftIcon={{
+                    type: "font-awesome",
+                    name:
+                      field.label === "Password"
+                        ? "lock"
+                        : field.label === "Email"
                         ? "envelope"
                         : "user",
-                  color: "#616061",
-                  size: 20,
-                }}
-                autoCapitalize="none"
-                secureTextEntry={field.secureTextEntry} // Use for password field
-                editable={field.editable}
-                disabled={field.disabled}
-                inputContainerStyle={{
-                  borderRadius: 30,
-                  borderTopWidth: 2.5,
-                  borderBottomWidth: 2.5,
-                  borderLeftWidth: 2.5,
-                  borderRightWidth: 2.5,
-                  borderColor: "#A7A7A7",
-                  width: 270,
-                  paddingLeft: 15,
-                  height: 40,
-                }}
-              />
-            </View>
-          ))}
+                    color: "#616061",
+                    size: 20,
+                  }}
+                  autoCapitalize="none"
+                  secureTextEntry={field.secureTextEntry} // Use for password field
+                  editable={field.editable}
+                  disabled={field.disabled}
+                  inputContainerStyle={{
+                    borderRadius: 30,
+                    borderTopWidth: 2.5,
+                    borderBottomWidth: 2.5,
+                    borderLeftWidth: 2.5,
+                    borderRightWidth: 2.5,
+                    borderColor: "#A7A7A7",
+                    width: 270,
+                    paddingLeft: 15,
+                    height: 40,
+                  }}
+                />
+              </View>
+            ))}
+          </View>
         </View>
+
         <View style={styles.buttonbox}>
           <LinearGradient
             start={{ x: 0, y: 0 }}
@@ -516,7 +520,11 @@ const ProfileSettings = ({ navigation, route }) => {
             colors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
             style={styles.gradient}
           >
-            <TouchableOpacity style={styles.button2} borderRadius={20} onPress={updateInfo}>
+            <TouchableOpacity
+              style={styles.button2}
+              borderRadius={20}
+              onPress={updateInfo}
+            >
               <Text style={[styles.buttontext]}>Update</Text>
             </TouchableOpacity>
           </LinearGradient>
@@ -651,7 +659,7 @@ const styles = StyleSheet.create({
     //aspectRatio: 1
   },
   bannerImage: {
-    position: 'absolute',
+    position: "absolute",
     width: 180, // Slightly wider than the profile picture
     height: 180, // Fixed height to fit the banner
     top: 0, // Adjust this value to position the banner above the profile picture
@@ -660,7 +668,6 @@ const styles = StyleSheet.create({
     borderRadius: 20, // Adjust to create a smoother edge
     justifyContent: "center",
     alignItems: "center",
-
   },
   placeholderImage: {
     width: 150,
@@ -671,18 +678,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
     margin: 10,
-    backgroundColor: 'grey'
+    backgroundColor: "grey",
+  },
+  fieldsWrapper: {
+    flex: 1,
+    justifyContent: "center", // Center vertically
+    alignItems: "center", // Center horizontally
   },
   fields: {
-    flexGrow: 1,
-    //borderWidth: 1,
-    marginTop: 5,
-    //padding: 20,
-    //height: 1000,
-    justifyContent: "center",
-    alignItems: "center",
     width: "100%",
-    paddingVertical: 20,
+    maxWidth: 300, // Restrict the width to a certain size for better centering
   },
   verticallySpaced: {
     flex: 1,
@@ -883,4 +888,3 @@ const styles = StyleSheet.create({
     left: 30,
   },
 });
-

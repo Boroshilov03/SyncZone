@@ -1,18 +1,16 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import React from "react";
 import { Image, Text, StyleSheet, View } from "react-native";
+import ChatsScreen from "../screens/ChatsScreen";
 import GiftsScreen from "../screens/GiftsScreen";
 import CallsScreen from "../screens/CallsScreen";
 import CalendarScreen from "../screens/CalendarScreen";
-import ChatsScreen from "../screens/ChatsScreen";
-import RecentCalls from "../screens/RecentCalls";
 
 const Tab = createBottomTabNavigator();
 
 const iconMap = {
   Gifts: require("../../assets/icons/gift-icon.png"),
   Chats: require("../../assets/icons/chat-icon.png"),
-  Calls: require("../../assets/icons/telephone.png"),
   Calendar: require("../../assets/icons/calendar-icon.png"),
 };
 
@@ -40,6 +38,7 @@ const iconSizeMap = {
 function MainTabNavigator({ navigation }) {
   return (
     <Tab.Navigator
+    initialRouteName="Chats" // Set "Chats" as the default screen
       screenOptions={({ route }) => ({
         tabBarShowLabel: false,
         tabBarStyle: [
@@ -90,7 +89,6 @@ function MainTabNavigator({ navigation }) {
     >
       <Tab.Screen name="Gifts" component={GiftsScreen} />
       <Tab.Screen name="Chats" component={ChatsScreen} />
-      <Tab.Screen name="Calls" component={RecentCalls} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
     </Tab.Navigator>
   );
