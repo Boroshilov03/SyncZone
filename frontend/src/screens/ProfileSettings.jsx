@@ -114,57 +114,69 @@ const ProfileSettings = ({ navigation, route }) => {
     }
   };
 
+  const pickImage = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission needed", "Camera roll permissions are required!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+      base64: true,
+    });
+
+    if (!result.canceled) {
+      const photo = result.assets[0];
+      setProfilePhoto(photo.uri);
+      setBase64Photo(photo.base64);
+    }
+  }, []);
+
   const updateInfo = async () => {
     try {
-      let avatarUrl = null;
+      let avatarUrl = profilePhoto; // Keep current photo if no new one is uploaded.
 
       if (base64Photo) {
-        const photoPath = `${user.id}/${uuid.v4()}.png`;
+        const fileName = `${user.id}/${uuid.v4()}.png`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("avatars")
-          .upload(photoPath, decode(base64Photo), { contentType: "image/png" });
+          .upload(fileName, decode(base64Photo), { contentType: "image/png" });
 
         if (uploadError) {
-          Alert.alert(
-            "Error",
-            "Failed to upload profile photo: " + uploadError.message
-          );
+          Alert.alert("Error", `Failed to upload profile photo: ${uploadError.message}`);
           return;
         }
-        avatarUrl = supabase.storage.from("avatars").getPublicUrl(photoPath)
-          .data.publicUrl;
+
+        avatarUrl = supabase.storage.from("avatars").getPublicUrl(fileName).data.publicUrl;
       }
 
-      const { error: updateProfileError } = await supabase
+      // Update the profile in Supabase
+      const { error: updateError } = await supabase
         .from("profiles")
         .update({
           username,
           first_name: firstName,
           last_name: lastName,
           location,
-          avatar_url: avatarUrl || profilePhoto,
+          avatar_url: avatarUrl,
         })
         .eq("id", user.id);
 
-      if (updateProfileError) {
-        Alert.alert(
-          "Error",
-          "Failed to update profile: " + updateProfileError.message
-        );
+      if (updateError) {
+        Alert.alert("Error", `Failed to update profile: ${updateError.message}`);
         return;
       }
 
-      contactInfo.contactUsername = username;
-      contactInfo.contactFirst = firstName;
-      contactInfo.contactLast = lastName;
-      contactInfo.location = location;
-      if (avatarUrl) contactInfo.contactPFP = avatarUrl;
-
-      await fetchProfileData();
+      contactInfo.contactPFP = avatarUrl; // Update local info
       alert("Profile updated successfully!");
+      await fetchProfileData(); // Refresh the profile data.
     } catch (error) {
-      console.error("Error updating user:", error);
-      alert("Error updating profile. Please try again.");
+      console.error("Error updating profile:", error);
+      alert("An error occurred while updating the profile. Please try again.");
     }
   };
 
@@ -214,30 +226,6 @@ const ProfileSettings = ({ navigation, route }) => {
       alert("Failed to remove profile image. Please try again.");
     }
   };
-
-  const pickImage = useCallback(async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission needed",
-        "Sorry, we need camera roll permissions to make this work!"
-      );
-      return;
-    }
-
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-      base64: true,
-    });
-    console.log(result);
-    if (!result.canceled) {
-      setProfilePhoto(result.assets[0].uri);
-      setBase64Photo(result.assets[0].base64);
-    }
-  }, []);
 
   // Function to fetch the active banner
   const fetchActiveBanner = async () => {
@@ -311,6 +299,7 @@ const ProfileSettings = ({ navigation, route }) => {
     fetchActiveBanner(); // Fetch the active banner when the component mounts
   }, [user]); // Dependency on user to refetch when user state changes
 
+
   // Use useFocusEffect to refetch active banner on screen focus
 
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
@@ -354,7 +343,7 @@ const ProfileSettings = ({ navigation, route }) => {
               />
             )}
             <Image
-              source={{ uri: contactInfo.contactPFP }}
+              source={{ uri: profilePhoto || contactInfo.contactPFP }}
               style={styles.placeholderImage}
               onPress={() => setOwnedBannersVisible(true)}
             ></Image>
