@@ -13,8 +13,8 @@ import React, { useEffect, useState, useRef  } from "react";
 import { supabase } from "../lib/supabase"; // Import Supabase client for Database Operations
 import useStore from "../store/store"; // Import store for state management
 import Header from "../components/Header"; //Import Header Component
-//import BannerCategory from "../../assets/icons/BannerCat.png";
-//import BannerStickers from "../../assets/icons/BannerStickers.png";
+//import BannerCategory from "../../assets/icons/OwnedButton.png";
+//import BannerStickers from "../../assets/icons/OwnedButton1.png";
 import { Pacifico_400Regular } from "@expo-google-fonts/pacifico"; // Import Pacifico font
 import { Poppins_400Regular } from "@expo-google-fonts/poppins"; // Import Poppins font
 import { useFonts } from "expo-font";
@@ -384,6 +384,9 @@ const GiftsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   headerContainer: {
     position: "relative",
+    zIndex: 1,
+    top: -10.1,
+
   },
 
   sectionContainer: {

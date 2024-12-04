@@ -75,7 +75,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
             }
           },
           onPanResponderRelease: (e, gestureState) => {
-            if (gestureState.dy > 150) {
+            if (gestureState.dy > 100) {
               handleClose(); // Close the modal if dragged down far enough
             } else {
               Animated.spring(slideAnim, {
@@ -89,6 +89,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
     }
 
     if (visible) {
+      slideAnim.setValue(500); // Ensure it starts off-screen
       Animated.spring(slideAnim, {
         toValue: 0, // Slide in from the bottom
         useNativeDriver: true,
@@ -110,11 +111,11 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         .from("messages")
         .insert([
           {
-            chat_id: chatID,
-            sender_id: user.id,
-            content: "", // Empty content for sticker-only message
-          },
-        ])
+          chat_id: chatID,
+          sender_id: user.id,
+          content: "", // Empty content for sticker-only message
+        },
+      ])
         .select();
 
       if (messageError) {
@@ -129,18 +130,19 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         .from("attachments")
         .insert([
           {
-            message_id: messageId,
-            sticker_id: stickerId,
-            image_url: "",
-          },
-        ]);
+          message_id: messageId,
+          sticker_id: stickerId,
+          image_url: "",
+        },
+      ]);
 
       if (attachmentError) {
         console.error("Error attaching sticker:", attachmentError);
       } else {
         console.log("Sticker attached successfully:", attachmentData);
       }
-      // Step 2: Fetch the sticker details to include in the message
+
+      // Step 3: Fetch the sticker details to include in the message
       const { data: stickerData, error: stickerError } = await supabase
         .from("stickers")
         .select("*")
@@ -151,7 +153,8 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         console.error("Error fetching sticker details:", stickerError);
         return;
       }
-      // Step 3: Attach the sticker to the message state
+
+      // Step 4: Attach the sticker to the message state
       const newMessage = {
         id: messageId,
         chat_id: chatID,
@@ -159,10 +162,10 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         content: "",
         attachments: [
           {
-            sticker_id: stickerId,
-            image_url: stickerData.image_url, // Use actual sticker data here
-          },
-        ],
+          sticker_id: stickerId,
+          image_url: stickerData.image_url, // Use actual sticker data here
+        },
+      ],
       };
 
       setMessages((prevMessages) => [newMessage, ...prevMessages]);
@@ -191,13 +194,9 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
     >
       <View style={styles.modalOverlay}>
         <Animated.View
-          style={[
-            styles.modalContainer,
-            { transform: [{ translateY: slideAnim }] },
-          ]}
+          style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}
           {...(panResponder ? panResponder.panHandlers : {})} // Attach pan responder
         >
-          {/* Handle for sliding */}
           <View style={styles.slideHandle}></View>
 
           <Text style={styles.modalTitle}>Your Owned Stickers</Text>
@@ -223,9 +222,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
                   </TouchableOpacity>
                 ))
               ) : (
-                <Text style={styles.noStickersText}>
-                  You have no owned stickers.
-                </Text>
+                <Text style={styles.noStickersText}>You have no owned stickers.</Text>
               )}
             </ScrollView>
           )}
@@ -244,11 +241,12 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: "100%",
-    backgroundColor: "#2f3136", // Dark background, Discord-like
+    maxHeight: "70%", // Limit the modal height, allowing it to scroll
+    backgroundColor: "#2f3136", // Dark background
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     padding: 20,
-    maxHeight: "70%",
+    overflow: "hidden", // Ensure content is clipped within the modal
   },
   slideHandle: {
     width: 50,
@@ -268,23 +266,26 @@ const styles = StyleSheet.create({
   stickerGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   stickerContainer: {
-    width: 100,
+    width: "23%", // About 4 items per row with space between
+    aspectRatio: 1, // Keep square stickers
+    marginBottom: 20,
     alignItems: "center",
-    marginBottom: 15,
   },
   stickerImage: {
-    width: 90,
-    height: 90,
-    marginBottom: 5,
-    borderRadius: 10,
+    width: "100%",
+    height: "100%",
+    borderRadius: 0,
+    marginBottom: -5,
   },
   stickerName: {
     fontSize: 12,
     color: "#fff",
     textAlign: "center",
+    top: 5,
   },
   noStickersText: {
     textAlign: "center",
