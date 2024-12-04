@@ -10,7 +10,8 @@ import React, { useEffect, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native"; // Import useFocusEffect
 import useStore from "../store/store";
 import { supabase } from "../lib/supabase";
-
+import OwnedButtonOff from "../../assets/icons/OwnedButton.png";
+import OwnedButtonOn from "../../assets/icons/OwnedButton1.png";
 const profilePic = require("../../assets/icons/pfp_icon.png");
 const calendarImage = require("../../assets/icons/add_calendar.png");
 const messageImage = require("../../assets/icons/plus.png");
@@ -132,16 +133,12 @@ const Header = ({
       </TouchableOpacity>
 
       {event === "shop" && (
-        <View style={styles.switchContainer}>
-          <Text style={styles.switchLabel}>
-            {switchValue ? "Show Owned" : "Show All"}
-          </Text>
-          <Switch
-            onValueChange={toggleSwitch}
-            style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
-            value={switchValue}
-          />
-        </View>
+      <TouchableOpacity onPress={toggleSwitch} style={styles.switchButton}>
+        <Image
+          source={switchValue ? OwnedButtonOn : OwnedButtonOff}
+          style={styles.switchIcon}
+        />
+      </TouchableOpacity>
       )}
     </View>
   );
@@ -210,13 +207,15 @@ const styles = StyleSheet.create({
     width: 23,
     height: 23,
   },
-  switchContainer: {
-    flexDirection: "row",
+  switchButton: {
+    justifyContent: "center",
     alignItems: "center",
-    bottom: 0,
+    padding: 10,
+    left: 15,
   },
-  switchLabel: {
-    marginRight: -4,
+  switchIcon: {
+    width: 40, // Adjust size as per your image dimensions
+    height: 40, // Adjust size as per your image dimensions
   },
 });
 
