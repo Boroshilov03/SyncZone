@@ -1,18 +1,133 @@
 import { StyleSheet, Text, View, Image, SafeAreaView, TouchableOpacity, Button, Pressable, Modal, } from 'react-native';
-import { React, useState, useEffect } from 'react';
+import { React, useState, useEffect, useCallback } from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Ionicons } from '@expo/vector-icons';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import * as Font from 'expo-font';
+import axios from "axios";
+import { supabase } from "../lib/supabase";
+import { WEATHER_API_KEY } from '@env';
 
 
-
-const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst, contactLast, contactUsername, setProfileVisible }) => {
-  //const [modalVisible, setModalVisible] = useState(false);
+const ProfileScreen = ({
+  navigation,
+  contactID,
+  contactPFP,
+  contactFirst,
+  contactLast,
+  contactUsername,
+  setProfileVisible,
+}) => {
   const [visible, setVisible] = useState(false);
-
-
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [timezone, setTimezone] = useState(null);
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+  const [weather, setWeather] = useState({
+    temp: null,
+    description: null,
+    time: null,
+  });
+  const [location, setLocation] = useState(false);
+
+  useEffect(() => {
+    async function fetchLatLon() {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("latitude, longitude, location")
+          .eq("id", contactID)
+          .single();
+
+        if (error) {
+          console.error("Error fetching location data:", error.message);
+        } else if (data) {
+          setLatitude(data.latitude);
+          setLongitude(data.longitude);
+          setLocation(data.location);
+        }
+      } catch (error) {
+        console.error("Error fetching latitude and longitude:", error);
+      }
+    }
+
+    fetchLatLon();
+  }, [contactID]);
+
+
+  const fetchTimeZone = useCallback(async (latitude, longitude) => {
+    try {
+      const response = await axios.get(
+        `http://api.geonames.org/timezoneJSON?lat=${latitude}&lng=${longitude}&username=synczone`
+      );
+
+      if (response.data && response.data.timezoneId) {
+        setTimezone(response.data.timezoneId);
+        console.log("Timezone:", response.data.timezoneId);
+      } else {
+        Alert.alert("Error", "Timezone not found.");
+      }
+    } catch (error) {
+      console.error("Error fetching timezone:", error);
+      Alert.alert("Error", "Failed to fetch timezone.");
+    }
+  }, []);
+
+  const fetchWeatherAndTime = useCallback(async (latitude, longitude) => {
+    try {
+      const weatherResponse = await axios.get(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=imperial&appid=${WEATHER_API_KEY}`
+      );
+
+      let weatherData = {};
+      if (weatherResponse.data) {
+        const { main, weather: weatherDetails } = weatherResponse.data;
+        const description = weatherDetails[0]?.description;
+
+        weatherData = {
+          temp: main.temp,
+          description: description
+            ? description.charAt(0).toUpperCase() + description.slice(1)
+            : "",
+        };
+      }
+
+      const timeResponse = await axios.get(
+        `http://api.geonames.org/timezoneJSON?lat=${latitude}&lng=${longitude}&username=synczone`
+      );
+
+      let localTime = null;
+      if (timeResponse.data) {
+        const rawTime = timeResponse.data.time;
+        const dateObj = new Date(rawTime);
+        localTime = dateObj.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
+      }
+
+      setWeather({ ...weatherData, time: localTime });
+      console.log("Weather and Time:", { ...weatherData, time: localTime });
+    } catch (error) {
+      console.error("Error fetching weather or time:", error);
+      Alert.alert("Error", "Failed to fetch weather or time.");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (latitude && longitude) {
+      fetchWeatherAndTime(latitude, longitude);
+    }
+  }, [latitude, longitude, fetchWeatherAndTime]);
+
+  useEffect(() => {
+    if (latitude && longitude) {
+      fetchTimeZone(latitude, longitude);
+    }
+  }, [latitude, longitude, fetchTimeZone]);
+
+
   useEffect(() => {
     const loadFonts = async () => {
       await Font.loadAsync({
@@ -20,7 +135,7 @@ const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst,
         'Poppins-Medium': require('./fonts/Poppins-Medium.ttf'),
         'Poppins-Bold': require('./fonts/Poppins-Bold.ttf'),
         'Rubik-Regular': require('./fonts/Rubik-Regular.ttf'),
-        // Load other weights as needed
+
       });
       setFontsLoaded(true);
     };
@@ -29,7 +144,7 @@ const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst,
   }, []);
 
   if (!fontsLoaded) {
-    return null; // You can return a loading spinner or similar
+    return null;
   }
 
 
@@ -68,11 +183,13 @@ const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst,
 
       <View style={styles.profileContainer}>
         <View style={styles.weather}>
-          <Text style={styles.loc}>Barcelona, Spain</Text>
+          <Text style={styles.loc}>{location}</Text>
         </View>
         <View style={styles.midbox}>
           <View style={styles.temp}>
-            <Text style={styles.weatherText}>62°F</Text>
+            <Text style={styles.weatherText}>{weather
+              ? `${weather.temp}°F, ${weather.description}`
+              : "Not available"}</Text>
           </View>
           {contactPFP ? (
             <Image source={{ uri: contactPFP }} style={styles.profileImage} />
@@ -81,7 +198,7 @@ const ProfileScreen = ({ navigation, route, contactID, contactPFP, contactFirst,
             <Image source={require('../images/girl.png')} style={styles.placeholderImage} />
           )}
           <View style={styles.temp}>
-            <Text style={styles.weatherText}>4:36 AM</Text>
+            <Text style={styles.weatherText}>{weather.time}</Text>
           </View>
         </View>
         <Text style={styles.nameText}>
@@ -160,8 +277,8 @@ const styles = StyleSheet.create({
 
   },
   profileImage: {
-    width: 170,
-    height: 170,
+    width: 150,
+    height: 150,
     borderRadius: 200, // Makes the image circular
     marginBottom: 10,
     padding: 10,
@@ -170,8 +287,8 @@ const styles = StyleSheet.create({
 
   },
   placeholderImage: {
-    width: 170,
-    height: 170,
+    width: 150,
+    height: 150,
     borderRadius: 155,
     backgroundColor: '#ccc', // Gray color for placeholder
     justifyContent: 'center',

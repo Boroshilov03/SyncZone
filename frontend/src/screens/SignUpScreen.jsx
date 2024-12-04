@@ -50,6 +50,7 @@ export default function SignupScreen({ navigation }) {
     description: null,
     time: null,
   });
+
   const [timezone, setTimezone] = useState(null);
   const [lat, setLat] = useState(null);
   const [lon, setLon] = useState(null);
@@ -61,7 +62,6 @@ export default function SignupScreen({ navigation }) {
   const handleInputChange = useCallback((name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }, []);
-
 
   const fetchWeatherAndTime = useCallback(async (lat, lon) => {
     try {
@@ -249,10 +249,6 @@ export default function SignupScreen({ navigation }) {
           },
         },
       });
-
-      // Log Supabase response to see if signup was successful or not
-      // console.log("Supabase SignUp Data:", data);
-      // console.log("Supabase SignUp Error:", error);
 
       if (error) {
         Alert.alert("Error", error.message);

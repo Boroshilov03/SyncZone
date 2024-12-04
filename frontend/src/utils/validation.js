@@ -14,7 +14,9 @@ export const signupSchema = z
     email: z.string().email("Invalid email address"),
     password1: z.string().min(8, "Password must be at least 8 characters long"),
     password2: z.string().min(8, "Password must be at least 8 characters long"),
-    location: z.string().optional(), // Make location optional
+    location: z.string().optional(),
+    latitude: z.string().optional(), // Make location optional
+    longitude: z.string().optional(), // Make location optional
   })
   .refine((data) => data.password1 === data.password2, {
     message: "Passwords do not match",
