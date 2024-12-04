@@ -517,21 +517,21 @@ const ContactScreen = ({ navigation }) => {
     </View>
   );
 
-if (isLoading) {
-  return (
-    <ActivityIndicator
-      size="large"
-      color="lightblue"
-      style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        marginTop: -40, // Adjust based on the size of the ActivityIndicator
-        marginLeft: -40, // Adjust based on the size of the ActivityIndicator
-      }}
-    />
-  );
-}
+  if (isLoading) {
+    return (
+      <ActivityIndicator
+        size="large"
+        color="lightblue"
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          marginTop: -40, // Adjust based on the size of the ActivityIndicator
+          marginLeft: -40, // Adjust based on the size of the ActivityIndicator
+        }}
+      />
+    );
+  }
 
   if (error) {
     return <Text>Error: {error.message}</Text>;
@@ -847,7 +847,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -855,7 +855,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
   },
   modalContent: {
     width: "85%",

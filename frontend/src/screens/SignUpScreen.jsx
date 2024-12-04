@@ -411,54 +411,7 @@ export default function SignupScreen({ navigation }) {
             <Dropdown
               location={formData.location}
               setCity={handleCitySelection} />
-            <View style={styles.tz_container}>
-              <View style={styles.tz}>
-                <Icon
-                  name="clock-o"
-                  size={22}
-                  style={{ marginHorizontal: 3 }}
-                  color={'#616061'} />
-                <Text style={{
-                  color: "#70747a",
-                  marginVertical: 6,
-                  paddingHorizontal: 16,
-                  fontWeight: 'bold'
 
-                }}>
-
-                  Timezone: {timezone ? timezone : "Not available"}</Text>
-              </View>
-              <View style={styles.tz}>
-                <Icon
-                  name="cloud"
-                  size={22}
-                  style={{ marginHorizontal: 3 }}
-                  color={'#616061'} />
-                <Text style={{
-                  color: "#70747a",
-                  marginVertical: 6,
-                  paddingHorizontal: 16,
-                  fontWeight: 'bold'
-
-                }}>
-                  Weather:{" "}
-                  {weather
-                    ? `${weather.temp}°F,  ${weather.description}`
-                    : "Not available"}
-                </Text>
-              </View>
-              <View style={styles.tz}>
-                <Icon name="clock-o" size={22} style={{ marginHorizontal: 3 }} color={'#616061'} />
-                <Text style={{
-                  color: "#70747a",
-                  marginVertical: 6,
-                  paddingHorizontal: 16,
-                  fontWeight: 'bold'
-                }}>
-                  Time: {weather.time ? weather.time : "Not available"}
-                </Text>
-              </View>
-            </View>
 
             <View style={styles.buttonbox}>
               <LinearGradient

@@ -24,11 +24,12 @@ const ProfileScreen = ({
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [weather, setWeather] = useState({
-    temp: null,
-    description: null,
+    temp: 'N/A',
+    description: 'N/A',
     time: null,
   });
   const [location, setLocation] = useState(false);
+  const [country, setCountry] = useState(null);
 
   useEffect(() => {
     async function fetchLatLon() {
@@ -54,65 +55,61 @@ const ProfileScreen = ({
     fetchLatLon();
   }, [contactID]);
 
-
-  const fetchTimeZone = useCallback(async (latitude, longitude) => {
-    try {
+  useEffect(() => {
+    const fetchCountry = async () => {
       const response = await axios.get(
-        `http://api.geonames.org/timezoneJSON?lat=${latitude}&lng=${longitude}&username=synczone`
+        `http://api.geonames.org/findNearbyPlaceNameJSON`,
+        {
+          params: {
+            lat: latitude,
+            lng: longitude,
+            username: "synczone",
+          },
+        }
       );
 
-      if (response.data && response.data.timezoneId) {
-        setTimezone(response.data.timezoneId);
-        console.log("Timezone:", response.data.timezoneId);
-      } else {
-        Alert.alert("Error", "Timezone not found.");
-      }
-    } catch (error) {
-      console.error("Error fetching timezone:", error);
-      Alert.alert("Error", "Failed to fetch timezone.");
+
+      setCountry(response.data.geonames[0].countryName);
+
     }
-  }, []);
+      ;
+
+    fetchCountry();
+  }, [latitude, longitude]);
 
   const fetchWeatherAndTime = useCallback(async (latitude, longitude) => {
-    try {
-      const weatherResponse = await axios.get(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=imperial&appid=${WEATHER_API_KEY}`
-      );
+    const weatherResponse = await axios.get(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=imperial&appid=${WEATHER_API_KEY}`
+    );
 
-      let weatherData = {};
-      if (weatherResponse.data) {
-        const { main, weather: weatherDetails } = weatherResponse.data;
-        const description = weatherDetails[0]?.description;
+    let weatherData = {};
+    if (weatherResponse.data) {
+      const { main, weather: weatherDetails } = weatherResponse.data;
+      const description = weatherDetails[0]?.description;
 
-        weatherData = {
-          temp: main.temp,
-          description: description
-            ? description.charAt(0).toUpperCase() + description.slice(1)
-            : "",
-        };
-      }
-
-      const timeResponse = await axios.get(
-        `http://api.geonames.org/timezoneJSON?lat=${latitude}&lng=${longitude}&username=synczone`
-      );
-
-      let localTime = null;
-      if (timeResponse.data) {
-        const rawTime = timeResponse.data.time;
-        const dateObj = new Date(rawTime);
-        localTime = dateObj.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        });
-      }
-
-      setWeather({ ...weatherData, time: localTime });
-      console.log("Weather and Time:", { ...weatherData, time: localTime });
-    } catch (error) {
-      console.error("Error fetching weather or time:", error);
-      Alert.alert("Error", "Failed to fetch weather or time.");
+      weatherData = {
+        temp: main.temp,
+        description: description
+          ? description.charAt(0).toUpperCase() + description.slice(1)
+          : "",
+      };
     }
+
+    const timeResponse = await axios.get(
+      `http://api.geonames.org/timezoneJSON?lat=${latitude}&lng=${longitude}&username=synczone`
+    );
+    let localTime = null;
+    if (timeResponse.data) {
+      const rawTime = timeResponse.data.time;
+      const dateObj = new Date(rawTime);
+      localTime = dateObj.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+    }
+    setWeather({ ...weatherData, time: localTime });
+
   }, []);
 
   useEffect(() => {
@@ -121,11 +118,6 @@ const ProfileScreen = ({
     }
   }, [latitude, longitude, fetchWeatherAndTime]);
 
-  useEffect(() => {
-    if (latitude && longitude) {
-      fetchTimeZone(latitude, longitude);
-    }
-  }, [latitude, longitude, fetchTimeZone]);
 
 
   useEffect(() => {
@@ -135,6 +127,7 @@ const ProfileScreen = ({
         'Poppins-Medium': require('./fonts/Poppins-Medium.ttf'),
         'Poppins-Bold': require('./fonts/Poppins-Bold.ttf'),
         'Rubik-Regular': require('./fonts/Rubik-Regular.ttf'),
+        'Rubik-Bold': require('./fonts/Rubik-Bold.ttf'),
 
       });
       setFontsLoaded(true);
@@ -183,13 +176,15 @@ const ProfileScreen = ({
 
       <View style={styles.profileContainer}>
         <View style={styles.weather}>
-          <Text style={styles.loc}>{location}</Text>
+          <Text style={styles.loc}> {location}</Text>
+          <Text style={styles.country}>{country} </Text>
+
         </View>
         <View style={styles.midbox}>
           <View style={styles.temp}>
-            <Text style={styles.weatherText}>{weather
-              ? `${weather.temp}°F, ${weather.description}`
-              : "Not available"}</Text>
+            <Text style={styles.weatherText}>
+              {weather.temp}°F, {weather.description}
+            </Text>
           </View>
           {contactPFP ? (
             <Image source={{ uri: contactPFP }} style={styles.profileImage} />
@@ -202,9 +197,9 @@ const ProfileScreen = ({
           </View>
         </View>
         <Text style={styles.nameText}>
-          {contactFirst} {contactLast}
+          {contactUsername}
         </Text>
-        <Text style={styles.usernameText}>@{contactUsername}</Text>
+        {/* <Text style={styles.usernameText}>@{contactUsername}</Text> */}
         {/* <Text style={styles.idText}>User ID: {contactID}</Text> */}
       </View>
       <Pressable
@@ -248,6 +243,8 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     zIndex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
     //flexWrap: 'wrap',
     //borderWidth: 3
   },
@@ -257,7 +254,16 @@ const styles = StyleSheet.create({
   },
   loc: {
     fontFamily: 'Rubik-Regular',
-    fontSize: 21,
+    fontSize: 22,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  country: {
+    fontFamily: 'Rubik-Regular',
+    fontSize: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: '#555'
   },
   midbox: {
     //flexWrap: 'wrap',
