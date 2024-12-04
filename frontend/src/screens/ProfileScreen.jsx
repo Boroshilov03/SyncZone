@@ -1,13 +1,22 @@
-import { StyleSheet, Text, View, Image, SafeAreaView, TouchableOpacity, Button, Pressable, Modal, } from 'react-native';
-import { React, useState, useEffect, useCallback } from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { Ionicons } from '@expo/vector-icons';
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
-import * as Font from 'expo-font';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  SafeAreaView,
+  TouchableOpacity,
+  Button,
+  Pressable,
+  Modal,
+} from "react-native";
+import { React, useState, useEffect, useCallback } from "react";
+import Icon from "react-native-vector-icons/FontAwesome";
+import { Ionicons } from "@expo/vector-icons";
+import { TouchableWithoutFeedback } from "react-native-gesture-handler";
+import * as Font from "expo-font";
 import axios from "axios";
 import { supabase } from "../lib/supabase";
-import { WEATHER_API_KEY } from '@env';
-
+import { WEATHER_API_KEY } from "@env";
 
 const ProfileScreen = ({
   navigation,
@@ -24,8 +33,8 @@ const ProfileScreen = ({
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [weather, setWeather] = useState({
-    temp: 'N/A',
-    description: 'N/A',
+    temp: "",
+    description: "",
     time: null,
   });
   const [location, setLocation] = useState(false);
@@ -68,12 +77,8 @@ const ProfileScreen = ({
         }
       );
 
-
       setCountry(response.data.geonames[0].countryName);
-
-    }
-      ;
-
+    };
     fetchCountry();
   }, [latitude, longitude]);
 
@@ -109,7 +114,6 @@ const ProfileScreen = ({
       });
     }
     setWeather({ ...weatherData, time: localTime });
-
   }, []);
 
   useEffect(() => {
@@ -118,17 +122,14 @@ const ProfileScreen = ({
     }
   }, [latitude, longitude, fetchWeatherAndTime]);
 
-
-
   useEffect(() => {
     const loadFonts = async () => {
       await Font.loadAsync({
-        'Poppins-Regular': require('./fonts/Poppins-Regular.ttf'),
-        'Poppins-Medium': require('./fonts/Poppins-Medium.ttf'),
-        'Poppins-Bold': require('./fonts/Poppins-Bold.ttf'),
-        'Rubik-Regular': require('./fonts/Rubik-Regular.ttf'),
-        'Rubik-Bold': require('./fonts/Rubik-Bold.ttf'),
-
+        "Poppins-Regular": require("./fonts/Poppins-Regular.ttf"),
+        "Poppins-Medium": require("./fonts/Poppins-Medium.ttf"),
+        "Poppins-Bold": require("./fonts/Poppins-Bold.ttf"),
+        "Rubik-Regular": require("./fonts/Rubik-Regular.ttf"),
+        "Rubik-Bold": require("./fonts/Rubik-Bold.ttf"),
       });
       setFontsLoaded(true);
     };
@@ -140,19 +141,18 @@ const ProfileScreen = ({
     return null;
   }
 
-
-
   return (
     <SafeAreaView style={styles.container}>
       <Pressable style={styles.trash}>
-        <Icon name="trash" size={35} color='#616061' onPress={() => setVisible(true)}></Icon>
+        <Icon
+          name="trash"
+          size={35}
+          color="#616061"
+          onPress={() => setVisible(true)}
+        ></Icon>
       </Pressable>
 
-      <Modal
-        visible={visible}
-        animationType="fade"
-        transparent={true}
-      >
+      <Modal visible={visible} animationType="fade" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalText}>
@@ -160,59 +160,71 @@ const ProfileScreen = ({
             </View>
             <Pressable style={styles.modalButtons}>
               <View style={styles.left}>
-                <Text style={styles.lText} onPress={() => setVisible(false)}>Remove</Text>
+                <Text style={styles.lText} onPress={() => setVisible(false)}>
+                  Remove
+                </Text>
               </View>
               <View style={styles.right}>
-                <Text style={styles.rText} onPress={() => setVisible(false)}>Cancel</Text>
+                <Text style={styles.rText} onPress={() => setVisible(false)}>
+                  Cancel
+                </Text>
               </View>
             </Pressable>
           </View>
         </View>
       </Modal>
 
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate("MainTabs")}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate("MainTabs")}
+      >
         {/* <Text style={styles.backButtonText}>Back button for chat page</Text> */}
       </TouchableOpacity>
 
       <View style={styles.profileContainer}>
         <View style={styles.weather}>
-          <Text style={styles.loc}> {location}</Text>
-          <Text style={styles.country}>{country} </Text>
-
+          {location ? ( <Text style={styles.loc}> {location}</Text>) : null}
+          {country ? ( <Text style={styles.country}> {country}</Text>) : null}
         </View>
         <View style={styles.midbox}>
           <View style={styles.temp}>
-            <Text style={styles.weatherText}>
-              {weather.temp}°F, {weather.description}
-            </Text>
+            {weather.temp && weather.description ? (
+              <Text style={styles.weatherText}>
+                {weather.temp}°F, {weather.description}
+              </Text>
+            ) : null}
           </View>
+
           {contactPFP ? (
             <Image source={{ uri: contactPFP }} style={styles.profileImage} />
           ) : (
             //<View style={styles.placeholderImage} />
-            <Image source={require('../images/girl.png')} style={styles.placeholderImage} />
+            <Image
+              source={require("../images/girl.png")}
+              style={styles.placeholderImage}
+            />
           )}
+
           <View style={styles.temp}>
-            <Text style={styles.weatherText}>{weather.time}</Text>
+            {weather.time ? (
+              <Text style={styles.weatherText}>{weather.time}</Text>
+            ) : null}
           </View>
         </View>
-        <Text style={styles.nameText}>
-          {contactUsername}
-        </Text>
+        <Text style={styles.nameText}>{contactUsername}</Text>
         {/* <Text style={styles.usernameText}>@{contactUsername}</Text> */}
         {/* <Text style={styles.idText}>User ID: {contactID}</Text> */}
       </View>
       <Pressable
         style={styles.buttons}
         onPress={() => {
-          setProfileVisible(false)
+          setProfileVisible(false);
           navigation.navigate("ProfileSettings", { setProfileVisible });
         }}
       >
-        <Ionicons name="chatbox-ellipses" size={35} color='#616061' />
-        <Ionicons name="call" size={35} color='#616061' />
+        <Ionicons name="chatbox-ellipses" size={35} color="#616061" />
       </Pressable>
-    </SafeAreaView >
+    </SafeAreaView>
   );
 };
 
@@ -221,21 +233,21 @@ const styles = StyleSheet.create({
     flex: 1,
     //borderWidth: 1,
     //justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: "center",
     //alignItems: 'center',
     //justifyContent: 'center',
     //padding: 20,
     //backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   topbox: {
-    flex: .2,
+    flex: 0.2,
     //borderWidth: 3,
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
 
     margin: 20,
   },
   trash: {
-    position: 'absolute',
+    position: "absolute",
     top: -30,
     right: 10,
   },
@@ -243,44 +255,43 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     zIndex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
+    justifyContent: "center",
+    alignItems: "center",
     //flexWrap: 'wrap',
     //borderWidth: 3
   },
   weatherText: {
-    fontFamily: 'Rubik-Regular',
+    fontFamily: "Rubik-Regular",
     fontSize: 18,
   },
   loc: {
-    fontFamily: 'Rubik-Regular',
+    fontFamily: "Rubik-Regular",
     fontSize: 22,
-    justifyContent: 'center',
-    alignItems: 'center'
+    justifyContent: "center",
+    alignItems: "center",
   },
   country: {
-    fontFamily: 'Rubik-Regular',
+    fontFamily: "Rubik-Regular",
     fontSize: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    color: '#555'
+    justifyContent: "center",
+    alignItems: "center",
+    color: "#555",
   },
   midbox: {
     //flexWrap: 'wrap',
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "center",
     //borderWidth: 1,
     zIndex: 0,
   },
   profileContainer: {
     flex: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 60,
     //borderWidth: 4,
     width: 340,
-
   },
   profileImage: {
     width: 150,
@@ -288,22 +299,19 @@ const styles = StyleSheet.create({
     borderRadius: 200, // Makes the image circular
     marginBottom: 10,
     padding: 10,
-    resizeMode: 'cover',
-
-
+    resizeMode: "cover",
   },
   placeholderImage: {
     width: 150,
     height: 150,
     borderRadius: 155,
-    backgroundColor: '#ccc', // Gray color for placeholder
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#ccc", // Gray color for placeholder
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 10,
 
     // margin: 20,
     //borderWidth: 3,
-
   },
   nameText: {
     fontSize: 24,
@@ -313,88 +321,86 @@ const styles = StyleSheet.create({
   },
   usernameText: {
     fontSize: 18,
-    color: '#555',
-    fontFamily: 'Poppins-Regular',
+    color: "#555",
+    fontFamily: "Poppins-Regular",
   },
   idText: {
     fontSize: 14,
-    color: '#888',
+    color: "#888",
   },
   buttons: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+    width: "100%",
     //borderWidth: 1,
   },
   temp: {
     flex: 1,
     //borderWidth: 1,
-    alignItems: 'center',
+    alignItems: "center",
 
     //padding: 10,
-
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
   },
   modalContent: {
-    flex: .12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    flex: 0.12,
+    justifyContent: "center",
+    alignItems: "center",
     width: 190,
     //padding: 20,
     //paddingBottom: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 25,
-    alignItems: 'center',
+    alignItems: "center",
     //borderWidth: 1,
-    borderColor: 'grey'
+    borderColor: "grey",
   },
   modalText: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 10,
-    borderBottomColor: 'grey',
+    borderBottomColor: "grey",
     borderBottomWidth: 1,
-    borderColor: 'grey',
-    width: '100%'
+    borderColor: "grey",
+    width: "100%",
   },
   mText: {
-    fontFamily: 'Poppins-Regular'
+    fontFamily: "Poppins-Regular",
   },
   modalButtons: {
     flex: 1,
-    flexDirection: 'row',
-
+    flexDirection: "row",
   },
   left: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderColor: 'grey',
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "grey",
     borderRightWidth: 1,
     padding: 10,
   },
   right: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
+    justifyContent: "center",
+    alignItems: "center",
   },
   lText: {
-    color: 'red',
+    color: "red",
     //fontWeight: 'bold',
-    fontFamily: 'Poppins-Regular',
+    fontFamily: "Poppins-Regular",
   },
   rText: {
-    color: 'blue',
+    color: "blue",
     //fontWeight: 'bold',
-    fontFamily: 'Poppins-Regular',
+    fontFamily: "Poppins-Regular",
   },
 });
 

@@ -10,14 +10,13 @@ import {
 import { supabase } from "../lib/supabase";
 import { Input } from "@rneui/themed";
 import GradientText from "react-native-gradient-texts";
-import * as Font from 'expo-font';
+import * as Font from "expo-font";
 import { LinearGradient } from "expo-linear-gradient";
 import useStore from "../store/store"; // Assuming this handles user and tokens
 import { loginSchema } from "../utils/validation"; // Import the login schema
 import { useMutation } from "@tanstack/react-query"; // Import useMutation
 import SpinningLogo from "../components/SpinningLogo";
 import { TouchableOpacity } from "react-native-gesture-handler";
-
 
 export default function SignInScreen({ navigation }) {
   const { setUser, setAccessToken, setRefreshToken } = useStore();
@@ -77,69 +76,82 @@ export default function SignInScreen({ navigation }) {
       style={styles.parent}
       colors={["#FFDDF7", "#C5ECFF"]}
     >
-      <View style={styles.space}>
-        <SpinningLogo />
-      </View>
+      <View style={styles.space}></View>
       <View style={styles.container}>
-        <View style={styles.loginbox}>
-          <Text style={[styles.title, { fontFamily: "Karla-Medium" }]}>Login</Text>
-        </View>
-        {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
-        <View style={styles.fields}>
-          <View style={[styles.verticallySpaced, styles.mt20]}>
-
-            <Input
-              label="Email"
-              labelStyle={{ position: "absolute", top: -25, left: 25, color: "#616061" }}
-              leftIcon={{
-                type: "font-awesome",
-                name: "envelope",
-                color: "#616061",
-                size: 18,
-              }}
-              onChangeText={setEmail}
-              value={email}
-              autoCapitalize="none"
-              inputContainerStyle={{
-                borderRadius: 30,
-                borderTopWidth: 2.5,
-                borderBottomWidth: 2.5,
-                borderLeftWidth: 2.5,
-                borderRightWidth: 2.5,
-                borderColor: "#A7A7A7",
-                width: 270,
-                paddingLeft: 15,
-                height: 40,
-              }}
-            />
+        <View style={{borderWidth: 4, flex: 1}}>
+          <View style={styles.loginbox}>
+            <Text style={[styles.title, { fontFamily: "Karla-Medium" }]}>
+              Login
+            </Text>
+            {errorMessage && (
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            )}
           </View>
+          <View style={styles.fields}>
+            <View style={[styles.verticallySpaced, styles.mt20]}>
+              <Input
+                label="Email"
+                labelStyle={{
+                  position: "absolute",
+                  top: -25,
+                  left: 25,
+                  color: "#616061",
+                }}
+                leftIcon={{
+                  type: "font-awesome",
+                  name: "envelope",
+                  color: "#616061",
+                  size: 18,
+                }}
+                onChangeText={setEmail}
+                value={email}
+                autoCapitalize="none"
+                inputContainerStyle={{
+                  borderRadius: 30,
+                  borderTopWidth: 2.5,
+                  borderBottomWidth: 2.5,
+                  borderLeftWidth: 2.5,
+                  borderRightWidth: 2.5,
+                  borderColor: "#A7A7A7",
+                  width: 270,
+                  paddingLeft: 15,
+                  height: 40,
+                }}
+              />
+            </View>
 
-          <View style={styles.verticallySpaced}>
-            <Input
-              label="Password"
-              labelStyle={{ position: "absolute", top: -25, left: 25, color: "#616061" }}
-              leftIcon={{
-                type: "font-awesome",
-                name: "lock",
-                color: "#616061",
-                size: 20,
-              }}
-              onChangeText={setPassword}
-              value={password}
-              secureTextEntry
-              autoCapitalize="none"
-              inputContainerStyle={{
-                borderRadius: 30,
-                borderTopWidth: 2.5,
-                borderBottomWidth: 2.5,
-                borderLeftWidth: 2.5,
-                borderRightWidth: 2.5,
-                borderColor: "#A7A7A7",
-                width: 270,
-                paddingLeft: 15,
-                height: 40,
-              }}
-            />
+            <View style={styles.verticallySpaced}>
+              <Input
+                label="Password"
+                labelStyle={{
+                  position: "absolute",
+                  top: -25,
+                  left: 25,
+                  color: "#616061",
+                }}
+                leftIcon={{
+                  type: "font-awesome",
+                  name: "lock",
+                  color: "#616061",
+                  size: 20,
+                }}
+                onChangeText={setPassword}
+                value={password}
+                secureTextEntry
+                autoCapitalize="none"
+                inputContainerStyle={{
+                  borderRadius: 30,
+                  borderTopWidth: 2.5,
+                  borderBottomWidth: 2.5,
+                  borderLeftWidth: 2.5,
+                  borderRightWidth: 2.5,
+                  borderColor: "#A7A7A7",
+                  width: 270,
+                  paddingLeft: 15,
+                  height: 40,
+                }}
+              />
+            </View>
           </View>
           {/* {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>} */}
         </View>
@@ -185,13 +197,11 @@ export default function SignInScreen({ navigation }) {
       </View>
     </LinearGradient>
   );
-
 }
 
 const styles = StyleSheet.create({
   safeview: {
     flex: 1,
-
   },
   parent: {
     flex: 1,
@@ -199,7 +209,7 @@ const styles = StyleSheet.create({
 
     //height: 1000,
     backgroundColor: "rgba(52, 52, 52, alpha)",
-    
+
     // padding: 12,
     //backgroundColor: '#966dab',
   },
@@ -218,13 +228,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     borderTopLeftRadius: 40,
     borderTopRightRadius: 90,
-    //borderWidth: 3,
+    borderWidth: 3,
   },
   loginbox: {
     flex: 5,
     padding: 10,
     // margin: 8,
-    //borderWidth: 3,
+    borderWidth: 3,
   },
   fields: {
     flex: 10,
@@ -233,7 +243,7 @@ const styles = StyleSheet.create({
     //margin: 5,
     //justifyContent: 'center',
     // backgroundColor: "rgba(255, 255, 255, 0.8)",
-    //borderWidth: 3,
+    borderWidth: 3,
     //height: '50%',
     rowGap: 5,
   },
@@ -265,7 +275,6 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: "#616061",
     //fontWeight: "bold",
-    lineHeight: 34,
   },
   box: {
     minWidth: 10,
@@ -307,9 +316,6 @@ const styles = StyleSheet.create({
   errorText: {
     // New style for error messages
     color: "red", // Change color as needed
-    marginTop: 5,
     textAlign: "left",
-    top: -30
   },
-
 });

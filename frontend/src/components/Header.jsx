@@ -136,7 +136,7 @@ const Header = ({
       <TouchableOpacity onPress={toggleSwitch} style={styles.switchButton}>
         <Image
           source={switchValue ? OwnedButtonOn : OwnedButtonOff}
-          style={styles.switchIcon}
+          style={switchValue ? styles.switchIcon : styles.switchIcon1}
         />
       </TouchableOpacity>
       )}
@@ -214,8 +214,12 @@ const styles = StyleSheet.create({
     left: 15,
   },
   switchIcon: {
-    width: 40, // Adjust size as per your image dimensions
-    height: 40, // Adjust size as per your image dimensions
+    width: 35, // Adjust size as per your image dimensions
+    height: 35, // Adjust size as per your image dimensions
+  },
+  switchIcon1: {
+    width: 33.5, // Adjust size as per your image dimensions
+    height: 33, // Adjust size as per your image dimensions
   },
 });
 

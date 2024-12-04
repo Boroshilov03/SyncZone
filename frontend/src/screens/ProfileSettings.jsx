@@ -41,7 +41,7 @@ const ProfileSettings = ({ navigation, route }) => {
   const { user } = useStore();
   const [activeBannerData, setActiveBannerData] = useState(null);
 
-  // State for form fields
+  // State for form fields  
   const [username, setUsername] = useState(contactInfo.contactUsername || "");
   const [email, setEmail] = useState(contactInfo.contactEmail || ""); // Make sure contactInfo has email property
   const [password, setPassword] = useState(""); // Leave this blank for user to enter

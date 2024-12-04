@@ -432,6 +432,11 @@ const styles = StyleSheet.create({
     height: 90,
     borderRadius: 10,
   },
+  image1: {
+    width: 50,
+    height: 50,
+    borderRadius: 10,
+  },
   bannerName: {
     marginVertical: 5,
     fontSize: 20,

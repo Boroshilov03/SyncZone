@@ -192,23 +192,6 @@ export default function Example({ navigation }) {
           <Text style={styles.sectionTitle}>Preferences</Text>
 
           <View style={styles.sectionBody}>
-            <View style={[styles.rowWrapper, styles.rowFirst]}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}
-              >
-                <Text style={styles.rowLabel}>Language</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <Text style={styles.rowValue}>English</Text>
-
-                <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
-              </TouchableOpacity>
-            </View>
-
             <View style={styles.rowWrapper}>
               <TouchableOpacity
                 onPress={() => {
@@ -224,38 +207,6 @@ export default function Example({ navigation }) {
 
                 <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
               </TouchableOpacity>
-            </View>
-
-            <View style={styles.rowWrapper}>
-              <View style={styles.row}>
-                <Text style={styles.rowLabel}>Email Notifications</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <Switch
-                  onValueChange={(emailNotifications) =>
-                    setForm({ ...form, emailNotifications })
-                  }
-                  style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
-                  value={form.emailNotifications}
-                />
-              </View>
-            </View>
-
-            <View style={[styles.rowWrapper, styles.rowLast]}>
-              <View style={styles.row}>
-                <Text style={styles.rowLabel}>Push Notifications</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <Switch
-                  onValueChange={(pushNotifications) =>
-                    setForm({ ...form, pushNotifications })
-                  }
-                  style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
-                  value={form.pushNotifications}
-                />
-              </View>
             </View>
           </View>
         </View>
@@ -278,8 +229,6 @@ export default function Example({ navigation }) {
             </View>
           </View>
         </View>
-
-        <Text style={styles.contentFooter}>App Version 2.24 #50491</Text>
       </ScrollView>
     </SafeAreaView>
   );
