@@ -314,7 +314,7 @@ const GiftsScreen = ({ navigation }) => {
   
         {/* Stickers Section */}
         <View style={styles.sectionContainer}>
-          <Text style={styles.stickersTitle}>STICKERS</Text>
+          <Text style={styles.bannersTitle}>STICKERS</Text>
   
           {/* Horizontal ScrollView for Stickers */}
           <ScrollView
@@ -384,35 +384,22 @@ const GiftsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   headerContainer: {
     position: "relative",
-    zIndex: 1,
-    top: -4,
   },
 
   sectionContainer: {
-    marginBottom: 40, // Space between sections
+    marginBottom: 30, // Space between sections
   },
   bannersTitle: {
-    fontFamily: "Pacifico",
+    // fontFamily: "Pacifico",
     fontSize: 40,
+    fontWeight: 'bold',
     color: "#FF69B4",
     textAlign: "center",
-    marginBottom: 0,
-    textShadowColor: "#FFC0CB",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-    top: -20,
-    zIndex: 1,
-  },
-  stickersTitle: {
-    fontFamily: "Pacifico",
-    fontSize: 40,
-    color: "#FF69B4", // Light purple color for stickers
-    textAlign: "center",
-    marginBottom: -10,
-    top: -20,
-    textShadowColor: "#FF69B4", // Subtle purple shadow
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    borderWidth: 1,
+    borderColor: "#FFE4E1",
+    borderRadius: 20,
+    marginBottom: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   verticalScrollContainer: {
     paddingVertical: 0,
@@ -425,7 +412,7 @@ const styles = StyleSheet.create({
   itemFrame: {
     backgroundColor: "#FFE4E1",
     borderWidth: 1,
-    borderColor: "#FFE4E1",
+    borderColor: "#FFB6C1",
     borderRadius: 20,
     marginRight: 20, // Space between items horizontally
     padding: 15,

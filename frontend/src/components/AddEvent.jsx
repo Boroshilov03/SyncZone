@@ -125,15 +125,15 @@ const AddEvent = ({ onClose }) => {
     const formattedStartTime = formatTime(startTime);
     const formattedEndTime = formatTime(endTime);
 
-    console.log({
-      titleValue,
-      date,
-      startTime: formattedStartTime,
-      endTime: formattedEndTime,
-      description,
-      selectedContacts,
-      mood,
-    });
+    // console.log({
+    //   titleValue,
+    //   date,
+    //   startTime: formattedStartTime,
+    //   endTime: formattedEndTime,
+    //   description,
+    //   selectedContacts,
+    //   mood,
+    // });
 
      // Check time constraint: startTime must be before endTime
   if (startTime >= endTime) {

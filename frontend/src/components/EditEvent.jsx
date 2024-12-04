@@ -123,48 +123,67 @@ const EditEvent = ({ event, onClose }) => {
   const [deletePopupVisible, setDeletePopupVisible] = useState(false); // Controls visibility of DeleteEvent
   const [titleError, setTitleError] = useState(""); // Title validation error
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch user IDs from the "event_participants" table
-        const { data: userIds, error: userError } = await supabase
-          .from("event_participants")
-          .select("user_id")
-          .eq("event_id", event.id);
+  const fetchData = async () => {
+    try {
+      const { data: userIds, error: userError } = await supabase
+        .from("event_participants")
+        .select("user_id")
+        .eq("event_id", event.id);
 
-        if (userError) {
-          console.error("Error fetching user IDs:", userError.message);
-          return;
+      if (userError) {
+        console.error("Error fetching user IDs:", userError.message);
+        return;
+      }
+
+      if (userIds) {
+        const ids = userIds.map((item) => item.user_id);
+        setUsers(ids);
+
+        const { data: contactsData, error: contactsError } = await supabase
+          .from("profiles")
+          .select("id, first_name, avatar_url")
+          .in("id", ids)
+          .neq("id", user.id);
+
+        if (contactsError) {
+          console.error("Error fetching contacts:", contactsError.message);
+        } else {
+          setContacts(contactsData);
+          const contactIds = userIds.map((item) => item.user_id);
+          setSelectedContacts(contactIds);
         }
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+    }
+  };
 
-        if (userIds) {
-          // Map userIds to extract user_id array
-          const ids = userIds.map((item) => item.user_id);
-          setUsers(ids);
+  useEffect(() => {
+    fetchData(); // Call the function within useEffect
+  }, [event.id]);
 
-          // Fetch contacts from "profiles" table based on user IDs
-          const { data: contactsData, error: contactsError } = await supabase
-            .from("profiles")
-            .select("id, first_name, avatar_url")
-            .in("id", ids)
-            .neq("id", user.id);
-
-          if (contactsError) {
-            console.error("Error fetching contacts:", contactsError.message);
-          } else {
-            setContacts(contactsData);
-            const contactIds = userIds.map((item) => item.user_id);
-            setSelectedContacts(contactIds);
-          }
+  useEffect(() => {
+    const fetchContacts = async () => {
+      if (selectedContacts.length === 0) return;
+      try {
+        // Fetch contacts from "profiles" table by user_id
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, first_name, avatar_url")
+          .in("id", selectedContacts)
+          .neq("id", user.id);
+        if (error) {
+          console.error("Error fetching contacts:", error.message);
+        } else {
+          setContacts(data); // Store the contacts with avatar_url
         }
       } catch (error) {
-        console.error("Unexpected error:", error);
+        console.error("Error fetching contacts:", error);
       }
     };
 
-    // Fetch data only when `selectedContacts` changes
-    fetchData();
-  }, [event.id]); // Dependency on event.id
+    fetchContacts();
+  }, [selectedContacts]); // Trigger whenever selectedContacts changes
 
   const handleEditEvent = async () => {
     try {
@@ -195,16 +214,16 @@ const EditEvent = ({ event, onClose }) => {
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`; // Format: YYYY-MM-DD
     };
-            // Title validation
-            if (titleValue.trim() === "") {
-              setTitleError("Title is required.");
-              return;
-            } else if (titleValue.length > 20) {
-              setTitleError("Title cannot exceed 20 characters.");
-              return;
-            } else {
-              setTitleError(""); // Clear error if valid
-            }
+    // Title validation
+    if (titleValue.trim() === "") {
+      setTitleError("Title is required.");
+      return;
+    } else if (titleValue.length > 20) {
+      setTitleError("Title cannot exceed 20 characters.");
+      return;
+    } else {
+      setTitleError(""); // Clear error if valid
+    }
 
     // Function to format time as HH:mm:ss
     const formatTimeForSubmission = (date) => {
@@ -218,12 +237,11 @@ const EditEvent = ({ event, onClose }) => {
     const formattedStartTime = formatTimeForSubmission(startTime);
     const formattedEndTime = formatTimeForSubmission(endTime);
 
-     // Check time constraint: startTime must be before endTime
-     if (startTime >= endTime) {
+    // Check time constraint: startTime must be before endTime
+    if (startTime >= endTime) {
       alert("Start time must be before end time."); // Alert the user about the invalid time
       return; // Prevent submitting the event if time is invalid
     }
-
 
     try {
       console.log(
@@ -274,20 +292,6 @@ const EditEvent = ({ event, onClose }) => {
   };
 
   const predefinedPFPs = [require("../../assets/icons/add_person.png")];
-
-  const handleModalClose = (updatedContacts) => {
-    setSelectedContacts(updatedContacts); // Save the updated selected contacts
-    setContacts(
-      updatedContacts.map(
-        (id) =>
-          contacts.find((contact) => contact.id === id) || {
-            id,
-            first_name: "New User",
-          }
-      )
-    );
-    setModalVisible(false); // Close the modal
-  };
 
   const EditEventParticipants = async (eventID, selectedContacts) => {
     try {
@@ -352,7 +356,6 @@ const EditEvent = ({ event, onClose }) => {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        
         {/* Title Container */}
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Edit Event</Text>
