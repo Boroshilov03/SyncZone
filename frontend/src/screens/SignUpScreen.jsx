@@ -58,11 +58,15 @@ export default function SignupScreen({ navigation }) {
   const [base64Photo, setBase64Photo] = useState(null);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showDropdowns, setShowDropdowns] = useState(false);
 
   const handleInputChange = useCallback((name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
+  const handleToggleDropdowns = () => {
+    setShowDropdowns((prev) => !prev); // Toggle visibility
+  };
   const fetchWeatherAndTime = useCallback(async (lat, lon) => {
     try {
       const weatherResponse = await axios.get(
@@ -115,13 +119,13 @@ export default function SignupScreen({ navigation }) {
         const timezone = response.data.timezoneId;
         setTimezone(timezone);
         console.log("Timezone:", timezone);
-        Alert.alert("Timezone", `Timezone for the location is ${timezone}`);
+
       } else {
-        Alert.alert("Error", "Timezone not found.");
+
       }
     } catch (error) {
       console.error("Error fetching timezone:", error);
-      Alert.alert("Error", "Failed to fetch timezone.");
+
     }
   }, []);
 
@@ -408,9 +412,26 @@ export default function SignupScreen({ navigation }) {
             {/* <Text>Latitude: {lat ? lat : "Not available"}</Text>
             <Text>Longitude: {lon ? lon : "Not available"}</Text> */}
 
-            <Dropdown
-              location={formData.location}
-              setCity={handleCitySelection} />
+            <TouchableOpacity
+              style={styles.toggleButton}
+              onPress={handleToggleDropdowns}
+            >
+              <Text style={styles.toggleButtonText}>
+                {showDropdowns ? "Remove Location" : "Allow Location?"}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Dropdowns - Conditional Rendering */}
+            {showDropdowns && (
+              <View>
+                <Dropdown
+                  location={formData.location}
+                  setCity={handleCitySelection}
+                />
+                {/* Add a country dropdown if required */}
+                {/* <CountryDropdown /> */}
+              </View>
+            )}
 
 
             <View style={styles.buttonbox}>
@@ -597,5 +618,21 @@ const styles = StyleSheet.create({
     //justifyContent: 'center',
     flexDirection: 'row',
     alignItems: 'center'
+  },
+  toggleButton: {
+    marginVertical: 15,
+    marginHorizontal: 50,
+    padding: 20,
+    // backgroundColor: "#FFDDF7",
+    borderRadius: 15,
+    borderWidth: 2.5,
+    borderColor: 'grey',
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  toggleButtonText: {
+    fontSize: 16,
+    color: "#616061",
+    fontFamily: "Karla-Medium",
   },
 });
