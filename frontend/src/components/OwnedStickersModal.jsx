@@ -199,7 +199,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         >
           <View style={styles.slideHandle}></View>
 
-          <Text style={styles.modalTitle}>Your Owned Stickers</Text>
+          <Text style={styles.modalTitle}>Stickers</Text>
 
           {loading ? (
             <Text>Loading...</Text>
@@ -235,7 +235,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)", // Darkened background
+    //backgroundColor: "rgba(0, 0, 0, 0.6)", // Darkened background
     justifyContent: "flex-end",
     alignItems: "center",
   },
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   stickerContainer: {
     width: "23%", // About 4 items per row with space between
     aspectRatio: 1, // Keep square stickers
-    marginBottom: 20,
+    marginBottom: 40,
     alignItems: "center",
   },
   stickerImage: {

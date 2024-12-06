@@ -45,7 +45,7 @@ const CalendarScreen = ({ navigation, route }) => {
   };
 
   return (
-    <View style={[styles.safeArea]}>
+    <View style={{ flex: 1, position: "relative", zIndex: 1, backgroundColor: "#fff" }}>
       <Header
         toggleAddEventModal={toggleAddEventModal}
         event="calendar"

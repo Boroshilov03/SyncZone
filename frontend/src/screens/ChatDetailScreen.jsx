@@ -48,13 +48,23 @@ const ChatDetailScreen = () => {
   const [ownedStickersVisible, setOwnedStickersVisible] = useState(false);
   const [attachmentPhoto, setAttachmentPhoto] = useState(null);
   const [base64Photo, setBase64Photo] = useState(null);
+  //const [modalAnimation, setModalAnimation] = useState(new Animated.Value(0)); // Initialize modalAnimation here
+  const [isModalVisible, setModalVisible] = useState(false);
+  const translateY = useRef(new Animated.Value(0)).current;
 
-  const toggleOwnedStickersModal = () => {
-    setOwnedStickersVisible(!ownedStickersVisible);
-  };
+
+    useEffect(() => {
+      Animated.timing(translateY, {
+        toValue: isModalVisible ? -215 : 0, // Adjust the distance to your needs
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    }, [isModalVisible]);
+  
   useEffect(() => {
     fetchProfilePicture();
   }, []);
+  
 
   const pickImage = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -626,169 +636,184 @@ const ChatDetailScreen = () => {
     );
   };
 
-  return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <View style={styles.innerContainer}>
-        <SafeAreaView style={styles.innerContainer}>
-          <View style={styles.profileContainer}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.navigate("MainTabs")}
-            >
-              <Image
-                source={require("../../assets/icons/back_arrow.webp")}
-                style={styles.backIcon}
-              />
-            </TouchableOpacity>
 
-            <View style={styles.centerContainer}>
-              <TouchableOpacity
-                onPress={() =>
-                  console.log("Opening profile", otherPFP, username)
-                }
-              >
-                {otherPFP ? (
-                  <Image
-                    alt="Avatar"
-                    resizeMode="cover"
-                    source={{ uri: otherPFP }}
-                    style={styles.headerImage}
-                  />
-                ) : (
-                  <View style={[styles.headerImg]}>
-                    <Text style={styles.cardAvatarText}>
-                      {groupTitle
-                        ? groupTitle[0].toUpperCase()
-                        : username[0].toUpperCase()}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
 
-              <Text style={styles.title}>
-                {groupTitle ? groupTitle : username}
-              </Text>
-            </View>
-            <TouchableOpacity style={styles.callIconContainer}>
-              <Image
-                source={require("../../assets/icons/telephone.png")}
-                style={styles.callIcon}
-              />
-            </TouchableOpacity>
-          </View>
-          {loading && (
-            <ActivityIndicator
-              size="large"
-              color="#A0D7E5"
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                // transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
-              }}
+// Modal toggle function
+const toggleOwnedStickersModal = () => {
+  setModalVisible(!isModalVisible);
+};
+
+return (
+  <KeyboardAvoidingView
+    style={styles.container}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+  >
+    <View style={styles.innerContainer}>
+      <SafeAreaView style={styles.innerContainer}>
+        <View style={styles.profileContainer}>
+          {/* Profile section */}
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.navigate("MainTabs")}
+          >
+            <Image
+              source={require("../../assets/icons/back_arrow.webp")}
+              style={styles.backIcon}
             />
-          )}
-          {error && <Text style={styles.errorText}>{error}</Text>}
-          <View style={{ flex: 1, marginBottom: 70 }}>
-            {!loading && !error && (
-              <FlatList
-                ref={flatListRef}
-                data={messages}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderMessage}
-                contentContainerStyle={styles.messageList}
-                inverted
-              />
-            )}
-            {typingUser && (
-              <View style={styles.mainTyping}>
-                <View style={styles.typingIndicatorBubble}>
-                  <Text style={styles.typingIndicator}>
-                    {typingUser} is typing...
+          </TouchableOpacity>
+
+          <View style={styles.centerContainer}>
+            <TouchableOpacity
+              onPress={() =>
+                console.log("Opening profile", otherPFP, username)
+              }
+            >
+              {otherPFP ? (
+                <Image
+                  alt="Avatar"
+                  resizeMode="cover"
+                  source={{ uri: otherPFP }}
+                  style={styles.headerImage}
+                />
+              ) : (
+                <View style={[styles.headerImg]}>
+                  <Text style={styles.cardAvatarText}>
+                    {groupTitle
+                      ? groupTitle[0].toUpperCase()
+                      : username[0].toUpperCase()}
                   </Text>
                 </View>
-              </View>
-            )}
-          </View>
+              )}
+            </TouchableOpacity>
 
-          <View style={styles.inputContainer}>
-            {attachmentPhoto && (
-              <View style={styles.attachmentPreviewContainer}>
-                <Image
-                  source={{ uri: attachmentPhoto }}
-                  style={styles.attachmentPreviewImage}
-                />
-                <TouchableOpacity
-                  style={styles.removeAttachmentButton}
-                  onPress={() => setAttachmentPhoto(null)}
-                >
-                  <Text style={styles.removeAttachmentText}>x</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-            <TextInput
-              style={styles.input}
-              placeholder="Type a message"
-              value={newMessage}
-              onChangeText={(text) => {
-                setNewMessage(text);
-                handleTyping();
-              }}
+            <Text style={styles.title}>
+              {groupTitle ? groupTitle : username}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.callIconContainer}>
+            <Image
+              source={require("../../assets/icons/telephone.png")}
+              style={styles.callIcon}
             />
-            <TouchableOpacity onPress={pickImage}>
-              <Icon
-                name="photo"
-                size={23}
-                style={{
-                  marginHorizontal: 3,
-                  transform: [{ rotate: "0deg" }],
-                  marginRight: 5,
-                }}
-                color={"#616061"}
-              />
-            </TouchableOpacity>
-            {/* Secondary Button */}
-            <TouchableOpacity
-              style={styles.secondaryButtonContainer}
-              onPress={toggleOwnedStickersModal}
-            >
-              <Image
-                source={require("../../assets/icons/gift-icon.png")}
-                style={styles.secondaryButtonIcon} // Add a style to control size and position
-                color={"#616061"}
-              />
-              <Text style={styles.secondaryButtonText}></Text>
+          </TouchableOpacity>
+        </View>
 
-              {/* Owned Stickers Modal */}
-              <OwnedStickersModal
-                visible={ownedStickersVisible}
-                onClose={() => setOwnedStickersVisible(false)}
-                chatID={chatId}
-                setMessages={setMessages}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleSendMessage}>
+        {loading && (
+          <ActivityIndicator
+            size="large"
+            color="#A0D7E5"
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+            }}
+          />
+        )}
+        {error && <Text style={styles.errorText}>{error}</Text>}
+
+        <View style={{ flex: 1, marginBottom: 70 }}>
+          {!loading && !error && (
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderMessage}
+              contentContainerStyle={styles.messageList}
+              inverted
+            />
+          )}
+          {typingUser && (
+            <View style={styles.mainTyping}>
+              <View style={styles.typingIndicatorBubble}>
+                <Text style={styles.typingIndicator}>
+                  {typingUser} is typing...
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* Wrap inputContainer with Animated.View */}
+        <Animated.View
+          style={[styles.inputContainer, { transform: [{ translateY }] }]}
+        >
+          {attachmentPhoto && (
+            <View style={styles.attachmentPreviewContainer}>
               <Image
-                style={[
-                  styles.sendButton,
-                  {
-                    tintColor: "#A0D7E5",
-                    width: 20,
-                    height: 20,
-                    marginRight: 10,
-                  },
-                ]}
-                source={require("../../assets/icons/send_icon.png")}
+                source={{ uri: attachmentPhoto }}
+                style={styles.attachmentPreviewImage}
               />
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </View>
-    </KeyboardAvoidingView>
-  );
+              <TouchableOpacity
+                style={styles.removeAttachmentButton}
+                onPress={() => setAttachmentPhoto(null)}
+              >
+                <Text style={styles.removeAttachmentText}>x</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          <TextInput
+            style={styles.input}
+            placeholder="Type a message"
+            value={newMessage}
+            onChangeText={(text) => {
+              setNewMessage(text);
+              handleTyping();
+            }}
+          />
+          <TouchableOpacity onPress={pickImage}>
+            <Icon
+              name="photo"
+              size={23}
+              style={{
+                marginHorizontal: 3,
+                transform: [{ rotate: "0deg" }],
+                marginRight: 5,
+              }}
+              color={"#616061"}
+            />
+          </TouchableOpacity>
+
+          {/* Secondary Button */}
+          <TouchableOpacity
+            style={styles.secondaryButtonContainer}
+            onPress={toggleOwnedStickersModal}
+          >
+            <Image
+              source={require("../../assets/icons/gift-icon.png")}
+              style={styles.secondaryButtonIcon} // Add a style to control size and position
+              color={"#616061"}
+            />
+            <Text style={styles.secondaryButtonText}></Text>
+
+            {/* Owned Stickers Modal */}
+            <OwnedStickersModal
+              visible={isModalVisible}
+              onClose={() => setModalVisible(false)} // Close modal on close
+              chatID={chatId}
+              setMessages={setMessages}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleSendMessage}>
+            <Image
+              style={[
+                styles.sendButton,
+                {
+                  tintColor: "#A0D7E5",
+                  width: 20,
+                  height: 20,
+                  marginRight: 10,
+                },
+              ]}
+              source={require("../../assets/icons/send_icon.png")}
+            />
+          </TouchableOpacity>
+        </Animated.View>
+      </SafeAreaView>
+    </View>
+  </KeyboardAvoidingView>
+);
+
 };
 
 const negativeEmotions = [
@@ -965,7 +990,7 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   inputContainer: {
-    position: "absolute",
+    //position: "absolute",
     bottom: 15,
     flexDirection: "row",
     alignItems: "center",

@@ -374,7 +374,6 @@ const GiftsScreen = ({ navigation }) => {
           { opacity: opacityAnim }, // Success message visibility
         ]}
       >
-        <Text style={styles.successMessage}>Banner Acquired!</Text>
       </Animated.View>
     </LinearGradient>
   );
@@ -385,12 +384,13 @@ const styles = StyleSheet.create({
   headerContainer: {
     position: "relative",
     zIndex: 1,
-    top: -10.1,
+    top: -6.5,
 
   },
 
   sectionContainer: {
     marginBottom: 30, // Space between sections
+    position: "relative",
   },
   bannersTitle: {
     // fontFamily: "Pacifico",
