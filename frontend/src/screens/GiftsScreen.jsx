@@ -193,7 +193,7 @@ const GiftsScreen = ({ navigation }) => {
         useNativeDriver: true,
       }).start();
 
-      Alert.alert("Success", "You have acquired the banner!");
+      //Alert.alert("Success", "You have acquired the banner!");
       setUserBanners((prev) => new Set(prev).add(bannerId)); // Update owned banners in state
     }
   };
