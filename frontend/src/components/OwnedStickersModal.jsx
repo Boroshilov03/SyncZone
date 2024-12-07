@@ -80,7 +80,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
           },
           onPanResponderRelease: (e, gestureState) => {
             // If dragged far enough, close the modal
-            if (gestureState.dy > 50) { // Reduced sensitivity threshold
+            if (gestureState.dy > 100) { // Reduced sensitivity threshold
               handleClose();
             } else {
               Animated.spring(slideAnim, {
