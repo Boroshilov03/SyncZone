@@ -193,7 +193,7 @@ const GiftsScreen = ({ navigation }) => {
         useNativeDriver: true,
       }).start();
 
-      Alert.alert("Success", "You have acquired the banner!");
+      //Alert.alert("Success", "You have acquired the banner!");
       setUserBanners((prev) => new Set(prev).add(bannerId)); // Update owned banners in state
     }
   };
@@ -374,7 +374,6 @@ const GiftsScreen = ({ navigation }) => {
           { opacity: opacityAnim }, // Success message visibility
         ]}
       >
-        <Text style={styles.successMessage}>Banner Acquired!</Text>
       </Animated.View>
     </LinearGradient>
   );
@@ -385,12 +384,13 @@ const styles = StyleSheet.create({
   headerContainer: {
     position: "relative",
     zIndex: 1,
-    top: -10.1,
+    top: -6.5,
 
   },
 
   sectionContainer: {
     marginBottom: 30, // Space between sections
+    position: "relative",
   },
   bannersTitle: {
     // fontFamily: "Pacifico",

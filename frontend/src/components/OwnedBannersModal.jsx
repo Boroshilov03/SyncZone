@@ -89,10 +89,10 @@ const OwnedBannersModal = ({ visible, onClose }) => {
 
     if (error) { // If there's an error updating or inserting
       console.error("Error setting active banner:", error.message); // Log the error
-      Alert.alert("Error", "Failed to set active banner."); // Show an alert
+      //Alert.alert("Error", "Failed to set active banner."); // Show an alert
     } else {
       setActiveBannerId(bannerId); // Update the active banner ID in state
-      Alert.alert("Success", "Active banner updated successfully."); // Show a success alert
+      //Alert.alert("Success", "Active banner updated successfully."); // Show a success alert
       // Do not close the modal here
     }
   };
@@ -107,10 +107,10 @@ const OwnedBannersModal = ({ visible, onClose }) => {
 
     if (error) {  // If there's an error deleting the active banner
       console.error("Error removing active banner:", error.message);  // Log the error
-      Alert.alert("Error", "Failed to remove active banner."); // Show an alert
+      //Alert.alert("Error", "Failed to remove active banner."); // Show an alert
     } else {
       setActiveBannerId(null); // Clear the active banner ID in state
-      Alert.alert("Success", "Active banner removed successfully."); // Show a success alert
+      //Alert.alert("Success", "Active banner removed successfully."); // Show a success alert
     }
   };
 
@@ -154,7 +154,7 @@ const OwnedBannersModal = ({ visible, onClose }) => {
           {/* Button to remove the active banner */}
           {activeBannerId && (
             <TouchableOpacity onPress={handleRemoveActiveBanner} style={styles.removeButton}>
-              <Text style={styles.removeButtonText}>Remove Active Banner</Text>
+              <Text style={styles.removeButtonText}>Remove</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -184,9 +184,16 @@ const styles = StyleSheet.create({
   closeButton: { // Style for the close button
     alignSelf: 'flex-end', // Align to the right
     marginBottom: 10, // Space below the button
+    backgroundColor: 'lightblue',
+    borderRadius: 10,
+    width: 70,
+    height: 25,
+    alignItems: 'center',
   },
   closeButtonText: { // Style for close button text
-    color: '#007bff', // Color for the button text
+    color: 'white', // Color for the button text
+    fontSize: 15,
+    alignItems: 'center',
   },
   scrollContainer: { // Style for the scrollable container
     alignItems: 'center', // Vertical padding
@@ -220,12 +227,16 @@ const styles = StyleSheet.create({
     marginTop: 0,
     backgroundColor: '#ff5252', // Change to the desired color for the remove button
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 10,
     alignItems: 'center',
+    width: 80,
+    height: 40,
+    left: 105,
   },
   removeButtonText: {
     color: 'white',
     fontWeight: 'bold',
+    bottom: 2,
   },
 });
 

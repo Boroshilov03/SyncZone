@@ -304,10 +304,10 @@ const styles = StyleSheet.create({
   },
   bannerImage: {
     position: "absolute",
-    width: 80, // Slightly wider than the profile picture
-    height: 80, // Fixed height to fit the banner
-    top: 7, // Adjust this value to position the banner above the profile picture
-    left: 3, // Center the banner horizontally (adjust as necessary)
+    width: 70, // Slightly wider than the profile picture
+    height: 70, // Fixed height to fit the banner
+    top: 12, // Adjust this value to position the banner above the profile picture
+    left: 2, // Center the banner horizontally (adjust as necessary)
     zIndex: 1, // Ensure the banner is infront the profile picture
     borderRadius: 20, // Adjust to create a smoother edge
     justifyContent: "center",

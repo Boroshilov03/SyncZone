@@ -66,8 +66,12 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
             const touchLocation = e.nativeEvent.locationY;
             return touchLocation < 100; // Only trigger drag if touch is in the top 100px area
           },
-          onMoveShouldSetPanResponder: (e, gestureState) => true,
+          onMoveShouldSetPanResponder: (e, gestureState) => {
+            // Only start dragging if there's significant vertical movement (gesture.dy)
+            return Math.abs(gestureState.dy) > 10;
+          },
           onPanResponderMove: (e, gestureState) => {
+            // Move the modal based on the drag movement
             if (gestureState.dy > 0) {
               Animated.event([null, { dy: slideAnim }], {
                 useNativeDriver: false,
@@ -75,8 +79,9 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
             }
           },
           onPanResponderRelease: (e, gestureState) => {
-            if (gestureState.dy > 100) {
-              handleClose(); // Close the modal if dragged down far enough
+            // If dragged far enough, close the modal
+            if (gestureState.dy > 100) { // Reduced sensitivity threshold
+              handleClose();
             } else {
               Animated.spring(slideAnim, {
                 toValue: 0, // Reset to the bottom of the screen
@@ -103,7 +108,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
   }, [visible]);
 
   const handleStickerPress = async (stickerId, chatID, setMessages) => {
-    console.log("Sticker ID:", stickerId, chatID, user.id);
+    console.log("Sticker pressed! Sticker ID:", stickerId, "Chat ID:", chatID); // Debug log to ensure function is triggered
 
     try {
       // Step 1: Create a new message
@@ -111,11 +116,11 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         .from("messages")
         .insert([
           {
-          chat_id: chatID,
-          sender_id: user.id,
-          content: "", // Empty content for sticker-only message
-        },
-      ])
+            chat_id: chatID,
+            sender_id: user.id,
+            content: "", // Empty content for sticker-only message
+          },
+        ])
         .select();
 
       if (messageError) {
@@ -130,11 +135,11 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         .from("attachments")
         .insert([
           {
-          message_id: messageId,
-          sticker_id: stickerId,
-          image_url: "",
-        },
-      ]);
+            message_id: messageId,
+            sticker_id: stickerId,
+            image_url: "",
+          },
+        ]);
 
       if (attachmentError) {
         console.error("Error attaching sticker:", attachmentError);
@@ -162,10 +167,10 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         content: "",
         attachments: [
           {
-          sticker_id: stickerId,
-          image_url: stickerData.image_url, // Use actual sticker data here
-        },
-      ],
+            sticker_id: stickerId,
+            image_url: stickerData.image_url, // Use actual sticker data here
+          },
+        ],
       };
 
       setMessages((prevMessages) => [newMessage, ...prevMessages]);
@@ -199,7 +204,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         >
           <View style={styles.slideHandle}></View>
 
-          <Text style={styles.modalTitle}>Your Owned Stickers</Text>
+          <Text style={styles.modalTitle}>Stickers</Text>
 
           {loading ? (
             <Text>Loading...</Text>
@@ -209,16 +214,18 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
                 ownedStickers.map((sticker) => (
                   <TouchableOpacity
                     key={sticker.id}
-                    onPress={() =>
-                      handleStickerPress(sticker.id, chatID, setMessages)
-                    }
+                    onPress={() => {
+                      console.log("Sticker pressed:", sticker.id); // Log the sticker ID
+                      handleStickerPress(sticker.id, chatID, setMessages);
+                    }}
                     style={styles.stickerContainer}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} // Allow some tolerance around the touch area
                   >
                     <Image
                       source={{ uri: sticker.image_url }}
                       style={styles.stickerImage}
                     />
-                    <Text style={styles.stickerName}>{sticker.name}</Text>
+                    
                   </TouchableOpacity>
                 ))
               ) : (
@@ -235,14 +242,14 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)", // Darkened background
     justifyContent: "flex-end",
     alignItems: "center",
+    zIndex: 10,
   },
   modalContainer: {
     width: "100%",
     maxHeight: "70%", // Limit the modal height, allowing it to scroll
-    backgroundColor: "#2f3136", // Dark background
+    backgroundColor: "#D1EBEF", // Dark background
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     padding: 20,
@@ -251,17 +258,18 @@ const styles = StyleSheet.create({
   slideHandle: {
     width: 50,
     height: 5,
-    backgroundColor: "#40444b", // Subtle color for handle
+    backgroundColor: "grey", // Subtle color for handle
     borderRadius: 5,
     alignSelf: "center",
     marginBottom: 10,
     marginTop: 10,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#46194b",
     marginBottom: 10,
+    left: 135,
   },
   stickerGrid: {
     flexDirection: "row",
@@ -272,8 +280,9 @@ const styles = StyleSheet.create({
   stickerContainer: {
     width: "23%", // About 4 items per row with space between
     aspectRatio: 1, // Keep square stickers
-    marginBottom: 20,
+    marginBottom: 40,
     alignItems: "center",
+    zIndex: 20,
   },
   stickerImage: {
     width: "100%",
@@ -281,12 +290,7 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     marginBottom: -5,
   },
-  stickerName: {
-    fontSize: 12,
-    color: "#fff",
-    textAlign: "center",
-    top: 5,
-  },
+  
   noStickersText: {
     textAlign: "center",
     fontSize: 16,
