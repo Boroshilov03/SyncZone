@@ -225,7 +225,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
                       source={{ uri: sticker.image_url }}
                       style={styles.stickerImage}
                     />
-                    <Text style={styles.stickerName}>{sticker.name}</Text>
+                    
                   </TouchableOpacity>
                 ))
               ) : (
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: "100%",
     maxHeight: "70%", // Limit the modal height, allowing it to scroll
-    backgroundColor: "#2f3136", // Dark background
+    backgroundColor: "#D1EBEF", // Dark background
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     padding: 20,
@@ -258,17 +258,18 @@ const styles = StyleSheet.create({
   slideHandle: {
     width: 50,
     height: 5,
-    backgroundColor: "#40444b", // Subtle color for handle
+    backgroundColor: "grey", // Subtle color for handle
     borderRadius: 5,
     alignSelf: "center",
     marginBottom: 10,
     marginTop: 10,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#46194b",
     marginBottom: 10,
+    left: 135,
   },
   stickerGrid: {
     flexDirection: "row",
@@ -289,12 +290,7 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     marginBottom: -5,
   },
-  stickerName: {
-    marginTop: 8,
-    color: "#fff",
-    fontSize: 12,
-    textAlign: "center",
-  },
+  
   noStickersText: {
     textAlign: "center",
     fontSize: 16,
