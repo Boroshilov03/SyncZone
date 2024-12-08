@@ -66,7 +66,10 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
             const touchLocation = e.nativeEvent.locationY;
             return touchLocation < 100; // Only trigger drag if touch is in the top 100px area
           },
-          onMoveShouldSetPanResponder: (e, gestureState) => true,
+          onMoveShouldSetPanResponder: (e, gestureState) => {
+            // Only start dragging if there's significant vertical movement (gesture.dy)
+            return Math.abs(gestureState.dy) > 10;
+          },
           onPanResponderMove: (e, gestureState) => {
             if (gestureState.dy > 0) {
               Animated.event([null, { dy: slideAnim }], {
@@ -199,7 +202,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         >
           <View style={styles.slideHandle}></View>
 
-          <Text style={styles.modalTitle}>Your Owned Stickers</Text>
+          <Text style={styles.modalTitle}>Stickers</Text>
 
           {loading ? (
             <Text>Loading...</Text>
@@ -209,16 +212,17 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
                 ownedStickers.map((sticker) => (
                   <TouchableOpacity
                     key={sticker.id}
-                    onPress={() =>
-                      handleStickerPress(sticker.id, chatID, setMessages)
-                    }
+                    onPress={() => {
+                      console.log("Sticker pressed:", sticker.id); // Log the sticker ID
+                      handleStickerPress(sticker.id, chatID, setMessages);
+                    }}
                     style={styles.stickerContainer}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} // Allow some tolerance around the touch area
                   >
                     <Image
                       source={{ uri: sticker.image_url }}
                       style={styles.stickerImage}
                     />
-                    <Text style={styles.stickerName}>{sticker.name}</Text>
                   </TouchableOpacity>
                 ))
               ) : (
@@ -235,14 +239,14 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)", // Darkened background
     justifyContent: "flex-end",
     alignItems: "center",
+    zIndex: 10,
   },
   modalContainer: {
     width: "100%",
-    maxHeight: "70%", // Limit the modal height, allowing it to scroll
-    backgroundColor: "#2f3136", // Dark background
+    maxHeight: "100%", // Limit the modal height, allowing it to scroll
+    backgroundColor: "#D1EBEF",
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     padding: 20,
@@ -251,41 +255,34 @@ const styles = StyleSheet.create({
   slideHandle: {
     width: 50,
     height: 5,
-    backgroundColor: "#40444b", // Subtle color for handle
+    backgroundColor: "grey", // Subtle color for handle
     borderRadius: 5,
     alignSelf: "center",
-    marginBottom: 10,
-    marginTop: 10,
+    marginBottom: 5,
+    marginTop: 5,
   },
   modalTitle: {
     fontSize: 20,
+    fontSize: 25,
     fontWeight: "bold",
     color: "#fff",
+    color: "#444444",
     marginBottom: 10,
   },
   stickerGrid: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    alignItems: "center",
   },
   stickerContainer: {
     width: "23%", // About 4 items per row with space between
     aspectRatio: 1, // Keep square stickers
-    marginBottom: 20,
     alignItems: "center",
+    zIndex: 30,
   },
   stickerImage: {
     width: "100%",
     height: "100%",
     borderRadius: 0,
     marginBottom: -5,
-  },
-  stickerName: {
-    fontSize: 12,
-    color: "#fff",
-    textAlign: "center",
-    top: 5,
   },
   noStickersText: {
     textAlign: "center",

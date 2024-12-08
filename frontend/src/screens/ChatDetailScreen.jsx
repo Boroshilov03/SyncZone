@@ -49,12 +49,24 @@ const ChatDetailScreen = () => {
   const [attachmentPhoto, setAttachmentPhoto] = useState(null);
   const [base64Photo, setBase64Photo] = useState(null);
 
-  const toggleOwnedStickersModal = () => {
-    setOwnedStickersVisible(!ownedStickersVisible);
-  };
+  const [isModalVisible, setModalVisible] = useState(false);
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(translateY, {
+      toValue: isModalVisible ? -170 : 0, // Adjust the distance to your needs
+      duration: 150,
+      useNativeDriver: true,
+    }).start();
+  }, [isModalVisible]);
+
   useEffect(() => {
     fetchProfilePicture();
   }, []);
+
+  const toggleOwnedStickersModal = () => {
+    setModalVisible(!isModalVisible);
+  };
 
   const pickImage = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -714,7 +726,9 @@ const ChatDetailScreen = () => {
             )}
           </View>
 
-          <View style={styles.inputContainer}>
+          <Animated.View
+            style={[styles.inputContainer, { transform: [{ translateY }] }]}
+          >
             {attachmentPhoto && (
               <View style={styles.attachmentPreviewContainer}>
                 <Image
@@ -764,8 +778,8 @@ const ChatDetailScreen = () => {
 
               {/* Owned Stickers Modal */}
               <OwnedStickersModal
-                visible={ownedStickersVisible}
-                onClose={() => setOwnedStickersVisible(false)}
+                visible={isModalVisible}
+                onClose={() => setModalVisible(false)}
                 chatID={chatId}
                 setMessages={setMessages}
               />
@@ -784,7 +798,7 @@ const ChatDetailScreen = () => {
                 source={require("../../assets/icons/send_icon.png")}
               />
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </SafeAreaView>
       </View>
     </KeyboardAvoidingView>
