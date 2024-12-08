@@ -97,8 +97,8 @@ const ContactScreen = ({ navigation }) => {
   const RenderGroupedContacts = ({ item }) => (
     <View>
       <Text style={styles.groupHeader}>{item.letter}</Text>
-      {item.contacts.map((contact) => (
-        <RenderContact key={contact.profiles.id} item={contact} />
+      {item.contacts.map((contact, index) => (
+        <RenderContact key={`${contact.profiles.id}-${index}`} item={contact} />
       ))}
     </View>
   );
@@ -219,9 +219,9 @@ const ContactScreen = ({ navigation }) => {
         onLayout={onLayout}
         {...panResponder.panHandlers} // Attach pan gesture handlers
       >
-        {alphabet.map((letter) => (
+        {alphabet.map((letter, index) => (
           <TouchableOpacity
-            key={letter}
+            key={`${letter}-${index}`}
             style={styles.alphabetLetter} // Ensure enough padding and clickable space
             onPress={() => onLetterPress(letter)} // Handle tap
             activeOpacity={0.7} // Provides visual feedback on press
@@ -392,10 +392,6 @@ const ContactScreen = ({ navigation }) => {
     });
   };
 
-  const createCall = (contactID) => {
-    console.log("Creating call with", contactID);
-  };
-
   // Function to handle group chat creation
   const createGroupChat = () => {
     console.log("Create Group Chat Pressed");
@@ -493,17 +489,6 @@ const ContactScreen = ({ navigation }) => {
                 color="#fff"
               />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.callButton}
-              onPress={() => createCall(item.profiles.id)}
-            >
-              <FontAwesome
-                name="phone"
-                size={20}
-                style={styles.callIcon}
-                color="#fff"
-              />
-            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -511,27 +496,32 @@ const ContactScreen = ({ navigation }) => {
   };
   // Render grouped contacts
   const renderGroup = ({ item }) => (
-    <View style={styles.groupContainer}>
+    <View>
       {/* Title (letter) above the contact cards */}
       <Text style={styles.letterHeader}>{item.letter}</Text>
-      {item.contacts.map((contact) => renderContact({ item: contact }))}
+      {item.contacts.map((contact, index) => (
+        // Adding a unique key for each contact
+        <View key={contact.id}>
+          {renderContact({ item: contact })}
+        </View>
+      ))}
     </View>
   );
-
-if (isLoading) {
-  return (
-    <SplashScreen/>
-    // <ActivityIndicator
-    //   size="large"
-    //   color="lightblue"
-    //   style={{
-    //     position: "absolute",
-    //     top: "50%",
-    //     left: "50%",
-    //   }}
-    // />
-  );
-}
+  
+  if (isLoading) {
+    return (
+      <SplashScreen />
+      // <ActivityIndicator
+      //   size="large"
+      //   color="lightblue"
+      //   style={{
+      //     position: "absolute",
+      //     top: "50%",
+      //     left: "50%",
+      //   }}
+      // />
+    );
+  }
 
   if (error) {
     return <Text>Error: {error.message}</Text>;

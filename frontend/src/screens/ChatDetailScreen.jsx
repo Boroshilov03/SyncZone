@@ -606,7 +606,7 @@ const ChatDetailScreen = () => {
                       key={index}
                       source={{ uri }}
                       style={[
-                        attachment.sticker_url
+                        attachment.sticker_id 
                           ? styles.stickerImage // Fixed size for stickers
                           : styles.attachmentImage, // Auto size for images
                       ]}
@@ -616,7 +616,7 @@ const ChatDetailScreen = () => {
                       key={index}
                       source={{ uri }}
                       style={[
-                        attachment.sticker_url
+                        attachment.sticker_id
                           ? styles.otherStickerImage // Fixed size for stickers
                           : styles.otherAttachmentImage, // Auto size for images
                       ]}
@@ -739,7 +739,7 @@ const ChatDetailScreen = () => {
                   style={styles.removeAttachmentButton}
                   onPress={() => setAttachmentPhoto(null)}
                 >
-                  <Text style={styles.removeAttachmentText}>x</Text>
+                  <Text style={styles.removeAttachmentText}>X</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -1117,9 +1117,11 @@ const styles = StyleSheet.create({
   removeAttachmentButton: {
     position: "absolute",
     backgroundColor: "#ff4d4d",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: "50%",
+    width: 20, // Set a fixed width
+    height: 20, // Set the same value as width
+    borderRadius: 10,
+    justifyContent: "center", // Center content vertically
+    alignItems: "center", // Center content horizontally
   },
   removeAttachmentText: {
     color: "#fff",

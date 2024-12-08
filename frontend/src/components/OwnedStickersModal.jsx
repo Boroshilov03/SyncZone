@@ -163,6 +163,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         chat_id: chatID,
         sender_id: user.id,
         content: "",
+        created_at: new Date().toISOString(), // Add a proper timestamp
         attachments: [
           {
           sticker_id: stickerId,
@@ -174,6 +175,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
       setMessages((prevMessages) => [newMessage, ...prevMessages]);
 
       console.log("Sticker sent and appended to chat:", newMessage);
+      handleClose(); // Close the modal if dragged down far enough
     } catch (err) {
       console.error("Unexpected error:", err);
     }

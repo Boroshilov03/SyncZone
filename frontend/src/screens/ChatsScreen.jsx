@@ -301,7 +301,7 @@ const ChatsScreen = ({ navigation }) => {
         <View
           style={[
             styles.card,
-            isLastItem && { marginBottom: 70 },
+            isLastItem && { marginBottom: 60 },
             {
               backgroundColor: pressedCardId === item.id ? "#e2f5f8" : "#D1EBEF", // Change color only for the pressed card
             }
@@ -469,6 +469,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,
+
   },
   avatarContainer: {
     position: "relative", // Ensures the avatar and banner are in the same space
