@@ -172,7 +172,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
       ],
       };
 
-      setMessages((prevMessages) => [newMessage, ...prevMessages]);
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
 
       console.log("Sticker sent and appended to chat:", newMessage);
       handleClose(); // Close the modal if dragged down far enough

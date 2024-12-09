@@ -482,11 +482,9 @@ const ContactScreen = ({ navigation }) => {
               style={styles.chatButton}
               onPress={() => createChat(item.profiles.id)}
             >
-              <FontAwesome
-                name="comment"
-                size={20}
-                style={styles.chatIcon}
-                color="#fff"
+              <Image 
+              source={require("../../assets/icons/chat-contact.png")}
+              style={styles.chatIcon}
               />
             </TouchableOpacity>
           </View>
