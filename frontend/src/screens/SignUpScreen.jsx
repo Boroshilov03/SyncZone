@@ -16,6 +16,7 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
+  Switch,
 } from "react-native";
 
 import Input from "../components/Input";
@@ -45,11 +46,6 @@ export default function SignupScreen({ navigation }) {
     location: "",
   });
 
-  const [weather, setWeather] = useState({
-    temp: null,
-    description: null,
-    time: null,
-  });
 
   const [timezone, setTimezone] = useState(null);
   const [lat, setLat] = useState(null);
@@ -105,7 +101,7 @@ export default function SignupScreen({ navigation }) {
       console.log("Weather and Time:", { ...weatherData, time: localTime });
     } catch (error) {
       console.error("Error fetching weather or time:", error);
-      Alert.alert("Error", "Failed to fetch weather or time.");
+
     }
   }, []);
 
@@ -145,7 +141,6 @@ export default function SignupScreen({ navigation }) {
       }
     } catch (error) {
       console.error("Error fetching coordinates:", error);
-      Alert.alert("Error", "Failed to fetch coordinates.");
     }
   }, []);
 
@@ -412,24 +407,21 @@ export default function SignupScreen({ navigation }) {
             {/* <Text>Latitude: {lat ? lat : "Not available"}</Text>
             <Text>Longitude: {lon ? lon : "Not available"}</Text> */}
 
-            <TouchableOpacity
-              style={styles.toggleButton}
-              onPress={handleToggleDropdowns}
-            >
-              <Text style={styles.toggleButtonText}>
-                {showDropdowns ? "Remove Location" : "Allow Location?"}
+            <View style={styles.switchContainer}>
+              <Text style={styles.switchLabel}>
+                {showDropdowns ? "Enable Location" : "Disable Location"}
               </Text>
-            </TouchableOpacity>
+              <Switch
+                value={showDropdowns}
+                onValueChange={setShowDropdowns}
+                thumbColor={showDropdowns ? "#fff" : "#fff"}
+                trackColor={{ false: "#ccc", true: "#C5ECFF" }}
+              />
+            </View>
 
-            {/* Dropdowns - Conditional Rendering */}
             {showDropdowns && (
-              <View>
-                <Dropdown
-                  location={formData.location}
-                  setCity={handleCitySelection}
-                />
-                {/* Add a country dropdown if required */}
-                {/* <CountryDropdown /> */}
+              <View style={styles.dropdownContainer}>
+                <Dropdown location={formData.location} setCity={handleCitySelection} />
               </View>
             )}
 
@@ -478,7 +470,7 @@ export default function SignupScreen({ navigation }) {
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 }
 
@@ -619,20 +611,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center'
   },
-  toggleButton: {
-    marginVertical: 15,
-    marginHorizontal: 50,
-    padding: 20,
-    // backgroundColor: "#FFDDF7",
-    borderRadius: 15,
-    borderWidth: 2.5,
-    borderColor: 'grey',
+  switchContainer: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    marginVertical: 20
   },
-  toggleButtonText: {
-    fontSize: 16,
-    color: "#616061",
-    fontFamily: "Karla-Medium",
-  },
+  switchLabel: { fontSize: 17, fontFamily: "Karla-Bold", color: "#616061" },
 });

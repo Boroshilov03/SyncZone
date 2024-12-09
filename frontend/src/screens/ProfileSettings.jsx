@@ -28,6 +28,12 @@ import * as ImagePicker from "expo-image-picker";
 import uuid from "react-native-uuid";
 import { decode } from "base64-arraybuffer";
 
+import axios from "axios";
+import RNPickerSelect from "react-native-picker-select";
+import Dropdown from "../components/DropdownComponent";
+import { WEATHER_API_KEY } from '@env';
+
+
 const ProfileSettings = ({ navigation, route }) => {
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [base64Photo, setBase64Photo] = useState(null);
@@ -52,7 +58,38 @@ const ProfileSettings = ({ navigation, route }) => {
     firstName: "",
     lastName: "",
     email: "",
+    location: "",
   });
+
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const handleCitySelection = (cityCode) => {
+    console.log("Selected city:", cityCode);
+    setLocation(cityCode); // Set the selected city as location
+    fetchCoordinates(cityCode); // Optionally fetch coordinates if necessary
+  };
+
+  const fetchCoordinates = async (city) => {
+    try {
+      const response = await axios.get(
+        `http://api.geonames.org/searchJSON?q=${city}&username=synczone&maxRows=1`
+      );
+
+      if (response.data.geonames && response.data.geonames.length > 0) {
+        const { lat, lng } = response.data.geonames[0];
+        console.log("Latitude:", lat, "Longitude:", lng);
+      } else {
+        Alert.alert("Error", "City not found or invalid.");
+      }
+    } catch (error) {
+      console.error("Error fetching coordinates:", error);
+      Alert.alert("Error", "Failed to fetch coordinates.");
+    }
+  };
+
+  const toggleDropdown = () => {
+    setShowDropdown(prev => !prev);
+  };
 
   const handleInputChange = useCallback((name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -87,6 +124,7 @@ const ProfileSettings = ({ navigation, route }) => {
         firstName: user.user_metadata?.first_name || "",
         lastName: user.user_metadata?.last_name || "",
         email: user.email || "",
+        location: user.user_metadata?.location || "",
       });
     }
   }, [user]);
@@ -96,6 +134,7 @@ const ProfileSettings = ({ navigation, route }) => {
       user_metadata: {
         first_name: formData.firstName,
         last_name: formData.lastName,
+        location: formData.location,
       },
       email: formData.email,
     };
@@ -161,7 +200,7 @@ const ProfileSettings = ({ navigation, route }) => {
           username,
           first_name: firstName,
           last_name: lastName,
-          location,
+          location: location,
           avatar_url: avatarUrl,
         })
         .eq("id", user.id);
@@ -278,12 +317,8 @@ const ProfileSettings = ({ navigation, route }) => {
         return;
       }
 
-      // Update your state with the fetched data
-      setUsername(data.username || "");
-      setFirstName(data.first_name || "");
-      setLastName(data.last_name || "");
-      setLocation(data.location || "");
-      setProfilePhoto(data.avatar_url || null);
+      // Ensure `location` is set correctly
+      setLocation(data.location || ""); // Fallback to an empty string if undefined
     } catch (error) {
       console.error("Error in fetchProfileData:", error);
     }
@@ -299,7 +334,11 @@ const ProfileSettings = ({ navigation, route }) => {
     fetchActiveBanner(); // Fetch the active banner when the component mounts
   }, [user]); // Dependency on user to refetch when user state changes
 
-
+  useEffect(() => {
+    if (user) {
+      setLocation(user.user_metadata?.location || "");
+    }
+  }, [user]);
   // Use useFocusEffect to refetch active banner on screen focus
 
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
@@ -359,14 +398,13 @@ const ProfileSettings = ({ navigation, route }) => {
             {contactInfo.contactFirst} {contactInfo.contactLast}
           </Text>
           <Text style={styles.user}>@{contactInfo.contactUsername}</Text>
-          <View style={styles.actbox}>
-            <Text style={styles.act}>Show Location</Text>
+          <View style={styles.switchContainer}>
+            <Text style={styles.switchLabel}>{showDropdown ? "Hide Location" : "Enable Location"}</Text>
             <Switch
-              trackColor={{ false: "#ccc", true: "#4caf50" }}
-              thumbColor={isEnabled ? "#fff" : "#fff"}
-              onValueChange={toggleSwitch}
-              value={isEnabled}
-              marginHorizontal={10}
+              value={showDropdown}
+              onValueChange={setShowDropdown}
+              thumbColor={showDropdown ? "#fff" : "#fff"}
+              trackColor={{ false: "#ccc", true: "#C5ECFF" }}
             />
           </View>
         </View>
@@ -467,7 +505,7 @@ const ProfileSettings = ({ navigation, route }) => {
               },
               { label: "First Name", value: firstName, setValue: setFirstName },
               { label: "Last Name", value: lastName, setValue: setLastName },
-              { label: "Location", value: location, setValue: setLocation },
+
               // Add more fields as needed
             ].map((field, index) => (
               <View key={index} style={styles.verticallySpaced}>
@@ -487,8 +525,8 @@ const ProfileSettings = ({ navigation, route }) => {
                       field.label === "Password"
                         ? "lock"
                         : field.label === "Email"
-                        ? "envelope"
-                        : "user",
+                          ? "envelope"
+                          : "user",
                     color: "#616061",
                     size: 20,
                   }}
@@ -508,11 +546,72 @@ const ProfileSettings = ({ navigation, route }) => {
                     height: 40,
                   }}
                 />
+
               </View>
             ))}
           </View>
+
+
         </View>
 
+
+        {showDropdown && (
+
+          <View style={styles.fieldsWrapper}>
+            <View style={styles.fields}>
+              {[
+
+                { label: "Location", value: location, setValue: setLocation },
+                // Add more fields as needed
+              ].map((field, index) => (
+                <View key={index} style={styles.verticallySpaced}>
+                  <Input
+                    label={field.label}
+                    value={field.value}
+                    onChangeText={field.setValue}
+                    labelStyle={{
+                      position: "absolute",
+                      top: -25,
+                      left: 25,
+                      color: "#616061",
+                    }}
+                    leftIcon={{
+                      type: "font-awesome",
+                      name:
+                        field.label === "Password"
+                          ? "lock"
+                          : field.label === "Email"
+                            ? "envelope"
+                            : "user",
+                      color: "#616061",
+                      size: 20,
+                    }}
+                    autoCapitalize="none"
+                    secureTextEntry={field.secureTextEntry} // Use for password field
+                    editable={field.editable}
+                    disabled={field.disabled}
+                    inputContainerStyle={{
+                      borderRadius: 30,
+                      borderTopWidth: 2.5,
+                      borderBottomWidth: 2.5,
+                      borderLeftWidth: 2.5,
+                      borderRightWidth: 2.5,
+                      borderColor: "#A7A7A7",
+                      width: 270,
+                      paddingLeft: 15,
+                      height: 40,
+                    }}
+                  />
+
+                </View>
+              ))}
+            </View>
+
+
+          </View>
+
+
+        )}
         <View style={styles.buttonbox}>
           <LinearGradient
             start={{ x: 0, y: 0 }}
@@ -682,11 +781,13 @@ const styles = StyleSheet.create({
   },
   fieldsWrapper: {
     flex: 1,
-    justifyContent: "center", // Center vertically
-    alignItems: "center", // Center horizontally
+    justifyContent: "center",
+    alignItems: "center",
+    //borderWidth: 1
+
   },
   fields: {
-    width: "100%",
+    width: "80%",
     maxWidth: 300, // Restrict the width to a certain size for better centering
   },
   verticallySpaced: {
@@ -887,4 +988,11 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 30,
   },
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 20
+  },
+  switchLabel: { fontSize: 17, fontFamily: "Karla-Bold", color: "#616061" },
 });

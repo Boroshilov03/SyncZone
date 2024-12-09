@@ -6,10 +6,10 @@ import { API_KEY, API_URL } from '@env';
 import Icon from "react-native-vector-icons/FontAwesome";
 import Icon2 from "react-native-vector-icons/FontAwesome5";
 
-const DropdownComponent = ({ setCity, location }) => {
+const DropdownComponent = ({ setCity, location, storedLocation, storedCountry }) => {
     const [countryData, setCountryData] = useState([]);
     const [cityData, setCityData] = useState([]);
-    const [country, setCountry] = useState(null);
+    const [country, setCountry] = useState(storedCountry || null);
     const [state, setState] = useState(null);
     const [isFocus, setIsFocus] = useState(false);
 
@@ -33,10 +33,11 @@ const DropdownComponent = ({ setCity, location }) => {
                 }
                 setCountryData(countryArray);
             })
-            .catch((error) => {
-                console.error(error);
-            });
+        if (storedCountry) {
+            handleCity(storedCountry);
+        }
     }, []);
+
 
     const handleCity = async (countryCode) => {
         try {
@@ -106,7 +107,7 @@ const DropdownComponent = ({ setCity, location }) => {
                 valueField="value"
                 placeholder={!isFocus ? 'Select city' : '...'}
                 searchPlaceholder="Search..."
-                value={location}
+                value={storedLocation || location}
                 onFocus={() => setIsFocus(true)}
                 onBlur={() => setIsFocus(false)}
                 renderLeftIcon={() =>
@@ -131,16 +132,25 @@ export default DropdownComponent;
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: 'white',
+        //backgroundColor: 'white',
         padding: 16,
+        justifyContent: 'center',
+        //borderWidth: 3,
+        flex: 1,
+        alignItems: 'center'
+
     },
     dropdown: {
         height: 40,
         borderColor: 'gray',
         borderWidth: 2.5,
         borderRadius: 60,
-        paddingHorizontal: 8,
+        paddingHorizontal: 10,
         margin: 18,
+        flexShrink: 0,  // Prevent it from shrinking
+        flexGrow: 0,
+        width: 310
+
     },
     icon: {
         marginRight: 8,

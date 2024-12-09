@@ -287,6 +287,7 @@ const ChatsScreen = ({ navigation }) => {
         onPress={() => {
           navigation.navigate("ChatDetail", {
             chatId: item.id,
+            userId: otherParticipants[0]?.profiles?.id,
             username: displayName,
             otherPFP: displayPhoto,
             groupTitle: item.group_title,
@@ -404,7 +405,7 @@ const ChatsScreen = ({ navigation }) => {
   };
 
   if (isLoading) {
-    return <SplashScreen/>;
+    return <SplashScreen />;
   }
 
   if (error) {

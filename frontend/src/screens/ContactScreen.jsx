@@ -507,7 +507,7 @@ const ContactScreen = ({ navigation }) => {
       ))}
     </View>
   );
-  
+
   if (isLoading) {
     return (
       <SplashScreen />
@@ -1000,6 +1000,31 @@ const styles = StyleSheet.create({
     flexDirection: "row", // Arrange icon and text in a row
     alignItems: "center", // Center items vertically
     justifyContent: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+  },
+  modalContent: {
+    width: "85%",
+    height: "70%",
+    padding: 40,
+    paddingTop: 40,
+    backgroundColor: "#fff",
+    borderRadius: 40,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });
 
