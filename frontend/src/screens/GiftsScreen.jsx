@@ -9,7 +9,7 @@ import {
   Alert,
   Animated, // Import Animated
 } from "react-native";
-import React, { useEffect, useState, useRef  } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase"; // Import Supabase client for Database Operations
 import useStore from "../store/store"; // Import store for state management
 import Header from "../components/Header"; //Import Header Component
@@ -33,8 +33,7 @@ const GiftsScreen = ({ navigation }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current; // Start with normal size
   const opacityAnim = useRef(new Animated.Value(0)).current; // Start with hidden success message
 
-
-    // Load fonts
+  // Load fonts
   const [fontsLoaded] = useFonts({
     Pacifico: Pacifico_400Regular,
     Poppins: Poppins_400Regular,
@@ -153,7 +152,10 @@ const GiftsScreen = ({ navigation }) => {
 
     if (checkError) {
       console.error("Error checking user_banners:", checkError.message);
-      Alert.alert("Error", "Failed to check banner ownership. Please try again.");
+      Alert.alert(
+        "Error",
+        "Failed to check banner ownership. Please try again."
+      );
       return;
     }
 
@@ -236,11 +238,11 @@ const GiftsScreen = ({ navigation }) => {
     }
   };
 
+  let avatarUrl = user.user_metadata.avatar_url
+    ? user.user_metadata.avatar_url
+    : null;
   return (
-    <LinearGradient
-      colors={[ "#FFE4E1","#fff" ]}
-      style={{ flex: 1 }}
-    >
+    <LinearGradient colors={["#FFE4E1", "#fff"]} style={{ flex: 1 }}>
       {/* Header */}
       <View style={styles.headerContainer}>
         <Header
@@ -251,17 +253,20 @@ const GiftsScreen = ({ navigation }) => {
           switchValue={showOwned}
         />
       </View>
-  
+
       {/* Main Vertical ScrollView */}
-      <ScrollView contentContainerStyle={styles.verticalScrollContainer}>
+      <ScrollView
+        contentContainerStyle={styles.verticalScrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Banners Section */}
         <View style={styles.sectionContainer}>
           <Text style={styles.bannersTitle}>BANNERS</Text>
-  
+
           {/* Horizontal ScrollView for Banners */}
           <ScrollView
             horizontal
-            showsHorizontalScrollIndicator={true}
+            showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.scrollContainer}
           >
             {banners.map((banner) => {
@@ -274,6 +279,19 @@ const GiftsScreen = ({ navigation }) => {
                       style={styles.image}
                       resizeMode="contain"
                     />
+                    {avatarUrl ? (
+                      <Image
+                        source={{ uri: avatarUrl }}
+                        resizeMode="cover"
+                        style={styles.cardImg}
+                      />
+                    ) : (
+                      <View style={styles.cardImg}>
+                        <Text style={styles.cardAvatarText}>
+                          {user.user_metadata.username[0].toUpperCase() || "N/A"}
+                        </Text>
+                      </View>
+                    )}
                     <Text style={styles.bannerName}>{banner.name}</Text>
                     <TouchableOpacity
                       style={[styles.button, styles.ownedButton]}
@@ -290,13 +308,21 @@ const GiftsScreen = ({ navigation }) => {
                     style={styles.image}
                     resizeMode="contain"
                   />
+                  <Image
+                    source={{ uri: user.user_metadata.avatar_url }}
+                    resizeMode="cover"
+                    style={styles.cardImg}
+                  />
                   <Text style={styles.bannerName}>{banner.name}</Text>
                   <TouchableOpacity
                     style={[styles.button, styles.getButton]}
                     onPress={() => handleGetBanner(banner.id)}
                   >
                     <Animated.Text
-                      style={[styles.buttonText, { transform: [{ scale: scaleAnim }] }]}
+                      style={[
+                        styles.buttonText,
+                        { transform: [{ scale: scaleAnim }] },
+                      ]}
                     >
                       Get
                     </Animated.Text>
@@ -305,17 +331,21 @@ const GiftsScreen = ({ navigation }) => {
               ) : null;
             })}
           </ScrollView>
-  
+
           {/* Show "More Banners Coming Soon..." only if all banners are owned */}
-          {!showOwned && banners.filter(banner => !user_banners.has(banner.id)).length === 0 && (
-            <Text style={styles.moreMessage}>More Banners Coming Soon...</Text>
-          )}
+          {!showOwned &&
+            banners.filter((banner) => !user_banners.has(banner.id)).length ===
+              0 && (
+              <Text style={styles.moreMessage}>
+                More Banners Coming Soon...
+              </Text>
+            )}
         </View>
-  
+
         {/* Stickers Section */}
         <View style={styles.sectionContainer}>
           <Text style={styles.bannersTitle}>STICKERS</Text>
-  
+
           {/* Horizontal ScrollView for Stickers */}
           <ScrollView
             horizontal
@@ -359,14 +389,18 @@ const GiftsScreen = ({ navigation }) => {
               ) : null;
             })}
           </ScrollView>
-  
+
           {/* Show "More Stickers Coming Soon..." only if all stickers are owned */}
-          {!showOwned && stickers.filter(sticker => !user_stickers.has(sticker.id)).length === 0 && (
-            <Text style={styles.moreMessage}>More Stickers Coming Soon...</Text>
-          )}
+          {!showOwned &&
+            stickers.filter((sticker) => !user_stickers.has(sticker.id))
+              .length === 0 && (
+              <Text style={styles.moreMessage}>
+                More Stickers Coming Soon...
+              </Text>
+            )}
         </View>
       </ScrollView>
-  
+
       {/* Success Message Animation */}
       <Animated.View
         style={[
@@ -378,7 +412,6 @@ const GiftsScreen = ({ navigation }) => {
       </Animated.View>
     </LinearGradient>
   );
-  
 };
 
 const styles = StyleSheet.create({
@@ -386,7 +419,6 @@ const styles = StyleSheet.create({
     position: "relative",
     zIndex: 1,
     top: -10.1,
-
   },
 
   sectionContainer: {
@@ -395,14 +427,14 @@ const styles = StyleSheet.create({
   bannersTitle: {
     // fontFamily: "Pacifico",
     fontSize: 40,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: "gray",
     textAlign: "center",
     borderWidth: 1,
     borderColor: "#FFE4E1",
     borderRadius: 20,
     marginBottom: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   verticalScrollContainer: {
     paddingVertical: 0,
@@ -411,6 +443,11 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexDirection: "row", // Items will be displayed horizontally
     alignItems: "center",
+  },
+  cardAvatarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF", // keeping the text white for readability
   },
   itemFrame: {
     backgroundColor: "#FFE4E1",
@@ -431,6 +468,17 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 10,
+  },
+  cardImg: {
+    position: "absolute",
+    width: 60,
+    height: 60,
+    backgroundColor: "#FFADAD", // soft coral to complement pastel blue
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 30,
+    zIndex: -1,
+    top: 31,
   },
   image1: {
     width: 50,
@@ -469,6 +517,5 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
-
 
 export default GiftsScreen;

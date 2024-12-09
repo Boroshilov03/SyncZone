@@ -54,6 +54,7 @@ const ChatDetailScreen = () => {
   const [base64Photo, setBase64Photo] = useState(null);
   const [profileVisible, setProfileVisible] = useState(false);
   const [selectedContact, setSelectedContact] = useState({});
+  const [floatingHeaderDate, setFloatingHeaderDate] = useState("Today");
 
   const [isModalVisible, setModalVisible] = useState(false);
   const translateY = useRef(new Animated.Value(0)).current;
@@ -101,7 +102,6 @@ const ChatDetailScreen = () => {
 
   // Function to send the selected image
   const sendImage = async () => {
-    console.log("sending image");
     if (!base64Photo) {
       Alert.alert("Error", "No photo selected.");
       return;
@@ -128,8 +128,8 @@ const ChatDetailScreen = () => {
       const newMessage = {
         chat_id: chatId,
         sender_id: user.id,
-        content: "",
-        created_at: new Date().toISOString(), // Add a proper timestamp
+        content: "", // Empty content for attachment-only messages
+        created_at: new Date().toISOString(),
       };
 
       const { data: messageData, error: messageError } = await supabase
@@ -141,20 +141,27 @@ const ChatDetailScreen = () => {
 
       const messageId = messageData[0].id;
 
+      // Link the attachment to the message
       await supabase
         .from("attachments")
         .insert([{ message_id: messageId, image_url: imageUrl }]);
 
-      setMessages((prevMessages) => [
-        {
-          ...newMessage,
-          id: messageId,
-          attachments: [{ image_url: imageUrl }],
-        },
-        ...prevMessages,
-      ]);
+      // Broadcast the new message with the attachment
+      const fullMessage = {
+        ...newMessage,
+        id: messageId,
+        attachments: [{ image_url: imageUrl }],
+      };
+
+      supabase.channel(`chat-room-${chatId}`).send({
+        type: "broadcast",
+        event: "new-message",
+        payload: fullMessage,
+      });
+
+      // Update local state
+      setMessages((prevMessages) => [...prevMessages, fullMessage]);
       setAttachmentPhoto(null);
-      console.log("Image sent successfully.");
     } catch (err) {
       console.error("Error sending image:", err);
       Alert.alert("Error", "Failed to send image. Please try again.");
@@ -211,7 +218,7 @@ const ChatDetailScreen = () => {
           if (prevMessages.find((msg) => msg.id === receivedMessage.id)) {
             return prevMessages;
           }
-          return [receivedMessage, ...prevMessages];
+          return [...prevMessages, receivedMessage];
         });
       })
       .on("broadcast", { event: "typing" }, async (payload) => {
@@ -360,8 +367,12 @@ const ChatDetailScreen = () => {
             };
           })
         );
+        // Sort messages in ascending order by created_at
+        const sortedMessages = processedMessages.sort(
+          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        );
 
-        setMessages(processedMessages);
+        setMessages(sortedMessages);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching messages:", err);
@@ -411,8 +422,6 @@ const ChatDetailScreen = () => {
       );
 
       if (result) {
-        console.log("Messages before update:", messages);
-
         setMessages((prevMessages) => {
           const newMessage = {
             ...result.message,
@@ -420,9 +429,7 @@ const ChatDetailScreen = () => {
             receiverEmotion: null,
           };
 
-          console.log("New message being added:", newMessage);
-
-          return [newMessage, ...prevMessages];
+          return [...prevMessages, newMessage];
         });
 
         supabase.channel(`chat-room-${chatId}`).send({
@@ -433,8 +440,6 @@ const ChatDetailScreen = () => {
             senderEmotion: result.emotionAnalysis.emotion,
           },
         });
-
-        console.log("Messages after update:", messages);
       }
     }
   };
@@ -525,7 +530,7 @@ const ChatDetailScreen = () => {
     );
   };
 
-  const renderMessage = ({ item }) => {
+  const renderMessage = ({ item, index }) => {
     const isMyMessage = item.sender_id === user.id;
     const senderProfile = profilePics[item.sender_id] || {
       avatar_url: null,
@@ -533,13 +538,27 @@ const ChatDetailScreen = () => {
     };
     const { avatar_url, username } = senderProfile;
 
+    // Format date for this message
+    const messageDate = getFormattedDate(item.created_at);
+
+    const previousMessage = index > 0 ? messages[index - 1] : null;
+    const previousMessageDate = previousMessage
+      ? getFormattedDate(previousMessage.created_at)
+      : null;
+
+    const showDateHeader = index === 0 || previousMessageDate !== messageDate;
+
     return (
       <View style={styles.messageWrapper}>
+        {showDateHeader && (
+          <Text style={styles.dateHeader}>{messageDate}</Text> // Render date header
+        )}
+
         <View
           style={[
             styles.messageContainer,
             isMyMessage
-              ? [styles.myMessageContainer, { borderBottomRightRadius: 0 }] // Removes top-right radius for the tail effect
+              ? [styles.myMessageContainer, { borderBottomRightRadius: 0 }]
               : [styles.otherMessageContainer, { borderBottomLeftRadius: 0 }],
           ]}
         >
@@ -582,9 +601,9 @@ const ChatDetailScreen = () => {
                     : styles.otherEmotionContainer,
                 ]}
               >
-                <Text style={styles.emotionText}>
-                  {`${item.senderEmotion.name}`}
-                </Text>
+                <Text
+                  style={styles.emotionText}
+                >{`${item.senderEmotion.name}`}</Text>
               </View>
             )}
 
@@ -603,19 +622,18 @@ const ChatDetailScreen = () => {
                 </Text>
               ) : null}
 
-              {/* Render sticker if available */}
+              {/* Render attachments */}
               {item.attachments &&
                 item.attachments.map((attachment, index) => {
-                  const uri = attachment.image_url || attachment.sticker_url; // Prefer image_url, fallback to sticker_url
-
+                  const uri = attachment.image_url || attachment.sticker_url;
                   return uri && isMyMessage ? (
                     <Image
                       key={index}
                       source={{ uri }}
                       style={[
                         attachment.sticker_id
-                          ? styles.stickerImage // Fixed size for stickers
-                          : styles.attachmentImage, // Auto size for images
+                          ? styles.stickerImage
+                          : styles.attachmentImage,
                       ]}
                     />
                   ) : (
@@ -624,8 +642,8 @@ const ChatDetailScreen = () => {
                       source={{ uri }}
                       style={[
                         attachment.sticker_id
-                          ? styles.otherStickerImage // Fixed size for stickers
-                          : styles.otherAttachmentImage, // Auto size for images
+                          ? styles.otherStickerImage
+                          : styles.otherAttachmentImage,
                       ]}
                     />
                   );
@@ -645,12 +663,50 @@ const ChatDetailScreen = () => {
       </View>
     );
   };
+  const viewabilityConfig = {
+    itemVisiblePercentThreshold: 50, // Trigger when 50% of the item is visible
+  };
+
+  const getFormattedDate = (date) => {
+    const today = new Date();
+    const messageDate = new Date(date);
+
+    // Get local date (strip time information)
+    const todayLocalDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+    const messageLocalDate = new Date(
+      messageDate.getFullYear(),
+      messageDate.getMonth(),
+      messageDate.getDate()
+    );
+
+    // Check if the message was sent today
+    if (messageLocalDate.getTime() === todayLocalDate.getTime()) {
+      return "Today";
+    }
+
+    // Check if the message was sent yesterday
+    const yesterday = new Date(todayLocalDate);
+    yesterday.setDate(todayLocalDate.getDate() - 1);
+    if (messageLocalDate.getTime() === yesterday.getTime()) {
+      return "Yesterday";
+    }
+
+    // For other days, format as "Thu, Nov 28"
+    const options = {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    };
+    return messageDate.toLocaleDateString("en-US", options);
+  };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <View style={styles.container}>
       <View style={styles.innerContainer}>
         <SafeAreaView style={styles.innerContainer}>
           <View style={styles.profileContainer}>
@@ -725,10 +781,7 @@ const ChatDetailScreen = () => {
               </Text>
             </View>
             <TouchableOpacity style={styles.callIconContainer}>
-              <Image
-                source={require("../../assets/icons/telephone.png")}
-                style={styles.callIcon}
-              />
+              <Image style={styles.callIcon} />
             </TouchableOpacity>
           </View>
           {loading && (
@@ -752,7 +805,6 @@ const ChatDetailScreen = () => {
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={renderMessage}
                 contentContainerStyle={styles.messageList}
-                inverted
               />
             )}
             {typingUser && (
@@ -841,7 +893,7 @@ const ChatDetailScreen = () => {
           </Animated.View>
         </SafeAreaView>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -898,6 +950,13 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
   },
+  dateHeader: {
+    textAlign: "center",
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#888",
+    marginVertical: 5,
+  },
   centerContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -942,6 +1001,7 @@ const styles = StyleSheet.create({
     borderRadius: 12, // Make the overall bubble more rounded
     bottom: 0,
     left: 10,
+    bottom: 7,
     padding: 5, // Increased padding for a more spacious feel
     borderWidth: 1,
     borderTopLeftRadius: 12,
@@ -949,16 +1009,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 12,
     borderBottomRightRadius: 12,
     borderColor: "rgba(209, 235, 239, 0.5)", // Use a semi-transparent border color
-    backgroundColor: "rgba(240, 249, 249, 0.7)", // Semi-transparent background color for glassy effect
-    backdropFilter: "blur(10px)", // Add blur effect (not supported in all RN versions)
-    shadowColor: "#000", // Shadow color
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2, // Light shadow effect
-    shadowRadius: 2, // Soft shadow
-    elevation: 3, // For Android shadow effect
+    backgroundColor: "rgba(240, 249, 249, 1)", // Semi-transparent background color for glassy effect
   },
 
   messageWrapper: {

@@ -114,11 +114,11 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         .from("messages")
         .insert([
           {
-          chat_id: chatID,
-          sender_id: user.id,
-          content: "", // Empty content for sticker-only message
-        },
-      ])
+            chat_id: chatID,
+            sender_id: user.id,
+            content: "", // Empty content for sticker-only message
+          },
+        ])
         .select();
 
       if (messageError) {
@@ -133,11 +133,11 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         .from("attachments")
         .insert([
           {
-          message_id: messageId,
-          sticker_id: stickerId,
-          image_url: "",
-        },
-      ]);
+            message_id: messageId,
+            sticker_id: stickerId,
+            image_url: "",
+          },
+        ]);
 
       if (attachmentError) {
         console.error("Error attaching sticker:", attachmentError);
@@ -166,13 +166,17 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
         created_at: new Date().toISOString(), // Add a proper timestamp
         attachments: [
           {
-          sticker_id: stickerId,
-          image_url: stickerData.image_url, // Use actual sticker data here
-        },
-      ],
+            sticker_id: stickerId,
+            image_url: stickerData.image_url, // Use actual sticker data here
+          },
+        ],
       };
-
-      setMessages((prevMessages) => [newMessage, ...prevMessages]);
+      supabase.channel(`chat-room-${chatID}`).send({
+        type: "broadcast",
+        event: "new-message",
+        payload: newMessage,
+      });
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
 
       console.log("Sticker sent and appended to chat:", newMessage);
       handleClose(); // Close the modal if dragged down far enough
@@ -199,7 +203,10 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
     >
       <View style={styles.modalOverlay}>
         <Animated.View
-          style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}
+          style={[
+            styles.modalContainer,
+            { transform: [{ translateY: slideAnim }] },
+          ]}
           {...(panResponder ? panResponder.panHandlers : {})} // Attach pan responder
         >
           <View style={styles.slideHandle}></View>
@@ -228,7 +235,9 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
                   </TouchableOpacity>
                 ))
               ) : (
-                <Text style={styles.noStickersText}>You have no owned stickers.</Text>
+                <Text style={styles.noStickersText}>
+                  You have no owned stickers.
+                </Text>
               )}
             </ScrollView>
           )}

@@ -82,88 +82,80 @@ export default function SignInScreen({ navigation }) {
     >
       <View style={styles.space}></View>
       <View style={styles.container}>
-
-        <View style={styles.loginbox}>
-          <Text style={[styles.title, { fontFamily: "Karla-Medium" }]}>
-            Login
-          </Text>
-          {errorMessage && (
-            <Text style={styles.errorText}>{errorMessage}</Text>
-          )}
-        </View>
-        <View style={styles.fields}>
-          <View style={[styles.verticallySpaced]}>
-            <Input
-              label="Email"
-              labelStyle={{
-                //position: "relative",
-                top: -5,
-                //left: 45,
-                color: "#616061",
-                textAlign: '',
-              }}
-              leftIcon={{
-                type: "font-awesome",
-                name: "envelope",
-                color: "#616061",
-                size: 18,
-              }}
-              onChangeText={setEmail}
-              value={email}
-              autoCapitalize="none"
-              inputContainerStyle={{
-                borderRadius: 30,
-                display: 'flex',
-                textAlign: 'center',
-                alignSelf: 'center',
-                borderTopWidth: 2.5,
-                borderBottomWidth: 2.5,
-                borderLeftWidth: 2.5,
-                borderRightWidth: 2.5,
-                borderColor: "#A7A7A7",
-                paddingLeft: 15,
-                width: '100%',
-                //margin: 10,
-                height: 40,
-              }}
-            />
+        <View style={{ flex: 1, paddingHorizontal: "30%"}}>
+          <View style={styles.loginbox}>
+            <Text style={[styles.title, { fontFamily: "Karla-Medium" }]}>
+              Welcome Back!
+            </Text>
+            {errorMessage && (
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            )}
           </View>
+          <View style={styles.fields}>
+            <View style={[styles.verticallySpaced]}>
+              <Input
+                label="Email"
+                labelStyle={{
+                  position: "absolute",
+                  top: -25,
+                  left: 25,
+                  color: "#616061",
+                }}
+                leftIcon={{
+                  type: "font-awesome",
+                  name: "envelope",
+                  color: "#616061",
+                  size: 18,
+                }}
+                onChangeText={setEmail}
+                value={email}
+                autoCapitalize="none"
+                inputContainerStyle={{
+                  borderRadius: 30,
+                  borderTopWidth: 2.5,
+                  borderBottomWidth: 2.5,
+                  borderLeftWidth: 2.5,
+                  borderRightWidth: 2.5,
+                  borderColor: "#A7A7A7",
+                  width: 270,
+                  paddingLeft: 15,
+                  height: 50,
+                }}
+              />
+            </View>
 
-          <View style={styles.verticallySpaced}>
-            <Input
-              label="Password"
-              labelStyle={{
-                position: "relative",
-                top: -5,
-                //left: 45,
-                color: "#616061",
-
-              }}
-              leftIcon={{
-                type: "font-awesome",
-                name: "lock",
-                color: "#616061",
-                size: 20,
-
-              }}
-              onChangeText={setPassword}
-              value={password}
-              secureTextEntry
-              autoCapitalize="none"
-              inputContainerStyle={{
-                borderRadius: 30,
-                borderTopWidth: 2.5,
-                borderBottomWidth: 2.5,
-                borderLeftWidth: 2.5,
-                borderRightWidth: 2.5,
-                borderColor: "#A7A7A7",
-                width: '100%',
-                paddingLeft: 15,
-                //margin: 20,
-                height: 40,
-                alignSelf: 'center',
-              }}
-            />
+            <View style={styles.verticallySpaced}>
+              <Input
+                label="Password"
+                labelStyle={{
+                  position: "absolute",
+                  top: -25,
+                  left: 25,
+                  color: "#616061",
+                }}
+                leftIcon={{
+                  type: "font-awesome",
+                  name: "lock",
+                  color: "#616061",
+                  size: 20,
+                }}
+                onChangeText={setPassword}
+                value={password}
+                secureTextEntry
+                autoCapitalize="none"
+                inputContainerStyle={{
+                  borderRadius: 30,
+                  borderTopWidth: 2.5,
+                  borderBottomWidth: 2.5,
+                  borderLeftWidth: 2.5,
+                  borderRightWidth: 2.5,
+                  borderColor: "#A7A7A7",
+                  width: 270,
+                  paddingLeft: 15,
+                  height: 50,
+                }}
+              />
+            </View>
           </View>
         </View>
         {/* {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>} */}
@@ -186,15 +178,17 @@ export default function SignInScreen({ navigation }) {
             </TouchableOpacity>
           </LinearGradient>
         </View>
-        <Text style={styles.signInText}>
-          Don't have an account?{"  "}
-          <Text
-            style={styles.signInLink}
-            onPress={() => navigation.navigate("SignUp")}
-          >
-            Sign Up
+        <View style={{paddingTop: 2}}>
+          <Text style={styles.signInText}>
+            Don't have an account?{"  "}
+            <Text
+              style={styles.signInLink}
+              onPress={() => navigation.navigate("SignUp")}
+            >
+              Sign Up
+            </Text>
           </Text>
-        </Text>
+        </View>
       </View>
       <View style={styles.syncbox}>
         <View style={styles.box}>
@@ -227,45 +221,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   container: {
-    flex: 4,
+    flex: 5,
     flexDirection: "column",
     justifyContent: "space-between",
-    padding: 20,
+    flexDirection: "column",
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
+    borderTopRightRadius: 90,
+    alignItems: 'center',
   },
   loginbox: {
-    flexWrap: 'wrap',
-    //alignItems: "center",
-    padding: 20,
-    //borderWidth: 1,
+    flex: 1,
+    // margin: 8,
+    justifyContent: "center",
+    alignItems: 'center',
+    marginBottom: -40,
   },
   fields: {
-    flexWrap: 'wrap',
-    justifyContent: "center",
-    alignItems: "center",
-    //borderWidth: 3,
-
-  },
-  verticallySpaced: {
-    //flexWrap: 'wrap',
-    padding: 2,
-    display: 'flex',
-    // margin: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    //position: "relative",
-    //borderWidth: 1,
-    borderColor: 'red',
-    width: '100%',
-    paddingHorizontal: 30
+    flex: 1,
+    justifyContent: "space-between",
+    //margin: 5,
+    //justifyContent: 'center',
+    // backgroundColor: "rgba(255, 255, 255, 0.8)",
+    //height: '50%',
+    rowGap: 5,
   },
   buttonbox: {
-
     justifyContent: "center",
     alignItems: "center",
-    //borderWidth: 3
+    marginTop: -30,
+    marginBottom: 20,
   },
   syncbox: {
     flex: 1,
@@ -273,12 +258,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: "rgba(255, 255, 255, 0.8)",
   },
-  inputContainerStyle: {
-    borderRadius: 30,
-    borderWidth: 2.5,
-    borderColor: "#A7A7A7",
-    width: width * 0.8, // 80% of screen width
-    height: 40,
+  verticallySpaced: {
+    flex: 1,
   },
   labelStyle: {
     fontSize: 14,
@@ -288,7 +269,7 @@ const styles = StyleSheet.create({
     color: "#616061",
   },
   title: {
-    fontSize: 32,
+    fontSize: 36,
     color: "#616061",
     fontWeight: "bold",
     marginTop: 10,
@@ -310,6 +291,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 21,
     color: "#fffbf5",
+    //padding: 100,
   },
   signInText: {
     fontSize: 16,
