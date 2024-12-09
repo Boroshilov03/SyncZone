@@ -18,6 +18,10 @@ import { useMutation } from "@tanstack/react-query"; // Import useMutation
 import SpinningLogo from "../components/SpinningLogo";
 import { TouchableOpacity } from "react-native-gesture-handler";
 
+import { Dimensions } from "react-native";
+
+const { width } = Dimensions.get("window");
+
 export default function SignInScreen({ navigation }) {
   const { setUser, setAccessToken, setRefreshToken } = useStore();
   const [email, setEmail] = useState("");
@@ -153,8 +157,9 @@ export default function SignInScreen({ navigation }) {
               />
             </View>
           </View>
-          {/* {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>} */}
         </View>
+        {/* {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>} */}
+
         <View style={styles.buttonbox}>
           <LinearGradient
             start={{ x: 0, y: 0 }}
@@ -207,15 +212,11 @@ const styles = StyleSheet.create({
   },
   parent: {
     flex: 1,
-    //height: 1000,
-    backgroundColor: "rgba(52, 52, 52, alpha)",
-
-    // padding: 12,
-    //backgroundColor: '#966dab',
+    backgroundColor: "rgba(52, 52, 52, 0.1)",
   },
   space: {
     flex: 1,
-    padding: 42,
+    padding: 20,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -252,35 +253,33 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   syncbox: {
-    flex: 2,
+    flex: 1,
     justifyContent: "center",
+    alignItems: 'center',
     backgroundColor: "rgba(255, 255, 255, 0.8)",
   },
   verticallySpaced: {
     flex: 1,
   },
-  logo: {
-    width: 250,
-    height: 250,
-    resizeMode: "contain",
+  labelStyle: {
+    fontSize: 14,
+    position: "relative",
+    top: -5,
+    left: 5,
+    color: "#616061",
   },
   title: {
     fontSize: 36,
     color: "#616061",
-    //fontWeight: "bold",
-  },
-  box: {
-    minWidth: 10,
-    padding: 12,
-    alignItems: "center",
+    fontWeight: "bold",
+    marginTop: 10,
+    marginLeft: 20
   },
   gradient: {
     overflow: "hidden",
-    //backgroundColor: 'transparent',
     borderRadius: 30,
     elevation: 5,
   },
-
   button: {
     alignItems: "center",
     justifyContent: "center",
@@ -294,19 +293,20 @@ const styles = StyleSheet.create({
     color: "#fffbf5",
     //padding: 100,
   },
-
   signInText: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: "center",
     color: "#616061",
+    marginTop: 10,
   },
   signInLink: {
     color: "#3F8CC5",
     fontWeight: "bold",
   },
   errorText: {
-    // New style for error messages
-    color: "red", // Change color as needed
+    color: "red",
+    fontSize: 14,
     textAlign: "left",
+    marginBottom: 10,
   },
 });

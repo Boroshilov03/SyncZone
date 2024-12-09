@@ -12,6 +12,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
+  Modal,
+  Pressable
 } from "react-native";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRoute, useNavigation } from "@react-navigation/native";
@@ -28,12 +30,14 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import uuid from "react-native-uuid";
 import { decode } from "base64-arraybuffer";
 import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
+import Profile from "./ProfileScreen";
 
 const ChatDetailScreen = () => {
   const { user } = useStore();
   const route = useRoute();
   const navigation = useNavigation();
-  const { chatId, username, otherPFP, groupTitle } = route.params;
+  const { chatId, username, otherPFP, groupTitle, userId } = route.params;
   const [senderPFP, setSenderPFP] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,11 +52,12 @@ const ChatDetailScreen = () => {
   const [ownedStickersVisible, setOwnedStickersVisible] = useState(false);
   const [attachmentPhoto, setAttachmentPhoto] = useState(null);
   const [base64Photo, setBase64Photo] = useState(null);
+  const [profileVisible, setProfileVisible] = useState(false);
+  const [selectedContact, setSelectedContact] = useState({});
   const [floatingHeaderDate, setFloatingHeaderDate] = useState("Today");
 
   const [isModalVisible, setModalVisible] = useState(false);
   const translateY = useRef(new Animated.Value(0)).current;
-
   useEffect(() => {
     Animated.timing(translateY, {
       toValue: isModalVisible ? -170 : 0, // Adjust the distance to your needs
@@ -348,15 +353,15 @@ const ChatDetailScreen = () => {
               ...message,
               senderEmotion: senderEmotion
                 ? {
-                    name: senderEmotion.emotion,
-                    score: senderEmotion.accuracy,
-                  }
+                  name: senderEmotion.emotion,
+                  score: senderEmotion.accuracy,
+                }
                 : null,
               receiverEmotion: receiverEmotion
                 ? {
-                    name: receiverEmotion.emotion,
-                    score: receiverEmotion.accuracy,
-                  }
+                  name: receiverEmotion.emotion,
+                  score: receiverEmotion.accuracy,
+                }
                 : null,
               attachments: attachmentsWithUrls,
             };
@@ -571,7 +576,9 @@ const ChatDetailScreen = () => {
                 <Image
                   source={{ uri: avatar_url }}
                   style={[styles.profileImage, styles.otherProfileContainer]}
+
                 />
+
               ) : (
                 <View style={styles.cardImg}>
                   <Text style={styles.cardAvatarText}>
@@ -651,6 +658,7 @@ const ChatDetailScreen = () => {
               </Text>
             </View>
           </View>
+
         </View>
       </View>
     );
@@ -714,8 +722,15 @@ const ChatDetailScreen = () => {
 
             <View style={styles.centerContainer}>
               <TouchableOpacity
-                onPress={() =>
+                onPress={() => {
                   console.log("Opening profile", otherPFP, username)
+                  setProfileVisible(true);
+                  setSelectedContact({
+                    contactID: userId,
+                    contactPFP: otherPFP,
+                    contactUsername: username,
+                  });
+                }
                 }
               >
                 {otherPFP ? (
@@ -724,7 +739,9 @@ const ChatDetailScreen = () => {
                     resizeMode="cover"
                     source={{ uri: otherPFP }}
                     style={styles.headerImage}
+
                   />
+
                 ) : (
                   <View style={[styles.headerImg]}>
                     <Text style={styles.cardAvatarText}>
@@ -735,7 +752,30 @@ const ChatDetailScreen = () => {
                   </View>
                 )}
               </TouchableOpacity>
-
+              <Modal
+                animationType="fade"
+                transparent={true}
+                visible={profileVisible}
+                onRequestClose={() => setProfileVisible(false)}
+              >
+                <View style={styles.modalOverlay}>
+                  <View style={styles.modalContent}>
+                    <Pressable onPress={() => setProfileVisible(false)}>
+                      <Ionicons
+                        name="close"
+                        size={35}
+                        color="#616061"
+                        style={styles.close}
+                      />
+                    </Pressable>
+                    <Profile
+                      {...selectedContact}
+                      setProfileVisible={setProfileVisible}
+                      navigation={navigation}
+                    />
+                  </View>
+                </View>
+              </Modal>
               <Text style={styles.title}>
                 {groupTitle ? groupTitle : username}
               </Text>
@@ -926,7 +966,7 @@ const styles = StyleSheet.create({
   profileImage: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 10,
     borderWidth: 2,
     borderColor: "#fff",
   },
@@ -1177,6 +1217,31 @@ const styles = StyleSheet.create({
   removeAttachmentText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+  },
+  modalContent: {
+    width: "85%",
+    height: "70%",
+    padding: 40,
+    paddingTop: 40,
+    backgroundColor: "#fff",
+    borderRadius: 40,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });
 

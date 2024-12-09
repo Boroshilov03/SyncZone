@@ -39,7 +39,7 @@ const ProfileScreen = ({
   });
   const [location, setLocation] = useState(false);
   const [country, setCountry] = useState(null);
-
+  console.log("prodile contactId: ", contactID)
   useEffect(() => {
     async function fetchLatLon() {
       try {
@@ -183,8 +183,8 @@ const ProfileScreen = ({
 
       <View style={styles.profileContainer}>
         <View style={styles.weather}>
-          {location ? ( <Text style={styles.loc}> {location}</Text>) : null}
-          {country ? ( <Text style={styles.country}> {country}</Text>) : null}
+          {location ? (<Text style={styles.loc}> {location}</Text>) : null}
+          {country ? (<Text style={styles.country}> {country}</Text>) : null}
         </View>
         <View style={styles.midbox}>
           <View style={styles.temp}>
