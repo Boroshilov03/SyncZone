@@ -32,6 +32,9 @@ import { Dimensions } from "react-native";
 import SplashScreen from "./SplashScreen";
 
 const { height: screenHeight } = Dimensions.get("window"); // Get screen height
+const { width, height } = Dimensions.get('window');
+const scale = width / 375; // 375 is the base width (for example, iPhone 6)
+const fontSize = 12 * scale; // Adjust base size (10) based on screen width
 
 // Fetch mutual contacts from Supabase
 const fetchMutualContacts = async ({ queryKey }) => {
@@ -214,21 +217,23 @@ const ContactScreen = ({ navigation }) => {
     };
 
     return (
-      <View
-        style={styles.alphabetIndex}
-        onLayout={onLayout}
-        {...panResponder.panHandlers} // Attach pan gesture handlers
-      >
-        {alphabet.map((letter, index) => (
-          <TouchableOpacity
-            key={`${letter}-${index}`}
-            style={styles.alphabetLetter} // Ensure enough padding and clickable space
-            onPress={() => onLetterPress(letter)} // Handle tap
-            activeOpacity={0.7} // Provides visual feedback on press
-          >
-            <Text style={styles.alphabetText}>{letter}</Text>
-          </TouchableOpacity>
-        ))}
+      <View style={styles.wrapperAlphabet}>
+        <View
+          style={styles.alphabetIndex}
+          onLayout={onLayout}
+          {...panResponder.panHandlers} // Attach pan gesture handlers
+        >
+          {alphabet.map((letter, index) => (
+            <TouchableOpacity
+              key={`${letter}-${index}`}
+              style={styles.alphabetLetter} // Ensure enough padding and clickable space
+              onPress={() => onLetterPress(letter)} // Handle tap
+              activeOpacity={0.7} // Provides visual feedback on press
+            >
+              <Text style={styles.alphabetText}>{letter}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
     );
   };
@@ -482,9 +487,9 @@ const ContactScreen = ({ navigation }) => {
               style={styles.chatButton}
               onPress={() => createChat(item.profiles.id)}
             >
-              <Image 
-              source={require("../../assets/icons/chat-contact.png")}
-              style={styles.chatIcon}
+              <Image
+                source={require("../../assets/icons/chat-contact.png")}
+                style={styles.chatIcon}
               />
             </TouchableOpacity>
           </View>
@@ -499,13 +504,11 @@ const ContactScreen = ({ navigation }) => {
       <Text style={styles.letterHeader}>{item.letter}</Text>
       {item.contacts.map((contact, index) => (
         // Adding a unique key for each contact
-        <View key={contact.id}>
-          {renderContact({ item: contact })}
-        </View>
+        <View key={contact.id}>{renderContact({ item: contact })}</View>
       ))}
     </View>
   );
-  
+
   if (isLoading) {
     return (
       <SplashScreen />
@@ -917,11 +920,17 @@ const styles = StyleSheet.create({
   flatList: {
     flex: 1,
   },
-
-  alphabetIndex: {
+  wrapperAlphabet: {
     position: "absolute",
     right: 0,
-    top: 200,
+    paddingTop: 20,
+    marginVertical: "50%",
+    zIndex: 100,
+    paddingHorizontal: 2,
+    justifyContent: 'center'
+  },
+  alphabetIndex: {
+    position: "relative",
     paddingHorizontal: 5,
     zIndex: 100,
   },
@@ -931,12 +940,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   alphabetText: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: "bold",
     color: "#000",
   },
   alphabetItem: {
-    fontSize: 10, // Smaller text size
+    fontSize: 16, // Smaller text size
     color: "#555", // Lighter text color
   },
   letterHeader: {

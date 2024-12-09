@@ -345,7 +345,8 @@ export default function SignupScreen({ navigation }) {
           <ScrollView contentContainerStyle={styles.scrollView}>
             <View style={styles.titlebox} flexDirection={"row"}>
               <View style={styles.open}>
-                <Text style={[styles.title, { fontFamily: "Karla-Regular" }]}>
+                <Text style={[styles.title, { fontFamily: "Karla-Medium" }]}>
+                  
                   Create an <Text style={styles.color}>account</Text>
                 </Text>
               </View>
@@ -505,7 +506,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   title: {
-    fontSize: 34,
+    fontSize: 35,
     color: "#616061",
     //borderWidth: 3,
   },
@@ -536,7 +537,7 @@ const styles = StyleSheet.create({
     right: 20,
   },
   color: {
-    color: "#d87af0",
+    color: "#ADD8E6",
   },
   inputbox: {
     flex: 1,

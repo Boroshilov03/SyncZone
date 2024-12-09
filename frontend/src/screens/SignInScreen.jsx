@@ -78,17 +78,17 @@ export default function SignInScreen({ navigation }) {
     >
       <View style={styles.space}></View>
       <View style={styles.container}>
-        <View style={{borderWidth: 4, flex: 1}}>
+        <View style={{ flex: 1, paddingHorizontal: "30%"}}>
           <View style={styles.loginbox}>
             <Text style={[styles.title, { fontFamily: "Karla-Medium" }]}>
-              Login
+              Welcome Back!
             </Text>
             {errorMessage && (
               <Text style={styles.errorText}>{errorMessage}</Text>
             )}
           </View>
           <View style={styles.fields}>
-            <View style={[styles.verticallySpaced, styles.mt20]}>
+            <View style={[styles.verticallySpaced]}>
               <Input
                 label="Email"
                 labelStyle={{
@@ -115,7 +115,7 @@ export default function SignInScreen({ navigation }) {
                   borderColor: "#A7A7A7",
                   width: 270,
                   paddingLeft: 15,
-                  height: 40,
+                  height: 50,
                 }}
               />
             </View>
@@ -148,7 +148,7 @@ export default function SignInScreen({ navigation }) {
                   borderColor: "#A7A7A7",
                   width: 270,
                   paddingLeft: 15,
-                  height: 40,
+                  height: 50,
                 }}
               />
             </View>
@@ -173,15 +173,17 @@ export default function SignInScreen({ navigation }) {
             </TouchableOpacity>
           </LinearGradient>
         </View>
-        <Text style={styles.signInText}>
-          Don't have an account?{"  "}
-          <Text
-            style={styles.signInLink}
-            onPress={() => navigation.navigate("SignUp")}
-          >
-            Sign Up
+        <View style={{paddingTop: 2}}>
+          <Text style={styles.signInText}>
+            Don't have an account?{"  "}
+            <Text
+              style={styles.signInLink}
+              onPress={() => navigation.navigate("SignUp")}
+            >
+              Sign Up
+            </Text>
           </Text>
-        </Text>
+        </View>
       </View>
       <View style={styles.syncbox}>
         <View style={styles.box}>
@@ -205,8 +207,6 @@ const styles = StyleSheet.create({
   },
   parent: {
     flex: 1,
-    //borderWidth: 4,
-
     //height: 1000,
     backgroundColor: "rgba(52, 52, 52, alpha)",
 
@@ -220,40 +220,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   container: {
-    flex: 4,
+    flex: 5,
     flexDirection: "column",
     justifyContent: "space-between",
     flexDirection: "column",
-    padding: 42,
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     borderTopLeftRadius: 40,
     borderTopRightRadius: 90,
-    borderWidth: 3,
+    alignItems: 'center',
   },
   loginbox: {
-    flex: 5,
-    padding: 10,
+    flex: 1,
     // margin: 8,
-    borderWidth: 3,
+    justifyContent: "center",
+    alignItems: 'center',
+    marginBottom: -40,
   },
   fields: {
-    flex: 10,
+    flex: 1,
     justifyContent: "space-between",
-    padding: 5,
     //margin: 5,
     //justifyContent: 'center',
     // backgroundColor: "rgba(255, 255, 255, 0.8)",
-    borderWidth: 3,
     //height: '50%',
     rowGap: 5,
   },
   buttonbox: {
-    flex: 0,
-    padding: 15,
     justifyContent: "center",
     alignItems: "center",
-    //margin: 5,
-    //borderWidth: 3,
+    marginTop: -30,
+    marginBottom: 20,
   },
   syncbox: {
     flex: 2,
@@ -262,9 +258,6 @@ const styles = StyleSheet.create({
   },
   verticallySpaced: {
     flex: 1,
-    padding: 5,
-    margin: 5,
-    position: "relative",
   },
   logo: {
     width: 250,
@@ -272,7 +265,7 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
   title: {
-    fontSize: 32,
+    fontSize: 36,
     color: "#616061",
     //fontWeight: "bold",
   },
@@ -301,9 +294,7 @@ const styles = StyleSheet.create({
     color: "#fffbf5",
     //padding: 100,
   },
-  mt20: {
-    marginTop: 0,
-  },
+
   signInText: {
     fontSize: 18,
     textAlign: "center",

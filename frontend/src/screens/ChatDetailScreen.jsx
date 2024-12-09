@@ -97,7 +97,6 @@ const ChatDetailScreen = () => {
 
   // Function to send the selected image
   const sendImage = async () => {
-    console.log("sending image");
     if (!base64Photo) {
       Alert.alert("Error", "No photo selected.");
       return;
@@ -124,8 +123,8 @@ const ChatDetailScreen = () => {
       const newMessage = {
         chat_id: chatId,
         sender_id: user.id,
-        content: "",
-        created_at: new Date().toISOString(), // Add a proper timestamp
+        content: "", // Empty content for attachment-only messages
+        created_at: new Date().toISOString(),
       };
 
       const { data: messageData, error: messageError } = await supabase
@@ -137,20 +136,27 @@ const ChatDetailScreen = () => {
 
       const messageId = messageData[0].id;
 
+      // Link the attachment to the message
       await supabase
         .from("attachments")
         .insert([{ message_id: messageId, image_url: imageUrl }]);
 
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          ...newMessage,
-          id: messageId,
-          attachments: [{ image_url: imageUrl }],
-        },
-      ]);
+      // Broadcast the new message with the attachment
+      const fullMessage = {
+        ...newMessage,
+        id: messageId,
+        attachments: [{ image_url: imageUrl }],
+      };
+
+      supabase.channel(`chat-room-${chatId}`).send({
+        type: "broadcast",
+        event: "new-message",
+        payload: fullMessage,
+      });
+
+      // Update local state
+      setMessages((prevMessages) => [...prevMessages, fullMessage]);
       setAttachmentPhoto(null);
-      console.log("Image sent successfully.");
     } catch (err) {
       console.error("Error sending image:", err);
       Alert.alert("Error", "Failed to send image. Please try again.");
@@ -363,7 +369,6 @@ const ChatDetailScreen = () => {
 
         setMessages(sortedMessages);
         setLoading(false);
-        
       } catch (err) {
         console.error("Error fetching messages:", err);
         setError("Failed to load messages");
@@ -419,7 +424,7 @@ const ChatDetailScreen = () => {
             receiverEmotion: null,
           };
 
-          return [...prevMessages ,newMessage];
+          return [...prevMessages, newMessage];
         });
 
         supabase.channel(`chat-room-${chatId}`).send({
@@ -956,6 +961,7 @@ const styles = StyleSheet.create({
     borderRadius: 12, // Make the overall bubble more rounded
     bottom: 0,
     left: 10,
+    bottom: 7,
     padding: 5, // Increased padding for a more spacious feel
     borderWidth: 1,
     borderTopLeftRadius: 12,
@@ -963,16 +969,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 12,
     borderBottomRightRadius: 12,
     borderColor: "rgba(209, 235, 239, 0.5)", // Use a semi-transparent border color
-    backgroundColor: "rgba(240, 249, 249, 0.7)", // Semi-transparent background color for glassy effect
-    backdropFilter: "blur(10px)", // Add blur effect (not supported in all RN versions)
-    shadowColor: "#000", // Shadow color
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2, // Light shadow effect
-    shadowRadius: 2, // Soft shadow
-    elevation: 3, // For Android shadow effect
+    backgroundColor: "rgba(240, 249, 249, 1)", // Semi-transparent background color for glassy effect
   },
 
   messageWrapper: {

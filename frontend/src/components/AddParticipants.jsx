@@ -41,7 +41,7 @@ const AddParticipants = ({
         try {
           setLoading(true);
           setError(""); // Reset error message
-  
+
           const { data, error } = await supabase
             .from("contacts")
             .select(
@@ -49,13 +49,13 @@ const AddParticipants = ({
             )
             .or(`user_id.eq.${user.id},contact_id.eq.${user.id}`)
             .neq("contact_id", user.id); // Exclude the logged-in user's ID
-  
+
           if (error) {
             console.error("Error fetching contacts:", error);
             setError("Failed to fetch contacts. Please try again.");
           } else {
             // Extract profiles from the contacts data
-            const contactProfiles = data.map(contact => contact.profiles);
+            const contactProfiles = data.map((contact) => contact.profiles);
             setContacts(contactProfiles || []);
             setFilteredContacts(contactProfiles || []); // Set initial filtered contacts
           }
@@ -67,7 +67,7 @@ const AddParticipants = ({
         }
       }
     };
-  
+
     fetchContacts();
   }, [user]);
 
@@ -153,19 +153,19 @@ const AddParticipants = ({
                   </View>
                 )}
                 <View style={styles.contactText}>
-                <Text style={styles.profileName}>
-                {item.first_name} {item.last_name}
+                  <Text style={styles.profileName}>
+                    {item.first_name} {item.last_name}
                   </Text>
                   <Text style={styles.contactUsername}>@{item.username}</Text>
                 </View>
-            
+
                 {/* Checkbox */}
                 <TouchableOpacity
                   style={styles.checkboxContainer}
                   onPress={() => toggleContactSelection(item.id)} // Handles the toggle logic
                 >
                   <View
-                    style={[ 
+                    style={[
                       styles.checkboxWrapper,
                       {
                         backgroundColor: selectedContacts.includes(item.id)
@@ -187,12 +187,14 @@ const AddParticipants = ({
               </Text>
             )}
           />
-          <TouchableOpacity
-            style={styles.closeButtonBottom}
-            onPress={handleClose}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
+          <View style={styles.closeButtonWrapper}>
+            <TouchableOpacity
+              style={styles.closeButtonBottom}
+              onPress={handleClose}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
     </View>
@@ -202,11 +204,11 @@ const AddParticipants = ({
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: "5%",
     alignSelf: "center",
     width: "100%",
     maxWidth: 400,
     alignItems: "center", // Center-align content
+    paddingTop: 10,
   },
   title: {
     fontSize: 24,
@@ -288,14 +290,18 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: "#999",
   },
+  closeButtonWrapper:{
+    display: 'flex',
+    marginBottom: 30,
+  },
   closeButtonBottom: {
-    position: "absolute",
+    position: "relative",
     backgroundColor: "#FFADAD",
-    padding: 10,
-    borderRadius: 25,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 10,
     width: "30%",
     alignItems: "center",
-    marginTop: "128%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
