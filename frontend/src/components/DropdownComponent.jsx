@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import { API_KEY, API_URL } from '@env';
@@ -10,53 +10,46 @@ const DropdownComponent = ({ setCity, location, storedLocation, storedCountry })
     const [countryData, setCountryData] = useState([]);
     const [cityData, setCityData] = useState([]);
     const [country, setCountry] = useState(storedCountry || null);
-    const [state, setState] = useState(null);
+    const [city, setCityState] = useState(storedLocation || location || null);
     const [isFocus, setIsFocus] = useState(false);
 
     useEffect(() => {
-        var config = {
-            method: 'get',
-            url: API_URL,
-            headers: {
-                'X-CSCAPI-KEY': API_KEY
+        const fetchCountries = async () => {
+            try {
+                const response = await axios.get(API_URL, {
+                    headers: { 'X-CSCAPI-KEY': API_KEY },
+                });
+                const countryArray = response.data.map(item => ({
+                    value: item.iso2,
+                    label: item.name,
+                }));
+                setCountryData(countryArray);
+                if (storedCountry) {
+                    handleCity(storedCountry);
+                }
+            } catch (error) {
+                console.error("Error fetching countries:", error);
             }
         };
-        axios(config)
-            .then(response => {
-                var count = Object.keys(response.data).length;
-                let countryArray = [];
-                for (var i = 0; i < count; i++) {
-                    countryArray.push({
-                        value: response.data[i].iso2,
-                        label: response.data[i].name,
-                    });
-                }
-                setCountryData(countryArray);
-            })
-        if (storedCountry) {
-            handleCity(storedCountry);
-        }
-    }, []);
-
+        fetchCountries();
+    }, [storedCountry]);
 
     const handleCity = async (countryCode) => {
         try {
             const response = await axios.get(`${API_URL}/${countryCode}/cities`, {
-                headers: { 'X-CSCAPI-KEY': API_KEY }
+                headers: { 'X-CSCAPI-KEY': API_KEY },
             });
 
-            console.log("City response:", response.data);
             const uniqueCities = Array.from(
                 new Map(response.data.map(city => [city.name, city])).values()
             );
 
             const cityArray = uniqueCities.map(city => ({
-                value: city.iso2,
+                value: city.name, // Use city name as value
                 label: city.name,
             }));
-
-            console.log("Mapped city data:", cityArray);
             setCityData(cityArray);
+            setCityState(null); // Reset city state when country changes
         } catch (error) {
             console.error("Error fetching cities:", error);
         }
@@ -107,7 +100,7 @@ const DropdownComponent = ({ setCity, location, storedLocation, storedCountry })
                 valueField="value"
                 placeholder={!isFocus ? 'Select city' : '...'}
                 searchPlaceholder="Search..."
-                value={storedLocation || location}
+                value={city}
                 onFocus={() => setIsFocus(true)}
                 onBlur={() => setIsFocus(false)}
                 renderLeftIcon={() =>
@@ -119,8 +112,8 @@ const DropdownComponent = ({ setCity, location, storedLocation, storedCountry })
                     />
                 }
                 onChange={item => {
-                    console.log("Selected item:", item);
                     setCity(item.label);
+                    setCityState(item.label); // Update local state
                     setIsFocus(false);
                 }}
             />
@@ -132,13 +125,10 @@ export default DropdownComponent;
 
 const styles = StyleSheet.create({
     container: {
-        //backgroundColor: 'white',
         padding: 16,
         justifyContent: 'center',
-        //borderWidth: 3,
         flex: 1,
         alignItems: 'center'
-
     },
     dropdown: {
         height: 40,
@@ -147,35 +137,20 @@ const styles = StyleSheet.create({
         borderRadius: 60,
         paddingHorizontal: 10,
         margin: 18,
-        flexShrink: 0,  // Prevent it from shrinking
-        flexGrow: 0,
         width: 310
-
     },
     icon: {
         marginRight: 8,
     },
-    label: {
-        position: 'absolute',
-        backgroundColor: 'white',
-        left: 22,
-        top: 8,
-        zIndex: 999,
-        paddingHorizontal: 8,
-        fontSize: 14,
-    },
     placeholderStyle: {
         fontSize: 14,
-
         color: "#70747a",
         marginVertical: 6,
         paddingHorizontal: 16,
         fontWeight: 'bold'
-
     },
     selectedTextStyle: {
         fontSize: 14,
-
         color: "#70747a",
         marginVertical: 6,
         paddingHorizontal: 16,

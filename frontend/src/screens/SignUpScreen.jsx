@@ -28,12 +28,10 @@ import { decode } from "base64-arraybuffer";
 import { signupSchema } from "../utils/validation";
 import { LinearGradient } from "expo-linear-gradient";
 import GradientText from "react-native-gradient-texts";
-import Icon from "react-native-vector-icons/FontAwesome";
 import Acon from "react-native-vector-icons/AntDesign";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import * as Font from "expo-font";
-import { WEATHER_API_KEY } from "@env";
 
 export default function SignupScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -46,7 +44,6 @@ export default function SignupScreen({ navigation }) {
     location: "",
   });
 
-  const [timezone, setTimezone] = useState(null);
   const [lat, setLat] = useState(null);
   const [lon, setLon] = useState(null);
   const [profilePhoto, setProfilePhoto] = useState(null);
@@ -62,63 +59,6 @@ export default function SignupScreen({ navigation }) {
   const handleToggleDropdowns = () => {
     setShowDropdowns((prev) => !prev); // Toggle visibility
   };
-  const fetchWeatherAndTime = useCallback(async (lat, lon) => {
-    try {
-      const weatherResponse = await axios.get(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${WEATHER_API_KEY}`
-      );
-
-      let weatherData = {};
-      if (weatherResponse.data) {
-        const { main, weather: weatherDetails } = weatherResponse.data;
-        const description = weatherDetails[0]?.description;
-
-        weatherData = {
-          temp: main.temp,
-          description: description
-            ? description.charAt(0).toUpperCase() + description.slice(1)
-            : "",
-        };
-      }
-
-      const timeResponse = await axios.get(
-        `http://api.geonames.org/timezoneJSON?lat=${lat}&lng=${lon}&username=synczone`
-      );
-
-      let localTime = null;
-      if (timeResponse.data) {
-        const rawTime = timeResponse.data.time;
-        const dateObj = new Date(rawTime);
-        localTime = dateObj.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        });
-      }
-
-      setWeather({ ...weatherData, time: localTime });
-      console.log("Weather and Time:", { ...weatherData, time: localTime });
-    } catch (error) {
-      console.error("Error fetching weather or time:", error);
-    }
-  }, []);
-
-  const fetchTimeZone = useCallback(async (lat, lon) => {
-    try {
-      const response = await axios.get(
-        `http://api.geonames.org/timezoneJSON?lat=${lat}&lng=${lon}&username=synczone`
-      );
-
-      if (response.data && response.data.timezoneId) {
-        const timezone = response.data.timezoneId;
-        setTimezone(timezone);
-        console.log("Timezone:", timezone);
-      } else {
-      }
-    } catch (error) {
-      console.error("Error fetching timezone:", error);
-    }
-  }, []);
 
   const fetchCoordinates = useCallback(async (city) => {
     try {
@@ -139,12 +79,6 @@ export default function SignupScreen({ navigation }) {
     }
   }, []);
 
-  useEffect(() => {
-    if (lat && lon) {
-      fetchWeatherAndTime(lat, lon);
-    }
-  }, [lat, lon, fetchWeatherAndTime]);
-
   const handleCitySelection = (cityCode) => {
     console.log("Selected city code:", cityCode);
     setFormData((prevData) => ({
@@ -154,12 +88,6 @@ export default function SignupScreen({ navigation }) {
 
     fetchCoordinates(cityCode);
   };
-
-  useEffect(() => {
-    if (lat && lon) {
-      fetchTimeZone(lat, lon);
-    }
-  }, [lat, lon, fetchTimeZone]);
 
   useEffect(() => {
     const loadFonts = async () => {
