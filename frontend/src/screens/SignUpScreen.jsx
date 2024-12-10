@@ -31,8 +31,7 @@ import GradientText from "react-native-gradient-texts";
 import Acon from "react-native-vector-icons/AntDesign";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
-import * as Font from 'expo-font';
-
+import * as Font from "expo-font";
 
 export default function SignupScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -44,8 +43,6 @@ export default function SignupScreen({ navigation }) {
     password2: "",
     location: "",
   });
-
-
 
   const [lat, setLat] = useState(null);
   const [lon, setLon] = useState(null);
@@ -62,7 +59,6 @@ export default function SignupScreen({ navigation }) {
   const handleToggleDropdowns = () => {
     setShowDropdowns((prev) => !prev); // Toggle visibility
   };
-
 
   const fetchCoordinates = useCallback(async (city) => {
     try {
@@ -94,7 +90,6 @@ export default function SignupScreen({ navigation }) {
   };
 
   useEffect(() => {
-    console.log("Location is now:", formData.location);
     const loadFonts = async () => {
       await Font.loadAsync({
         "Inter_18pt-Regular": require("./fonts/Inter_18pt-Regular.ttf"),
@@ -110,7 +105,6 @@ export default function SignupScreen({ navigation }) {
 
     loadFonts();
   }, []);
-
 
   const pickImage = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -170,7 +164,7 @@ export default function SignupScreen({ navigation }) {
             first_name: formData.firstname,
             last_name: formData.lastname,
             location: formData.location,
-            latitude: lat,  // Include lat
+            latitude: lat, // Include lat
             longitude: lon, // Include lon
           },
         },
@@ -224,7 +218,7 @@ export default function SignupScreen({ navigation }) {
         Alert.alert(
           "Error",
           "Failed to update avatar URL in profiles table: " +
-          updateProfileError.message
+            updateProfileError.message
         );
         setLoading(false);
         return;
@@ -268,7 +262,6 @@ export default function SignupScreen({ navigation }) {
             <View style={styles.titlebox} flexDirection={"row"}>
               <View style={styles.open}>
                 <Text style={[styles.title, { fontFamily: "Karla-Medium" }]}>
-
                   Create an <Text style={styles.color}>account</Text>
                 </Text>
               </View>
@@ -279,15 +272,26 @@ export default function SignupScreen({ navigation }) {
                 {profilePhoto ? (
                   <Image source={{ uri: profilePhoto }} style={styles.image} />
                 ) : (
-                  <Pressable style={styles.imagePlaceholder} onPress={pickImage}>
+                  <Pressable
+                    style={styles.imagePlaceholder}
+                    onPress={pickImage}
+                  >
                     {/* <Text style={styles.imagePlaceholderText}>
                       Upload Photo
                     </Text> */}
-                    <Acon name='plus' size={35} color="#858383" style={styles.icon} />
+                    <Acon
+                      name="plus"
+                      size={35}
+                      color="#858383"
+                      style={styles.icon}
+                    />
                   </Pressable>
                 )}
                 <View style={styles.cancel}>
-                  <Ionicons name="close" size={35} color="#616061"
+                  <Ionicons
+                    name="close"
+                    size={35}
+                    color="#616061"
                     onPress={() => {
                       setProfilePhoto(null);
                       setBase64Photo(null);
@@ -301,10 +305,9 @@ export default function SignupScreen({ navigation }) {
                 { key: "username", label: "Username", icon: "user" },
                 { key: "firstname", label: "First Name" },
                 { key: "lastname", label: "Last Name" },
-                { key: "email", label: "Email", },
+                { key: "email", label: "Email" },
                 { key: "password1", label: "Password" },
                 { key: "password2", label: "Confirm Password" },
-
               ].map(({ key, label }) => (
                 <Input
                   key={key}
@@ -313,28 +316,24 @@ export default function SignupScreen({ navigation }) {
                   error={errors[key]}
                   setValue={(value) => handleInputChange(key, value)}
                   secureTextEntry={key === "password1" || key === "password2"}
-                  // backgroundColor='#fffbf5'
-                  backgroundColor="red"
-
-
-
                   leftIcon={{
                     name:
-                      label === "Password" || label === "Confirm Password" ? "lock" :
-                        (label === "Email" ? "envelope" :
-                          (label === "Location" ? "globe" :
-                            (label === "Confirm" ? "fighter-jet" : "user"))),
+                      label === "Password" || label === "Confirm Password"
+                        ? "lock"
+                        : label === "Email"
+                        ? "envelope"
+                        : label === "Location"
+                        ? "globe"
+                        : label === "Confirm"
+                        ? "fighter-jet"
+                        : "user",
                     color: "#616061",
                     size: 20,
+                    style: { paddingLeft: 15 },
                   }}
-
                 />
-
               ))}
             </View>
-            {/* <Text>Latitude: {lat ? lat : "Not available"}</Text>
-            <Text>Longitude: {lon ? lon : "Not available"}</Text> */}
-
             <View style={styles.switchContainer}>
               <Text style={styles.switchLabel}>
                 {showDropdowns ? "Enable Location" : "Disable Location"}
@@ -349,10 +348,12 @@ export default function SignupScreen({ navigation }) {
 
             {showDropdowns && (
               <View style={styles.dropdownContainer}>
-                <Dropdown location={formData.location} setCity={handleCitySelection} />
+                <Dropdown
+                  location={formData.location}
+                  setCity={handleCitySelection}
+                />
               </View>
             )}
-
 
             <View style={styles.buttonbox}>
               <LinearGradient
@@ -391,14 +392,14 @@ export default function SignupScreen({ navigation }) {
                 isGradientStroke
                 gradientColors={["#FFDDF7", "#C5ECFF", "#FFDDF7"]}
                 fontFamily={"Karla-Bold"}
-              //gradientColors={["#D49AC0", "#6FD2E2"]}
-              // fontFamily={"Gill Sans"}
+                //gradientColors={["#D49AC0", "#6FD2E2"]}
+                // fontFamily={"Gill Sans"}
               />
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-    </SafeAreaView >
+    </SafeAreaView>
   );
 }
 
@@ -452,7 +453,7 @@ const styles = StyleSheet.create({
   cancel: {
     flex: 0,
     padding: 40,
-    position: 'absolute',
+    position: "absolute",
     right: 20,
   },
   color: {
@@ -466,7 +467,6 @@ const styles = StyleSheet.create({
   buttonbox: {
     flex: 0,
     padding: 15,
-    paddingTop: 20,
     justifyContent: "center",
     alignItems: "center",
 
@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
   imagePlaceholderText: {
     color: "#757575",
     zIndex: 2,
-    position: 'absolute'
+    position: "absolute",
   },
   box: {
     //minWidth: 10,,
@@ -521,29 +521,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   icon: {
-    position: 'absolute',
+    position: "absolute",
     zIndex: 1,
   },
   tz_container: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     padding: 16,
   },
   tz: {
     height: 40,
-    borderColor: 'gray',
+    borderColor: "gray",
     borderWidth: 2.5,
     borderRadius: 60,
     paddingHorizontal: 8,
     margin: 18,
     //justifyContent: 'center',
-    flexDirection: 'row',
-    alignItems: 'center'
+    flexDirection: "row",
+    alignItems: "center",
   },
   switchContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 20
+    marginVertical: 20,
   },
   switchLabel: { fontSize: 17, fontFamily: "Karla-Bold", color: "#616061" },
 });

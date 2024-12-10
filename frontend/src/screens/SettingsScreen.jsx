@@ -127,7 +127,7 @@ export default function Example({ navigation }) {
               /* handle onPress */
             }}
           >
-            <FeatherIcon color="#000" name="more-vertical" size={24} />
+            
           </TouchableOpacity>
         </View>
       </View>
@@ -187,29 +187,6 @@ export default function Example({ navigation }) {
             <Text>No user logged in</Text>
           </View>
         )}
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
-
-          <View style={styles.sectionBody}>
-            <View style={styles.rowWrapper}>
-              <TouchableOpacity
-                onPress={() => {
-                  // handle onPress
-                }}
-                style={styles.row}
-              >
-                <Text style={styles.rowLabel}>Location</Text>
-
-                <View style={styles.rowSpacer} />
-
-                <Text style={styles.rowValue}>Los Angeles, CA</Text>
-
-                <FeatherIcon color="#bcbcbc" name="chevron-right" size={19} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
 
         <View style={styles.section}>
           <View style={styles.sectionBody}>

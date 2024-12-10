@@ -37,6 +37,7 @@ const AddEvent = ({ onClose }) => {
   const { user } = useStore();
   const [titleValue, settitleValue] = useState(""); // Title
   const [date, setDate] = useState(new Date()); // Date
+  const [seconddate, setSecondDate] = useState(new Date()); // Date
   const [showDatePicker, setShowDatePicker] = useState(false); // Toggle date picker
   const [startTime, setStartTime] = useState(new Date()); // Start time state
   const [endTime, setEndTime] = useState(new Date()); // End time state
@@ -50,6 +51,26 @@ const AddEvent = ({ onClose }) => {
   const [selectedDate, setSelectedDate] = useState(""); // The date state
   const [titleError, setTitleError] = useState(""); // Title validation error
   const [descriptionError, setDescriptionError] = useState(""); // Title validation error
+
+  useEffect(() => {
+    const subtractOneDay = () => {
+      const newDate = new Date(date); // Create a copy of the current date
+      newDate.setDate(date.getDate() - 1); // Subtract one day
+      setDate(newDate); // Update the state with the new date
+    };
+
+    subtractOneDay();
+  }, []);
+
+  useEffect(() => {
+    const AddOneDay = () => {
+      const newDate = new Date(date); // Create a copy of the current date
+      newDate.setDate(date.getDate()); // Subtract one day
+      setSecondDate(newDate)
+    };
+
+    AddOneDay();
+  }, []);
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -215,12 +236,20 @@ const AddEvent = ({ onClose }) => {
   };
 
   const onDateChange = (event, selectedDate) => {
-    // Close the picker when a date is selected or if dismissed
     if (event.type === "set" && selectedDate) {
-      setDate(selectedDate); // Update the date
+      // Subtract 1 day from the selected date
+      const updatedDate = new Date(selectedDate);
+      updatedDate.setDate(updatedDate.getDate() - 1);
+  
+      // Optionally, if you want to store the selectedDate (without the subtraction) for secondDate:
+      setSecondDate(new Date(selectedDate)); // Store the original selected date
+      setDate(updatedDate); // Update the date with the subtracted day
     }
-    setShowDatePicker(false); // Close the picker in all cases
+    
+    // Close the date picker in all cases
+    setShowDatePicker(false);
   };
+  
 
   const predefinedPFPs = [require("../../assets/icons/add_person.png")];
 
@@ -252,7 +281,7 @@ const AddEvent = ({ onClose }) => {
           style={styles.dateIcon}
         />
         <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-          <Text>{date.toLocaleDateString()}</Text>
+          <Text>{seconddate.toLocaleDateString()}</Text>
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
