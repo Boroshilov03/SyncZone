@@ -13,7 +13,7 @@ import {
   Platform,
   Animated,
   Modal,
-  Pressable
+  Pressable,
 } from "react-native";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRoute, useNavigation } from "@react-navigation/native";
@@ -61,7 +61,7 @@ const ChatDetailScreen = () => {
   useEffect(() => {
     Animated.timing(translateY, {
       toValue: isModalVisible ? -170 : 0, // Adjust the distance to your needs
-      duration: 150,
+      duration: 0,
       useNativeDriver: true,
     }).start();
   }, [isModalVisible]);
@@ -205,6 +205,14 @@ const ChatDetailScreen = () => {
 
     fetchParticipants();
   }, [chatId]);
+
+  useEffect(() => {
+    // Scroll to the latest message when the messages change
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages]); // This effect runs every time messages change
+
 
   useEffect(() => {
     const channel = supabase.channel(`chat-room-${chatId}`);
@@ -353,15 +361,15 @@ const ChatDetailScreen = () => {
               ...message,
               senderEmotion: senderEmotion
                 ? {
-                  name: senderEmotion.emotion,
-                  score: senderEmotion.accuracy,
-                }
+                    name: senderEmotion.emotion,
+                    score: senderEmotion.accuracy,
+                  }
                 : null,
               receiverEmotion: receiverEmotion
                 ? {
-                  name: receiverEmotion.emotion,
-                  score: receiverEmotion.accuracy,
-                }
+                    name: receiverEmotion.emotion,
+                    score: receiverEmotion.accuracy,
+                  }
                 : null,
               attachments: attachmentsWithUrls,
             };
@@ -576,9 +584,7 @@ const ChatDetailScreen = () => {
                 <Image
                   source={{ uri: avatar_url }}
                   style={[styles.profileImage, styles.otherProfileContainer]}
-
                 />
-
               ) : (
                 <View style={styles.cardImg}>
                   <Text style={styles.cardAvatarText}>
@@ -656,9 +662,35 @@ const ChatDetailScreen = () => {
                   minute: "2-digit",
                 })}
               </Text>
+
+              {/* Schedule button */}
+              {!isMyMessage &&
+                item.senderEmotion &&
+                negativeEmotions.includes(item.senderEmotion.name) && (
+                  <TouchableOpacity
+                    style={styles.scheduleButton}
+                    onPress={() => {
+                      navigation.navigate("MainTabs", {
+                        screen: "Calendar",
+                        params: {
+                          showAddEvent: true,
+                          defaultTitle: `Follow-up: ${item.content.substring(
+                            0,
+                            30
+                          )}...`,
+                          relatedMessageId: item.id,
+                        },
+                      });
+                    }}
+                  >
+                    <Image
+                      source={require("../../assets/icons/calendar-icon.png")}
+                      style={styles.chatIcon}
+                    />
+                  </TouchableOpacity>
+                )}
             </View>
           </View>
-
         </View>
       </View>
     );
@@ -723,15 +755,14 @@ const ChatDetailScreen = () => {
             <View style={styles.centerContainer}>
               <TouchableOpacity
                 onPress={() => {
-                  console.log("Opening profile", otherPFP, username)
+                  console.log("Opening profile", otherPFP, username);
                   setProfileVisible(true);
                   setSelectedContact({
                     contactID: userId,
                     contactPFP: otherPFP,
                     contactUsername: username,
                   });
-                }
-                }
+                }}
               >
                 {otherPFP ? (
                   <Image
@@ -739,9 +770,7 @@ const ChatDetailScreen = () => {
                     resizeMode="cover"
                     source={{ uri: otherPFP }}
                     style={styles.headerImage}
-
                   />
-
                 ) : (
                   <View style={[styles.headerImg]}>
                     <Text style={styles.cardAvatarText}>
@@ -797,99 +826,99 @@ const ChatDetailScreen = () => {
             />
           )}
           {error && <Text style={styles.errorText}>{error}</Text>}
+          <Animated.View style={{ flex: 1, transform: [{ translateY }] }}>
           <View style={{ flex: 1, marginBottom: 70 }}>
-            {!loading && !error && (
-              <FlatList
-                ref={flatListRef}
-                data={messages}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderMessage}
-                contentContainerStyle={styles.messageList}
-              />
-            )}
-            {typingUser && (
-              <View style={styles.mainTyping}>
-                <View style={styles.typingIndicatorBubble}>
-                  <Text style={styles.typingIndicator}>
-                    {typingUser} is typing...
-                  </Text>
-                </View>
-              </View>
-            )}
-          </View>
-
-          <Animated.View
-            style={[styles.inputContainer, { transform: [{ translateY }] }]}
-          >
-            {attachmentPhoto && (
-              <View style={styles.attachmentPreviewContainer}>
-                <Image
-                  source={{ uri: attachmentPhoto }}
-                  style={styles.attachmentPreviewImage}
+              {!loading && !error && (
+                <FlatList
+                  ref={flatListRef}
+                  data={messages}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={renderMessage}
+                  contentContainerStyle={styles.messageList}
                 />
-                <TouchableOpacity
-                  style={styles.removeAttachmentButton}
-                  onPress={() => setAttachmentPhoto(null)}
-                >
-                  <Text style={styles.removeAttachmentText}>X</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-            <TextInput
-              style={styles.input}
-              placeholder="Type a message"
-              value={newMessage}
-              onChangeText={(text) => {
-                setNewMessage(text);
-                handleTyping();
-              }}
-            />
-            <TouchableOpacity onPress={pickImage}>
-              <Icon
-                name="photo"
-                size={23}
-                style={{
-                  marginHorizontal: 3,
-                  transform: [{ rotate: "0deg" }],
-                  marginRight: 5,
-                }}
-                color={"#616061"}
-              />
-            </TouchableOpacity>
-            {/* Secondary Button */}
-            <TouchableOpacity
-              style={styles.secondaryButtonContainer}
-              onPress={toggleOwnedStickersModal}
-            >
-              <Image
-                source={require("../../assets/icons/gift-icon.png")}
-                style={styles.secondaryButtonIcon} // Add a style to control size and position
-                color={"#616061"}
-              />
-              <Text style={styles.secondaryButtonText}></Text>
+              )}
+              {typingUser && (
+                <View style={styles.mainTyping}>
+                  <View style={styles.typingIndicatorBubble}>
+                    <Text style={styles.typingIndicator}>
+                      {typingUser} is typing...
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
 
-              {/* Owned Stickers Modal */}
-              <OwnedStickersModal
-                visible={isModalVisible}
-                onClose={() => setModalVisible(false)}
-                chatID={chatId}
-                setMessages={setMessages}
+            <View style={[styles.inputContainer]}>
+              {attachmentPhoto && (
+                <View style={styles.attachmentPreviewContainer}>
+                  <Image
+                    source={{ uri: attachmentPhoto }}
+                    style={styles.attachmentPreviewImage}
+                  />
+                  <TouchableOpacity
+                    style={styles.removeAttachmentButton}
+                    onPress={() => setAttachmentPhoto(null)}
+                  >
+                    <Text style={styles.removeAttachmentText}>X</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              <TextInput
+                style={styles.input}
+                placeholder="Type a message"
+                value={newMessage}
+                onChangeText={(text) => {
+                  setNewMessage(text);
+                  handleTyping();
+                }}
               />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleSendMessage}>
-              <Image
-                style={[
-                  styles.sendButton,
-                  {
-                    tintColor: "#A0D7E5",
-                    width: 20,
-                    height: 20,
-                    marginRight: 10,
-                  },
-                ]}
-                source={require("../../assets/icons/send_icon.png")}
-              />
-            </TouchableOpacity>
+              <TouchableOpacity onPress={pickImage}>
+                <Icon
+                  name="photo"
+                  size={23}
+                  style={{
+                    marginHorizontal: 3,
+                    transform: [{ rotate: "0deg" }],
+                    marginRight: 5,
+                  }}
+                  color={"#616061"}
+                />
+              </TouchableOpacity>
+              {/* Secondary Button */}
+              <TouchableOpacity
+                style={styles.secondaryButtonContainer}
+                onPress={toggleOwnedStickersModal}
+              >
+                <Image
+                  source={require("../../assets/icons/gift-icon.png")}
+                  style={styles.secondaryButtonIcon} // Add a style to control size and position
+                  color={"#616061"}
+                />
+                <Text style={styles.secondaryButtonText}></Text>
+
+                {/* Owned Stickers Modal */}
+                <OwnedStickersModal
+                  visible={isModalVisible}
+                  onClose={() => setModalVisible(false)}
+                  chatID={chatId}
+                  setMessages={setMessages}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleSendMessage}>
+                <Image
+                  style={[
+                    styles.sendButton,
+                    {
+                      tintColor: "#A0D7E5",
+                      width: 20,
+                      height: 20,
+                      marginRight: 10,
+                    },
+                  ]}
+                  source={require("../../assets/icons/send_icon.png")}
+                />
+              </TouchableOpacity>
+            </View>
           </Animated.View>
         </SafeAreaView>
       </View>
@@ -941,6 +970,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#D1EBEF",
     borderBottomRightRadius: 10,
     borderBottomLeftRadius: 10,
+    zIndex: 20,
   },
   backButton: {
     flex: 1,
@@ -1151,17 +1181,15 @@ const styles = StyleSheet.create({
   },
   scheduleButton: {
     position: "absolute",
-    right: -65,
-    bottom: 5,
-    backgroundColor: "#A0D7E5",
+    right: -50,
+    backgroundColor: "rgba(252, 252, 252, 0.9)",
     paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
-    elevation: 2,
+    paddingHorizontal: 12, // Increase padding for more space
+    borderRadius: 10,
+  },
+  chatIcon: {
+    width: 20,
+    height: 20,
   },
   scheduleButtonText: {
     color: "#FFF",

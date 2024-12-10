@@ -215,9 +215,12 @@ const AddEvent = ({ onClose }) => {
   };
 
   const onDateChange = (event, selectedDate) => {
-    // Close the picker when a date is selected or if dismissed
     if (event.type === "set" && selectedDate) {
-      setDate(selectedDate); // Update the date
+      // Subtract 1 day from the selected date
+      const updatedDate = new Date(selectedDate);
+      updatedDate.setDate(updatedDate.getDate() - 1);
+
+      setDate(updatedDate); // Update the date
     }
     setShowDatePicker(false); // Close the picker in all cases
   };

@@ -217,6 +217,7 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
             <Text>Loading...</Text>
           ) : (
             <ScrollView contentContainerStyle={styles.stickerGrid}>
+              
               {ownedStickers.length > 0 ? (
                 ownedStickers.map((sticker) => (
                   <TouchableOpacity
@@ -235,9 +236,11 @@ const OwnedStickersModal = ({ visible, onClose, chatID, setMessages }) => {
                   </TouchableOpacity>
                 ))
               ) : (
-                <Text style={styles.noStickersText}>
-                  You have no owned stickers.
-                </Text>
+                <View style={styles.stickerText}>
+                  <Text style={styles.noStickersText}>
+                    You have no owned stickers.
+                  </Text>
+                </View>
               )}
             </ScrollView>
           )}
@@ -294,6 +297,9 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 0,
     marginBottom: -5,
+  },
+  stickerText:{
+    height: 80,
   },
   noStickersText: {
     textAlign: "center",
