@@ -112,7 +112,7 @@ const Header = ({
         ) : (
           <View style={[styles.cardImg]}>
             <Text style={styles.cardAvatarText}>
-              {user.user_metadata.username[0].toUpperCase()}
+              {user.user_metadata.first_name[0].toUpperCase()}
             </Text>
           </View>
         )}

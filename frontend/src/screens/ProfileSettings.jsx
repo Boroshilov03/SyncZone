@@ -32,8 +32,7 @@ import { decode } from "base64-arraybuffer";
 import axios from "axios";
 import RNPickerSelect from "react-native-picker-select";
 import Dropdown from "../components/DropdownComponent";
-import { WEATHER_API_KEY } from '@env';
-
+import { WEATHER_API_KEY } from "@env";
 
 const ProfileSettings = ({ navigation, route }) => {
   const [profilePhoto, setProfilePhoto] = useState(null);
@@ -48,7 +47,7 @@ const ProfileSettings = ({ navigation, route }) => {
   const { user, setUser } = useStore();
   const [activeBannerData, setActiveBannerData] = useState(null);
 
-  // State for form fields  
+  // State for form fields
   const [username, setUsername] = useState(contactInfo.contactUsername || "");
   const [email, setEmail] = useState(contactInfo.contactEmail || ""); // Make sure contactInfo has email property
   const [password, setPassword] = useState(""); // Leave this blank for user to enter
@@ -56,10 +55,12 @@ const ProfileSettings = ({ navigation, route }) => {
   const [lastName, setLastName] = useState(contactInfo.contactLast || "");
   const [location, setLocation] = useState(contactInfo.location || "");
   const [formData, setFormData] = useState({
+    username: "",
     firstName: "",
     lastName: "",
     email: "",
     location: "",
+    avatar_url: "",
   });
 
   const [showDropdown, setShowDropdown] = useState(false);
@@ -89,7 +90,7 @@ const ProfileSettings = ({ navigation, route }) => {
   };
 
   const toggleDropdown = () => {
-    setShowDropdown(prev => !prev);
+    setShowDropdown((prev) => !prev);
   };
 
   const handleInputChange = useCallback((name, value) => {
@@ -112,11 +113,10 @@ const ProfileSettings = ({ navigation, route }) => {
       const fetchLatestUserData = async () => {
         const { data, error } = await supabase.auth.getUser();
         if (data) {
-
           setUser(data.user);
         }
 
-        console.log("DATA: ", data)
+        console.log("DATA: ", data);
         if (error)
           console.error("Error fetching latest user data:", error.message);
       };
@@ -138,9 +138,11 @@ const ProfileSettings = ({ navigation, route }) => {
   const saveProfileUpdates = async () => {
     const updatedProfileData = {
       user_metadata: {
+        username: formData.username,
         first_name: formData.firstName,
         last_name: formData.lastName,
         location: formData.location,
+        avatar_url: formData.avatar_url,
       },
       email: formData.email,
     };
@@ -155,7 +157,6 @@ const ProfileSettings = ({ navigation, route }) => {
     } else {
       // Update `useStore` with new data after Supabase update
       // setUser({ ...user, ...updatedProfileData });
-
 
       console.log("Profile updated successfully");
     }
@@ -184,32 +185,30 @@ const ProfileSettings = ({ navigation, route }) => {
   }, []);
 
   const updateInfo = async () => {
-
     try {
-
       let avatarUrl = profilePhoto; // Keep current photo if no new one is uploaded.
-      console.log("SUPABASE LOG: ",
+      console.log(
+        "SUPABASE LOG: ",
         username,
         firstName,
         lastName,
         location,
-        avatarUrl,)
-      const updatedUserName = username
-      const updatedUrl = avatarUrl
+        avatarUrl
+      );
+      const updatedUserName = username;
+      const updatedUrl = avatarUrl;
       const { updateData, error } = supabase.auth.updateUser({
-
         email: formData.email,
         data: {
           username: username,
           first_name: firstName,
           last_name: lastName,
           location: location,
-          avatar_url: avatarUrl
-
+          avatar_url: avatarUrl,
         },
-      })
-      contactInfo.contactUserName = updatedUserName
-      contactInfo.contactPFP = updatedUrl
+      });
+      contactInfo.contactUserName = updatedUserName;
+      contactInfo.contactPFP = updatedUrl;
       if (base64Photo) {
         const fileName = `${user.id}/${uuid.v4()}.png`;
         const { data: uploadData, error: uploadError } = await supabase.storage
@@ -217,33 +216,21 @@ const ProfileSettings = ({ navigation, route }) => {
           .upload(fileName, decode(base64Photo), { contentType: "image/png" });
 
         if (uploadError) {
-          Alert.alert("Error", `Failed to upload profile photo: ${uploadError.message}`);
+          Alert.alert(
+            "Error",
+            `Failed to upload profile photo: ${uploadError.message}`
+          );
           return;
         }
 
-        avatarUrl = supabase.storage.from("avatars").getPublicUrl(fileName).data.publicUrl;
+        avatarUrl = supabase.storage.from("avatars").getPublicUrl(fileName)
+          .data.publicUrl;
       }
-      // console.log("SUPABASE LOG: ",
-      //   username,
-      //   firstName,
-      //   lastName,
-      //   location,
-      //   avatarUrl,)
-      // setUser(
-      //   {
-      //     user_metadata: {
-      //       username: username,
-      //       first_name: 'firstName',
-      //       last_name: lastName,
-      //       location: location,
-      //     },
-      //     email: formData.email,
-      //   })
-      // Update the profile in Supabase
+
       const { error: updateError } = await supabase
         .from("profiles")
         .update({
-          username,
+          username: username,
           first_name: firstName,
           last_name: lastName,
           location: location,
@@ -251,10 +238,11 @@ const ProfileSettings = ({ navigation, route }) => {
         })
         .eq("id", user.id);
 
-
-
       if (updateError) {
-        Alert.alert("Error", `Failed to update profile: ${updateError.message}`);
+        Alert.alert(
+          "Error",
+          `Failed to update profile: ${updateError.message}`
+        );
         return;
       }
 
@@ -413,14 +401,6 @@ const ProfileSettings = ({ navigation, route }) => {
       style={[styles.container, { marginTop: Constants.statusBarHeight }]}
     >
       <ScrollView style={styles.scroll}>
-        <Pressable style={styles.trash}>
-          <Icon
-            name="trash"
-            size={35}
-            color="red"
-            onPress={() => setVisible(true)}
-          ></Icon>
-        </Pressable>
         <View style={styles.profileContainer}>
           <Pressable style={styles.pic} onPress={() => setModalVisible(true)}>
             {activeBannerData && (
@@ -447,7 +427,9 @@ const ProfileSettings = ({ navigation, route }) => {
           </Text>
           <Text style={styles.user}>@{contactInfo.contactUsername}</Text>
           <View style={styles.switchContainer}>
-            <Text style={styles.switchLabel}>{!showDropdown ? "Location Hidden" : "Location Enabled"}</Text>
+            <Text style={styles.switchLabel}>
+              {!showDropdown ? "Location Hidden" : "Location Enabled"}
+            </Text>
             <Switch
               value={showDropdown}
               onValueChange={setShowDropdown}
@@ -573,8 +555,8 @@ const ProfileSettings = ({ navigation, route }) => {
                       field.label === "Password"
                         ? "lock"
                         : field.label === "Email"
-                          ? "envelope"
-                          : "user",
+                        ? "envelope"
+                        : "user",
                     color: "#616061",
                     size: 20,
                   }}
@@ -594,21 +576,15 @@ const ProfileSettings = ({ navigation, route }) => {
                     height: 40,
                   }}
                 />
-
               </View>
             ))}
           </View>
-
-
         </View>
 
-
         {showDropdown && (
-
           <View style={styles.fieldsWrapper}>
             <View style={styles.fields}>
               {[
-
                 { label: "Location", value: location, setValue: setLocation },
                 // Add more fields as needed
               ].map((field, index) => (
@@ -629,8 +605,8 @@ const ProfileSettings = ({ navigation, route }) => {
                         field.label === "Password"
                           ? "lock"
                           : field.label === "Email"
-                            ? "envelope"
-                            : "user",
+                          ? "envelope"
+                          : "user",
                       color: "#616061",
                       size: 20,
                     }}
@@ -650,15 +626,10 @@ const ProfileSettings = ({ navigation, route }) => {
                       height: 40,
                     }}
                   />
-
                 </View>
               ))}
             </View>
-
-
           </View>
-
-
         )}
         <View style={styles.buttonbox}>
           <LinearGradient
@@ -670,7 +641,9 @@ const ProfileSettings = ({ navigation, route }) => {
             <TouchableOpacity
               style={styles.button2}
               borderRadius={20}
-              onPress={() => { updateInfo() }}
+              onPress={() => {
+                updateInfo();
+              }}
             >
               <Text style={[styles.buttontext]}>Update</Text>
             </TouchableOpacity>
@@ -832,7 +805,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     //borderWidth: 1
-
   },
   fields: {
     width: "80%",
@@ -1040,7 +1012,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 20
+    marginVertical: 20,
   },
   switchLabel: { fontSize: 17, fontFamily: "Karla-Bold", color: "#616061" },
 });

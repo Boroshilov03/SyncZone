@@ -213,7 +213,6 @@ const ChatDetailScreen = () => {
     }
   }, [messages]); // This effect runs every time messages change
 
-
   useEffect(() => {
     const channel = supabase.channel(`chat-room-${chatId}`);
 
@@ -452,6 +451,29 @@ const ChatDetailScreen = () => {
     }
   };
 
+  const handleDeleteChat = async (chatId) => {
+    try {
+      console.log("deleting", chatId);
+
+      // Deleting the chat from the database
+      const { data, error } = await supabase
+        .from("chats")
+        .delete()
+        .eq("id", chatId);
+
+      if (error) {
+        console.error("Error deleting chat:", error.message);
+        alert("Failed to delete chat.");
+      } else {
+        console.log("Chat deleted successfully:", data);
+        navigation.navigate("MainTabs");
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      alert("An unexpected error occurred while deleting the chat.");
+    }
+  };
+
   const emotionColorMap = {
     // Positive Emotions - Bright Colors
     Joy: "#FFD700",
@@ -561,134 +583,141 @@ const ChatDetailScreen = () => {
         {showDateHeader && (
           <Text style={styles.dateHeader}>{messageDate}</Text> // Render date header
         )}
-
         <View
-          style={[
-            styles.messageContainer,
-            isMyMessage
-              ? [styles.myMessageContainer, { borderBottomRightRadius: 0 }]
-              : [styles.otherMessageContainer, { borderBottomLeftRadius: 0 }],
-          ]}
+          style={{
+            flexDirection: "row",
+            justifyContent: isMyMessage ? "flex-end" : "flex-start", // Align based on message type
+            alignItems: "flex-end", // Align items to the bottom
+          }}
         >
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              padding: 4,
-              borderRadius: 15,
-            }}
-          >
-            {!isMyMessage && groupTitle ? (
-              avatar_url ? (
-                <Image
-                  source={{ uri: avatar_url }}
-                  style={[styles.profileImage, styles.otherProfileContainer]}
-                />
-              ) : (
-                <View style={styles.cardImg}>
-                  <Text style={styles.cardAvatarText}>
-                    {username[0].toUpperCase() || "N/A"}
-                  </Text>
-                </View>
-              )
-            ) : null}
-
-            {item.senderEmotion && (
-              <View
-                style={[
-                  styles.emotionContainer,
-                  {
-                    backgroundColor:
-                      emotionColorMap[item.senderEmotion.name] || "gray",
-                  },
-                  isMyMessage
-                    ? styles.myEmotionContainer
-                    : styles.otherEmotionContainer,
-                ]}
-              >
-                <Text
-                  style={styles.emotionText}
-                >{`${item.senderEmotion.name}`}</Text>
+          {!isMyMessage && groupTitle ? (
+            avatar_url ? (
+              <Image
+                source={{ uri: avatar_url }}
+                style={[styles.profileImage, styles.otherProfileContainer]}
+              />
+            ) : (
+              <View style={styles.cardImg}>
+                <Text style={styles.cardAvatarText}>
+                  {username[0].toUpperCase() || "N/A"}
+                </Text>
               </View>
-            )}
+            )
+          ) : null}
 
-            <View style={{ display: "flex" }}>
-              {/* Render message content */}
-              {item.content ? (
-                <Text
+          <View
+            style={[
+              styles.messageContainer,
+              isMyMessage
+                ? [styles.myMessageContainer, { borderBottomRightRadius: 0 }]
+                : [styles.otherMessageContainer, { borderBottomLeftRadius: 0 }],
+            ]}
+          >
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                padding: 4,
+                borderRadius: 15,
+              }}
+            >
+              {item.senderEmotion && (
+                <View
                   style={[
-                    styles.messageText,
+                    styles.emotionContainer,
+                    {
+                      backgroundColor:
+                        emotionColorMap[item.senderEmotion.name] || "gray",
+                    },
                     isMyMessage
-                      ? styles.myMessageText
-                      : styles.otherMessageText,
+                      ? styles.myEmotionContainer
+                      : styles.otherEmotionContainer,
                   ]}
                 >
-                  {item.content}
-                </Text>
-              ) : null}
+                  <Text
+                    style={styles.emotionText}
+                  >{`${item.senderEmotion.name}`}</Text>
+                </View>
+              )}
 
-              {/* Render attachments */}
-              {item.attachments &&
-                item.attachments.map((attachment, index) => {
-                  const uri = attachment.image_url || attachment.sticker_url;
-                  return uri && isMyMessage ? (
-                    <Image
-                      key={index}
-                      source={{ uri }}
-                      style={[
-                        attachment.sticker_id
-                          ? styles.stickerImage
-                          : styles.attachmentImage,
-                      ]}
-                    />
-                  ) : (
-                    <Image
-                      key={index}
-                      source={{ uri }}
-                      style={[
-                        attachment.sticker_id
-                          ? styles.otherStickerImage
-                          : styles.otherAttachmentImage,
-                      ]}
-                    />
-                  );
-                })}
-
-              {/* Message timestamp */}
-              <Text style={styles.messageTimestamp}>
-                {new Date(item.created_at).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
-
-              {/* Schedule button */}
-              {!isMyMessage &&
-                item.senderEmotion &&
-                negativeEmotions.includes(item.senderEmotion.name) && (
-                  <TouchableOpacity
-                    style={styles.scheduleButton}
-                    onPress={() => {
-                      navigation.navigate("MainTabs", {
-                        screen: "Calendar",
-                        params: {
-                          showAddEvent: true,
-                          defaultTitle: `Follow-up: ${item.content.substring(
-                            0,
-                            30
-                          )}...`,
-                          relatedMessageId: item.id,
-                        },
-                      });
-                    }}
+              <View style={{ display: "flex" }}>
+                {/* Render message content */}
+                {item.content ? (
+                  <Text
+                    style={[
+                      styles.messageText,
+                      isMyMessage
+                        ? styles.myMessageText
+                        : styles.otherMessageText,
+                    ]}
                   >
-                    <Image
-                      source={require("../../assets/icons/calendar-icon.png")}
-                      style={styles.chatIcon}
-                    />
-                  </TouchableOpacity>
-                )}
+                    {item.content}
+                  </Text>
+                ) : null}
+
+                {/* Render attachments */}
+                {item.attachments &&
+                  item.attachments.map((attachment, index) => {
+                    const uri = attachment.image_url || attachment.sticker_url;
+                    return uri && isMyMessage ? (
+                      <Image
+                        key={index}
+                        source={{ uri }}
+                        style={[
+                          attachment.sticker_id
+                            ? styles.stickerImage
+                            : styles.attachmentImage,
+                        ]}
+                      />
+                    ) : (
+                      <Image
+                        key={index}
+                        source={{ uri }}
+                        style={[
+                          attachment.sticker_id
+                            ? styles.otherStickerImage
+                            : styles.otherAttachmentImage,
+                        ]}
+                      />
+                    );
+                  })}
+
+                {/* Message timestamp */}
+                <Text style={styles.messageTimestamp}>
+                  {new Date(item.created_at).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Text>
+
+                {/* Schedule button */}
+                {!isMyMessage &&
+                  item.senderEmotion &&
+                  negativeEmotions.includes(item.senderEmotion.name) && (
+                    <TouchableOpacity
+                      style={styles.scheduleButton}
+                      onPress={() => {
+                        navigation.navigate("MainTabs", {
+                          screen: "Calendar",
+                          params: {
+                            showAddEvent: true,
+                            defaultTitle: `Follow-up: ${item.content.substring(
+                              0,
+                              30
+                            )}...`,
+                            relatedMessageId: item.id,
+                          },
+                        });
+                      }}
+                    >
+                      <Image
+                        source={require("../../assets/icons/calendar-icon.png")}
+                        style={styles.chatIcon}
+                      />
+                    </TouchableOpacity>
+                  )}
+              </View>
             </View>
           </View>
         </View>
@@ -809,8 +838,16 @@ const ChatDetailScreen = () => {
                 {groupTitle ? groupTitle : username}
               </Text>
             </View>
-            <TouchableOpacity style={styles.callIconContainer}>
-              <Image style={styles.callIcon} />
+            <TouchableOpacity
+              style={styles.callIconContainer}
+              onPress={() => handleDeleteChat(chatId)}
+            >
+              <Icon
+                name="trash"
+                size={25}
+                color="red"
+                style={styles.callIcon}
+              />
             </TouchableOpacity>
           </View>
           {loading && (
@@ -827,7 +864,7 @@ const ChatDetailScreen = () => {
           )}
           {error && <Text style={styles.errorText}>{error}</Text>}
           <Animated.View style={{ flex: 1, transform: [{ translateY }] }}>
-          <View style={{ flex: 1, marginBottom: 70 }}>
+            <View style={{ flex: 1, marginBottom: 70 }}>
               {!loading && !error && (
                 <FlatList
                   ref={flatListRef}
@@ -994,11 +1031,15 @@ const styles = StyleSheet.create({
     flex: 2,
   },
   profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    borderWidth: 2,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1,
     borderColor: "#fff",
+    marginBottom: 18,
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
   },
   title: {
     fontSize: 24,
@@ -1011,8 +1052,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   callIcon: {
-    width: 25.5,
-    height: 25.5,
+    width: 20,
+    height: 25,
   },
   typingIndicator: {
     fontSize: 12,
@@ -1061,7 +1102,6 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     fontWeight: "semibold",
     borderBottomWidth: 1,
-    borderRadius: 8,
     borderBlockColor: "#F6D6EE",
   },
   otherMessageContainer: {
@@ -1205,12 +1245,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   cardImg: {
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
     backgroundColor: "#FFADAD", // soft coral to complement pastel blue
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 20,
+    borderRadius: 15,
+    marginBottom: 18,
   },
   headerImage: {
     width: 40,

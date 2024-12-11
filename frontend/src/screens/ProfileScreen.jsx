@@ -17,6 +17,7 @@ import * as Font from "expo-font";
 import axios from "axios";
 import { supabase } from "../lib/supabase";
 import { WEATHER_API_KEY } from "@env";
+import useStore from "../store/store";
 
 const ProfileScreen = ({
   navigation,
@@ -39,7 +40,7 @@ const ProfileScreen = ({
   });
   const [location, setLocation] = useState(false);
   const [country, setCountry] = useState(null);
-  console.log("prodile contactId: ", contactID)
+  const { user } = useStore();
   useEffect(() => {
     async function fetchLatLon() {
       try {
@@ -140,6 +141,76 @@ const ProfileScreen = ({
   if (!fontsLoaded) {
     return null;
   }
+  const deleteContact = async (contactID) => {
+    console.log(contactID, user.id);
+    try {
+      // Check if the contact exists for the first condition
+      const { data: checkData1, error: checkError1 } = await supabase
+        .from("contacts")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("contact_id", contactID);
+
+      if (checkError1) {
+        console.error("Error checking first contact:", checkError1.message);
+        return;
+      }
+
+      if (checkData1.length === 0) {
+        console.log("No matching first contact found.");
+      } else {
+        console.log("First contact found:", checkData1);
+      }
+
+      // Delete the first record where user_id = user.id and contact_id = contactID
+      const { data: data1, error: error1 } = await supabase
+        .from("contacts")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("contact_id", contactID);
+
+      if (error1) {
+        console.error("Error deleting first contact:", error1.message);
+        return;
+      }
+
+      // Check if the contact exists for the second condition
+      const { data: checkData2, error: checkError2 } = await supabase
+        .from("contacts")
+        .select("*")
+        .eq("user_id", contactID)
+        .eq("contact_id", user.id);
+
+      if (checkError2) {
+        console.error("Error checking second contact:", checkError2.message);
+        return;
+      }
+
+      if (checkData2.length === 0) {
+        console.log("No matching second contact found.");
+      } else {
+        console.log("Second contact found:", checkData2);
+      }
+
+      // Delete the second record where user_id = contactID and contact_id = user.id
+      const { data: data2, error: error2 } = await supabase
+        .from("contacts")
+        .delete()
+        .eq("user_id", contactID)
+        .eq("contact_id", user.id);
+
+      if (error2) {
+        console.error("Error deleting second contact:", error2.message);
+        return;
+      }
+
+      console.log("Contacts deleted:", data1, data2);
+      setVisible(false);
+      setProfileVisible(false);
+    } catch (err) {
+      console.error("Unexpected error:", err.message);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -160,7 +231,10 @@ const ProfileScreen = ({
             </View>
             <Pressable style={styles.modalButtons}>
               <View style={styles.left}>
-                <Text style={styles.lText} onPress={() => setVisible(false)}>
+                <Text
+                  style={styles.lText}
+                  onPress={() => deleteContact(contactID)}
+                >
                   Remove
                 </Text>
               </View>
@@ -183,8 +257,8 @@ const ProfileScreen = ({
 
       <View style={styles.profileContainer}>
         <View style={styles.weather}>
-          {location ? (<Text style={styles.loc}> {location}</Text>) : null}
-          {country ? (<Text style={styles.country}> {country}</Text>) : null}
+          {location ? <Text style={styles.loc}> {location}</Text> : null}
+          {country ? <Text style={styles.country}> {country}</Text> : null}
         </View>
         <View style={styles.midbox}>
           <View style={styles.temp}>
@@ -215,15 +289,7 @@ const ProfileScreen = ({
         {/* <Text style={styles.usernameText}>@{contactUsername}</Text> */}
         {/* <Text style={styles.idText}>User ID: {contactID}</Text> */}
       </View>
-      <Pressable
-        style={styles.buttons}
-        onPress={() => {
-          setProfileVisible(false);
-          navigation.navigate("ProfileSettings", { setProfileVisible });
-        }}
-      >
-        <Ionicons name="chatbox-ellipses" size={35} color="#616061" />
-      </Pressable>
+      <Pressable style={styles.buttons}></Pressable>
     </SafeAreaView>
   );
 };
